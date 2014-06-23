@@ -1,4 +1,4 @@
-healthy-futures-contest
-=======================
+healthy
+========
 
-Healthy Futures Contest WordPress Theme
+Scottfennell.com/wp/healthy
