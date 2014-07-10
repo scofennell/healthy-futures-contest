@@ -1,7 +1,7 @@
 <?php
 
 /**
- * healthy setup functions.  Establish app-wide values.
+ * healthy setup functions.  Get and set app-wide values, do core WP configuration, enqueue scripts.
  *
  * @package WordPress
  * @subpackage healthy
@@ -25,25 +25,53 @@ function healthy_set_the_time_zone() {
 add_action( 'init', 'healthy_set_the_time_zone', 0 );
 
 /**
+ * Set the minimum amount of exercise to complete a day.
+ *
+ * @return int The number of minutes of exercise to achieve day_is_complete.
+ */
+function healthy_daily_minimum() {
+
+	// Let's say 30 minutes of exercise completes a day.
+	return 30;
+}
+
+/**
+ * Set the minimum amount of exercise days to complete a week.
+ *
+ * @return int The number of days_complete to achieve week_is_complete.
+ */
+function healthy_weekly_minimum() {
+
+	// Let's say 4 days of exercise completes a week.
+	return 4;
+}
+
+/**
  * Set the length of the contest in weeks.
+ *
+ * @return int The length of the contest in weeks.
  */
 function healthy_length_of_contest() {
 	
-	// let's say the contest lasts for 6 weeks
+	// Let's say the contest lasts for 6 weeks.
 	return 6;
 }
 
 /**
  * Set the first week of the contest.
+ *
+ * @return int The date('W') for the first week of the contest.
  */
 function healthy_first_week_of_contest() {
 	
-	// let's say the contest starts on the 23rd week of the year
-	return 23;
+	// Let's say the contest starts on the 26th week of the year.
+	return 26;
 }
 
 /**
- * Get the last week of the contest.
+ * Get the date('W') for the last week of the contest.
+ *
+ * @return int The date('W') for the last week of the contest.
  */
 function healthy_last_week_of_contest() {
 	
@@ -58,62 +86,102 @@ function healthy_last_week_of_contest() {
 
 	// Subtract 1.
 	$out = $off_by_one - 1;
-	
+
 	return $out;
 }
 
 /**
- * Add custom roles for out users.  Only needs to run once, as it is saved to the db.
+ * Get the roles used in our app.
+ * 
+ * @return array A multidimensional associative array of roles for users in our app.
  */
-function healthy_add_roles() {
-    
-	// Add a role for students.
-    add_role(
-    	'student', // Slug
-    	'Student', // Label
-    	array(
-    		'read' 					 => true,
-    		'level_0'				 => true,
-    		'delete_posts' 			 => true,
-			'delete_published_posts' => true,
-			'edit_posts' 			 => true,
-			'edit_published_posts' 	 => true,
-			'publish_posts' 		 => true,
-    	)
-    );
+function healthy_get_roles() {
+	$out = array(
+		
+		// Students.  Can edit profile and CRUD exercise data.
+		array(
 
-    // Add a role for teachers.
-    add_role(
-    	'teacher', // Slug
-    	'Teacher', // Label
-    	array(
-    		'level_0' 				 => true,
-    		'delete_posts' 			 => true,
-			'delete_published_posts' => true,
-			'delete_others_posts' 	 => true,
-			'delete_private_posts' 	 => true,
-			'edit_posts' 			 => true,
-			'edit_published_posts' 	 => true,
-			'edit_others_posts' 	 => true,
-			'edit_private_posts' 	 => true,			
-			'publish_posts' 		 => true,
-			'read' 					 => true,
-			'read_private_posts ' 	 => true,
-    	)
-    );
+			// The slug is used as a key for accessing the role.
+			'slug'  	=> 'student',
 
+			// The label is used to printing the role to the screen.
+			'label' 	=> 'Student',
+
+			// is_public is used to decide if the role is available to normal users.
+			'is_public' => 1,
+		),
+
+		// Teachers.  Can CRUD students and view reports for their school.
+		array(
+			'slug'  	=> 'teacher',
+			'label' 	=> 'Teacher',
+			'is_public' => 1,
+		),
+
+		// Meaghan and Nicole.  Can CRUD teachers and students, and view reports for any school.
+		array(
+			'slug'  	=> 'boss',
+			'label' 	=> 'Boss',
+		),
+	);
+	return $out;
 }
-//add_action( 'init', 'healthy_add_roles');
 
 /**
- * healthy favicon.
+ * Add custom roles for out users.  Only needs to run on theme activation.
+ */
+function healthy_add_roles() {
+ 
+	// If we're not in admin, bail.
+	if( ! is_admin () ) { return false; }
+
+ 	// Get the current screen.
+	$screen = get_current_screen();
+	
+	// Get the screen base.
+	$base = $screen -> base;
+	
+	// If we're not in the themes section, bail.
+	if( $base != 'themes' ) { return false; }
+
+	// If we didn't just activate, bail.
+	if( ! isset( $_GET[ 'activated' ] ) ) { return false; }
+
+	// Grab the user roles.
+	$roles = healthy_get_roles();
+
+	// For each role:
+	foreach( $roles as $r ) {
+		
+		// Grab the slug.
+		$slug = $r[ 'slug' ];
+		
+		// Grab the label.
+		$label = $r[ 'label' ];
+		
+		// Write the role to the db.
+		add_role(
+    		$slug,
+    		$label
+    	);
+	}
+}
+add_action( 'admin_head', 'healthy_add_roles');
+
+/**
+ * Draw a favicon. Expects an image, favicon.png, in the parent theme root.
  *
  * @since healthy 1.0
  */
 function healthy_favicon() {
-	?>
-	<link rel="shortcut icon" type="image/x-icon" href="<?php echo get_template_directory_uri(); ?>/favicon.png">
-	<?php
+
+	// The favicon href.
+	$href = esc_url( get_template_directory_uri().'/favicon.png' );
+	
+	// The favicon tag.
+	$out = "<link rel='shortcut icon' type='image/x-icon' href='$href'>";
+	
+	echo $out;
 }
 add_action( 'wp_head', 'healthy_favicon' );
 
@@ -164,6 +232,11 @@ function healthy_add_editor_styles() {
 add_action( 'init', 'healthy_add_editor_styles' );
 
 /**
+ * Get rid of the color picker.
+ */
+remove_action( 'admin_color_scheme_picker', 'admin_color_scheme_picker' );
+
+/**
  * Enqueue scripts and styles for the front end.
  *
  * @since healthy 1.0
@@ -173,10 +246,9 @@ function healthy_scripts_styles() {
 	/**
 	 * Loads our main stylesheet, complete with a value for date to break
 	 * caching.  That date should be manually updated whenever the stylesheet
-	 * is changed,
+	 * is changed.
 	 */  
-	// wp_enqueue_style( 'healthy-style', get_stylesheet_uri(), array(), '2014-05-30' );
-	wp_enqueue_style( 'healthy-sass', get_stylesheet_directory_uri().'/sass/output.css' , array(), '2014-05-30' );
+	wp_enqueue_style( 'healthy-sass', get_stylesheet_directory_uri().'/sass/output.css' , array(), '2014-07-08' );
 	
 	// Grab wp-includes version of jQuery.
 	wp_enqueue_script( 'jquery' );
@@ -186,6 +258,27 @@ function healthy_scripts_styles() {
 
 }
 add_action( 'wp_enqueue_scripts', 'healthy_scripts_styles' );
+
+/**
+ * Enqueue scripts for wp-admin.
+ */
+/*
+function healthy_admin_enqueue() {
+    
+	// Grab the current screen.
+    $screen = get_current_screen();
+    
+    // Grab the screen base.
+    $base = $screen -> base;
+
+    // If we're editing a user, grab jq validation -- Mainly because teachers and students need to be assigned to a school.
+    if ( ( $base == 'user-edit' ) || ( $base == 'profile' ) || ( $base == 'user' ) ) {
+        wp_enqueue_script( 'jquery-validation', get_template_directory_uri().'/js/jquery.validate.min.js', 'jquery', false, true );
+    }
+    
+}
+add_action( 'admin_enqueue_scripts', 'healthy_admin_enqueue' );
+*/
 
 /**
  * Register our widget areas.

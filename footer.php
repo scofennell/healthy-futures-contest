@@ -11,13 +11,7 @@
 ?>
 
 		<footer id="blog-footer" class="inverse-color outer-wrapper" role="contentinfo">
-			<div id="blog-footer-inner-wrapper" class="inner-wrapper">
-
-				<h2 class="blog-description">
-					<a href="#blog-header" class="blog-description-link" title="Back to Top">
-						<?php bloginfo( 'description' ); ?>
-					</a>
-				</h2>		
+			<div id="blog-footer-inner-wrapper" class="inner-wrapper">		
 
 				<?php if ( is_active_sidebar( 'footer-widgets' ) ) { ?>
 			
@@ -26,10 +20,6 @@
 					</aside>
 
 				<?php } ?>
-
-				<?php
-					// echo healthy_menu( 'secondary-menu' );
-				?>
 
 			</div>
 		</footer><!-- #colophon -->

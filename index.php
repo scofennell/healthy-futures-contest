@@ -16,45 +16,13 @@
 
 get_header(); ?>
 
-<?php if( is_archive() || is_search() || is_404() ) { ?>
-	
-	<section class='outer-wrapper'>
-	
-		<div class='inner-wrapper'>
-	
-			<?php echo healthy_archive_header(); ?>
-	
-		</div>
-	
-	</section>
-
-<?php } ?>
-
 <main id="loop" class="outer-wrapper" role="main">
 
-	<?php if( is_404() || ! have_posts() ) { ?>
-		
-		<article class='hentry no-posts inner-wrapper entry-content'>
-			
-			<?php echo healthy_no_posts(); ?>
-
-		</article>
-
-	<?php } elseif ( have_posts() ) { ?>
-
-		<?php /* The loop */ ?>
-		
-		<?php while ( have_posts() ) : the_post(); ?>
-
-			<article <?php post_class(); ?> itemscope itemtype="http://schema.org/Article">
+	<article <?php post_class(); ?> itemscope itemtype="http://schema.org/Article">
 				
-				<?php echo healthy_controller(); ?>
+		<?php echo healthy_controller(); ?>
 
-			</article><!-- #post -->
-
-		<?php endwhile; ?>
-
-	<?php } ?>
+	</article><!-- #post -->
 
 </main> <!-- end #loop-wrapper -->
 

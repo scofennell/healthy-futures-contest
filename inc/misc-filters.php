@@ -25,15 +25,26 @@ function healthy_filter_login_link( $link ) {
 		// Grab the user first name.
 		$first_name = get_user_meta( get_current_user_id(), 'first_name', TRUE	);
 	
-		// Translate.
-		$hello = '';
+		// If the user has a first name:
 		if ( ! empty ( $first_name ) ) {
-			$hello = sprintf( esc_html__( 'Hi!  You\'re logged in as %s.', 'healthy' ), $first_name );
+
+			// Create a "Hi user!" string.
+			$hello = sprintf( esc_html__( 'Hi %s!', 'healthy' ), $first_name );
+			
+			// Wrap the string for CSS.
+			$hello = "<span class='healthy-hello'>$hello</span>";
+	
+			// Build the new version of the link text.
+			$link = $hello.' '.$link;
 		}
 
-		// Build the new version of the link text.
-		$link = $hello.' '.$link;
 
+		// Fix the casing of the log out link.  Find the default text.
+		$logout_text_before = 'Log out';
+
+		// Replace it with cased text.
+		$logout_text_after = esc_html( 'Log Out', 'healthy');
+		$link = str_replace( $logout_text_before, $logout_text_after, $link );
 	}
 
 	// Always return something in filter functions.
@@ -87,8 +98,7 @@ add_filter( 'wp_title', 'healthy_wp_title', 10, 2 );
  *
  * Adds body classes to denote:
  * 1. Single or multiple authors.
- * 2. Active widgets in the sidebar to change the layout and spacing.
- * 3. When avatars are disabled in discussion settings.
+ * 2. When avatars are disabled in discussion settings.
  *
  * @since healthy 1.0
  *
@@ -121,14 +131,18 @@ add_filter( 'body_class', 'healthy_body_class' );
  */
 function healthy_post_class( $classes ) {
 
+	/*
 	global $post;
 
 	if( is_single( $post ) ) {
 		$classes[] = 'hentry-single';
 	}
+	*/
 
+	// A standard class in our CSS to control vertical spacing.
 	$classes[] = 'inner-wrapper';
 
+	// The filtered classes.
 	return $classes;
 
 }

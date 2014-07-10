@@ -68,12 +68,24 @@ function healthy_date_admin_styles() {
  */
 function healthy_add_custom_meta_box() {
 	add_meta_box(
-    	'custom_meta_box', // $id  
-		'About this day', // $title   
-		'healthy_show_custom_meta_box', // $callback  
-		'healthy_day', // $page  
+
+		// A unique ID for this meta box.
+    	'healthy_day_custom_meta_box',
+
+    	// The label for this box.
+		'About this day',
+
+		// The cb to draw the box.   
+		'healthy_show_custom_meta_box',
+		
+		// On which type of post to show the box.
+		'healthy_day',
+
+		// Where horizontally on the page to show the box. 
 		'normal', // $context  
-		'high' // $priority
+		
+		// Where vertically to show the box.
+		'high'
 	);
 }
 add_action('add_meta_boxes', 'healthy_add_custom_meta_box');
@@ -91,7 +103,7 @@ function healthy_show_custom_meta_box() {
     $day = healthy_day();
 
     // An array of fields for a day.
-    $healthy_meta_fields = $day['components'];
+    $healthy_meta_fields = $day[ 'components' ];
    
     // Use nonce for verification  
     echo '<input type="hidden" name="healthy_custom_meta_box_nonce" value="'.wp_create_nonce( basename( __FILE__ ) ).'" />';  
@@ -108,15 +120,21 @@ function healthy_show_custom_meta_box() {
         // Date will be saved as the post date -- it's not meta.
         if( $slug == 'date' ) { continue; }
         
+		// Controls what sort of form input we get.
+  		$type = esc_attr( $field[ 'type' ] );         
+        
+
         // Get the value for this field.
         $meta = get_post_meta( $post_id, $slug, true );  
+
+		// If it's a range, we need to make sure the default is 0, not empty string.
+		if( $type == 'range' ) {
+			if( empty ( $meta ) ) { $meta = absint( $meta ); }
+		}
 
         // Human-friendly label for this field.
   		$label = esc_html( $field['label'] );          
   		
-  		// Controls what sort of form input we get.
-  		$type = esc_attr( $field[ 'type' ] );         
-        
         // begin a table row with the label for this field
         echo "
         	<tr> 
@@ -126,19 +144,9 @@ function healthy_show_custom_meta_box() {
 		
 		//if ( $type == 'date' ) {
 		//	$input = "<input type='$type' name='$slug' id='$slug' value='$meta' >";
-		
-        // If it's a checkbox...
-		if ( $type == 'checkbox' ) {
-			$input = "<input type='$type' name='$slug' id='$slug' value='$meta' >";
-		
-		// If it's a range, we need to make sure the default is 0, not empty string.
-		} elseif( $type == 'range' ) {
-			if( empty ( $meta ) ) { $meta = absint( $meta ); }
-			$input = "<input type='text' name='$slug' id='$slug' value='$meta' >";
-		
-		} else {
-			$input = "<input type='text' name='$slug' id='$slug' value='$meta' >";
-		}
+	
+		// We can just use a simple text input for all of our fields.  This whole interface is just for debugging.
+		$input = "<input type='text' name='$slug' id='$slug' value='$meta' >";
             
         echo "
         			$input
@@ -204,4 +212,4 @@ function healthy_save_custom_meta( $post_id ) {
 		
     } // end foreach meta field  
 }
-add_action( 'save_post', 'healthy_save_custom_meta' );    
+add_action( 'save_post', 'healthy_save_custom_meta' );

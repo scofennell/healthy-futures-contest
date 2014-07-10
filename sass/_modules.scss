@@ -101,7 +101,7 @@ img.wp-smiley,
  * Marquee
  */
 .blog-title-blog-header {
-	vertical-align: middle;
+	vertical-align: top;
 	font-size: 45px;
 	line-height: 1.2em;
 
@@ -235,6 +235,19 @@ img.wp-smiley,
 	text-decoration: underline;
 }
 
+/**
+ * User-specific menu
+ */
+.healthy-menu {
+	line-height: 1.2em;
+}
+
+.healthy-menu > * {
+	display: block;
+	width: 100%;
+	margin-bottom: $medium_margin;
+}
+
 /** 
  * =============================================================================
  * Blog Footer
@@ -261,10 +274,7 @@ img.wp-smiley,
 
 /* Footer Widgets */
 .footer-widget {
-	width: 50%;
-	text-align: left;
-	padding: $small_padding $medium_padding $large_padding;
-	margin-bottom: $small_margin;
+	margin-bottom: $medium_margin;
 }
 
 .footer-widget:after {
@@ -304,8 +314,6 @@ img.wp-smiley,
 	margin-bottom: $small_margin;
 }
 
-
-
 /** 
  * =============================================================================
  * Main
@@ -330,7 +338,6 @@ img.wp-smiley,
 /**
  * Articles
  */
-
 .hentry {
 	margin-bottom: 80px;
 }
@@ -438,10 +445,20 @@ img.wp-smiley,
 	border-radius: $small_border-radius;
 }
 
-.editable-content input,
-.editable-content label {
-	display: block;
-	width: 100%;
+.editable-content {
+	select,
+	input,
+	label {
+		display: block;
+		width: 100%;
+	}
+
+	[type='checkbox'],
+	[type='radio'] {
+		display: inline-block;
+		width: auto;
+	}
+
 }
 
 /* Buttons */
@@ -572,6 +589,13 @@ button {
 	th {
 		padding: $small_padding $medium_padding;
 	}
+}
+
+/* Pagination */
+.pagination .current-pagination-item {
+	font-weight: 600;
+	text-decoration: none;
+	cursor: default;
 }
 
 /** 
@@ -824,4 +848,23 @@ button {
 .arrow {
 	text-decoration: none !important;
 	font-family: "Lucida sans unicode";
+}
+
+/** 
+ * =============================================================================
+ * Specific Pages
+ * =============================================================================
+ */
+
+/*
+ Switch / Delete Users
+ */
+
+/*
+ Reports
+ */
+#healthy_report {
+	overflow-x: scroll;
+	display: block;
+	max-width: 100%;
 }

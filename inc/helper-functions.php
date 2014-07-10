@@ -1,6 +1,14 @@
 <?php
 
 /**
+ * Utility functions used throughout the app.
+ *
+ * @package WordPress
+ * @subpackage healthy
+ * @since healthy 1.0
+ */
+
+/**
  * The controller for our application.  Routes the user to different views based 
  * on request.
  *
@@ -10,6 +18,12 @@ function healthy_controller() {
 
 	// The user on behalf of whom we're CRUD'ing
 	$active_user_id = healthy_get_active_user_id();
+
+	// Grab the object id.
+	$object_id = '';
+	if( isset( $_REQUEST[ 'object_id' ] ) ) {
+		$object_id = healthy_sanitize_object_id( $_REQUEST[ 'object_id' ] );
+	}
 
 	// The base url off of which we'll build absolute urls.
 	$base_url = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
@@ -34,29 +48,9 @@ function healthy_controller() {
 		$title = esc_html__( 'Please fill out this information about yourself.', 'healthy' );
 		$subtitle = esc_html__( 'Once your profile is complete, you can partake in the contest!', 'healthy' );
 		$content = healthy_profile_form();
-/*
-		// If they just completed their profile, congratulate them and prompt them to post data.
-		} else {
-
-			// Prompt the user to enter data.
-			$title = esc_html__( 'Hey, thanks so much for doing that!', 'healthy' );
-
-			// If the contest has started...
-			if ( healthy_contest_is_happening() ){
-		
-				$subtitle = esc_html__( 'As a reward, you can now do more data entry!', 'healthy' );
-				$content = healthy_post_a_day_form( false );
-		
-			// If the contest has not started yet.
-			} else {
-				$subtitle = esc_html__( 'Come back soon, once the contest has started.', 'healthy' );
-			}
-
-		}
-*/
 
 	// Is the user deleting a user?
-	} elseif ( healthy_current_user_is_acting( 'delete', 'user', $_REQUEST[ 'object_id' ] ) ) {
+	} elseif ( healthy_current_user_is_acting( 'delete', 'user', $object_id ) ) {
 
 		// Did he just delete something?
 		$deleting = healthy_process_delete_a_user_form();
@@ -78,12 +72,11 @@ function healthy_controller() {
 			$user_to_delete_display_name = get_userdata( $_REQUEST['object_id'] ) -> display_name;
 
 			// Prompt the user to enter data.
-			$title = sprintf( esc_html__( 'Was %s not such a good user?', 'healthy' ), $user_to_delete_display_name );
+			$title = sprintf( esc_html__( 'Expell %s?', 'healthy' ), $user_to_delete_display_name );
 			$subtitle = sprintf( esc_html__( 'Really delete your user, %s?', 'healthy' ), $user_to_delete_display_name );
 			$content = healthy_delete_user_confirm( $_REQUEST['object_id'] );
 		
 		}
-
 
 	// Is the user creating a user?
 	} elseif ( healthy_current_user_is_acting( 'create', 'user', 'new' ) ) {
@@ -93,12 +86,13 @@ function healthy_controller() {
 			$title = esc_html__( 'Your new user is alive and well.', 'healthy' );
 			$subtitle = esc_html__( 'Create another?', 'healthy' );			
 
+		// If post is not yet set...
 		} else {
 
 			// Prompt them to create a user.
-			$title = sprintf( esc_html__( 'Create a User.', 'healthy' ), $first_name );
-			$subtitle = esc_html__( 'You can create teachers and students for your school.', 'healthy' );
-		
+			$title = esc_html__( 'Add Teachers & Students!', 'healthy' );
+			$subtitle = esc_html__( 'You can create teachers and students for any school.', 'healthy' );
+
 		}
 
 		// The edit profile form.
@@ -115,25 +109,27 @@ function healthy_controller() {
 		$content = healthy_switch_to_user_form();	
 
 	// Is the user switching to a new active user?
-	} elseif ( healthy_current_user_is_acting( 'switch', 'user', $_REQUEST[ 'object_id' ] ) ) {
+	} elseif ( healthy_current_user_is_acting( 'switch', 'user', $object_id ) ) {			
 
-		$active_user_display_name = healthy_get_active_user() -> display_name;
-			
+		// If the user has switched users...
 		if( healthy_has_switched_users() ) {
+
+			// Grab the display name of the active user.
+			$active_user_display_name = healthy_get_active_user() -> display_name;
 
 			// Prompt the user to assume the identity of a user
 			$title = sprintf( esc_html__( 'You transformed yourself into %s.', 'healthy' ), $active_user_display_name );
 			$subtitle = sprintf( esc_html__( 'You are now posting, editing, deleting, and reviewing data for %s ', 'healthy' ), $active_user_display_name );			
 
+		// Else, something went wrong.
 		} else {
 
 			wp_die( "There has been a problem. 103" );		
 
 		}
 
-		
 	// Is the user editing his profile?
-	} elseif ( healthy_current_user_is_acting( 'edit', 'user', $_REQUEST[ 'object_id' ] ) ) {
+	} elseif ( healthy_current_user_is_acting( 'edit', 'user', $object_id ) ) {
 
 		// use their first name.
 		$first_name = healthy_active_user_first_name();
@@ -143,7 +139,7 @@ function healthy_controller() {
 		
 		// If the contest has started:
 		if ( healthy_contest_is_happening() ){
-			$subtitle = esc_html__( 'Your your profile is complete, but you can still edit it if you want.', 'healthy' );
+			$subtitle = esc_html__( 'Your profile is complete, but you can still edit it if you want.', 'healthy' );
 		
 		// If the contest has not yet started.
 		} else {
@@ -212,21 +208,21 @@ function healthy_controller() {
 		}
 
 	// Check to see if the user is editing
-	} elseif ( healthy_current_user_is_acting( 'edit', 'post', $_REQUEST['object_id'] ) ) {	
+	} elseif ( healthy_current_user_is_acting( 'edit', 'post', $object_id ) ) {	
 
 		// If the user is editing, grab the date of the post he's editing.
-		$post_to_edit_date = healthy_get_post_date_by_id( $_REQUEST['object_id'] );
+		$post_to_edit_date = healthy_get_post_date_by_id( $object_id );
 		
 		// If the user just edited, congratulate him.
 		if( healthy_process_post_a_day_form() ) {
 
 			// Thank the usr for editing that day.
-			$title = sprintf( esc_html__ ( 'You just edited your entry from %s', 'healthy' ), $post_to_edit_date );
-			$subtitle = esc_html__( 'It looks great, nice work on that.', 'healthy' );
+			$subtitle = sprintf( esc_html__ ( 'You just edited your entry from %s.', 'healthy' ), $post_to_edit_date );
+			$title = esc_html__( 'That looks great, nice work on that.', 'healthy' );
 
 		// Else, prompt him to edit.
 		} else {
-			$subtitle = sprintf( esc_html__( 'Edit your entry from %s', 'healthy' ), $post_to_edit_date );
+			$subtitle = sprintf( esc_html__( 'Edit your entry from %s.', 'healthy' ), $post_to_edit_date );
 			$title = esc_html__( 'Rewrite History!', 'healthy' );
 		}
 
@@ -235,7 +231,7 @@ function healthy_controller() {
 
 
 	// If he's niether creating or editing, see if he's deleting.
-	} elseif ( healthy_current_user_is_acting( 'delete', 'post', $_REQUEST['object_id'] ) ) {
+	} elseif ( healthy_current_user_is_acting( 'delete', 'post', $object_id ) ) {
 
 		// Did he just delete something?
 		$deleting = healthy_process_delete_a_day_form();
@@ -252,7 +248,7 @@ function healthy_controller() {
 		} else {
 
 			// Grab the date of the post he's deleting.
-			$post_to_delete_date = healthy_get_post_date_by_id( $_REQUEST['object_id'] );
+			$post_to_delete_date = healthy_get_post_date_by_id( $object_id );
 
 			// Prompt the user to enter data.
 			$title = sprintf( esc_html__( 'Was %s not such a good day?', 'healthy' ), $post_to_delete_date );
@@ -262,7 +258,7 @@ function healthy_controller() {
 		}
 
 	// If the user is browsing a post...
-	} elseif ( healthy_current_user_is_acting( 'review', 'post', $_REQUEST['object_id'] ) ) {
+	} elseif ( healthy_current_user_is_acting( 'review', 'post', $object_id ) ) {
 
 		// Get the id of the post.
 		$post_id = absint( $_REQUEST['object_id'] );
@@ -270,11 +266,18 @@ function healthy_controller() {
 		// The date we're reviewing.
 		$post_date_to_review = healthy_get_post_date_by_id( $post_id );
 
-		// Use the date in the title.
-		$title = sprintf( esc_html__( 'Your entry from %s.', 'healthy' ), $post_date_to_review );
-
 		// Subtitle for browsing a post.
-		$subtitle = esc_html__( 'You did a nice job entering data on this day.', 'healthy' );
+		if( healthy_is_day_complete( $post_id ) ) {
+			$title = esc_html__( 'Nice job!  This day is complete.', 'healthy' );
+		} else {
+			$title = esc_html__( 'So this was a rest day?', 'healthy' );
+		}
+
+		// Grab the min value of exercise for a day.
+		$min = healthy_daily_minimum();
+
+		// Use the date in the title.
+		$subtitle = sprintf( esc_html__( '%d minutes of exercise completes each day!', 'healthy' ), $min );
 
 		// The review a post view.
 		$content = healthy_review_a_post( $post_id );
@@ -282,30 +285,59 @@ function healthy_controller() {
 	// If the user is browsing all weeks
 	} elseif( healthy_current_user_is_acting( 'review', 'week', 'all' ) ) {
 
-		$title = esc_html__( 'Here\'s what you did each week.', 'healthy' );
+		$title = esc_html__( 'Here&#8217;s what you did each week.', 'healthy' );
 		$subtitle = esc_html__( 'You can edit data from the current week and browse data from past weeks.', 'healthy' );
 		$content = healthy_week_by_week();
 
 	// If the user is browsing a week
-	} elseif( healthy_current_user_is_acting( 'review', 'week', $_REQUEST['object_id'] ) ) {
+	} elseif( healthy_current_user_is_acting( 'review', 'week', $object_id ) ) {
 
-		$week_id = absint( $_REQUEST[ 'object_id' ] );
+		// Sanitize the week id.
+		$week_id = absint( $object_id );
 		
-		$title = esc_html__( 'These are the days of your life.', 'healthy' );
-		$subtitle = esc_html__( 'Choose a day to see more details.', 'healthy' );
+		// Grab the min value of exercise for a day.
+		$min = healthy_weekly_minimum();
+
+		// If this week is complete, congratulate.
+		if( healthy_is_week_complete( $week_id ) ) {
+			$title = sprintf( esc_html__( 'Huzzah!  Week %d is complete.', 'healthy' ), $week_id );
+		} else {
+			$title = sprintf( esc_html__( 'You gotta get %s days per week!', 'healthy' ), $min );
+		}
+
+		$subtitle = sprintf( esc_html__( 'Here&#8217;s what you did in week %s:', 'healthy' ), $week_id );
 		$content = healthy_choose_day_from_week( $week_id );
 
-	// As a default, just give a post-a-day-form or week by week data browse.
+	// If the user is browsing a week
+	} elseif( healthy_current_user_is_acting( 'review', 'report', $object_id ) ) {
+
+		// Prompt the user to assume the identity of a user
+		$title = esc_html__( 'Report Card', 'healthy' );
+		$subtitle = esc_html__( 'You can review reports here.', 'healthy' );	
+
+		$content = healthy_get_report( $object_id );
+
+	// As a default, if none of the above are met, offer appropriate defaults.
 	} else {
 
 		if( healthy_user_is_role( true, 'teacher' ) ) {
 
+			// Prompt the user to browse reports.
+			$title = esc_html__( 'Report Card', 'healthy' );
+			$subtitle = esc_html__( 'You can view a broad report for the whole contest, or more detailed reports for each week.', 'healthy' );			
+
+			// The report view.
+			$school = healthy_get_user_school( get_current_user_id() );
+			$content = healthy_get_report( $school );
+
+		} elseif( healthy_user_is_role( false, 'boss' ) ) {
+
 			// Prompt the user to assume the identity of a user
-			$title = esc_html__( 'These are your students.', 'healthy' );
-			$subtitle = esc_html__( 'You can act on behalf of any of your students.', 'healthy' );			
+			$title = esc_html__( 'Contest Activity', 'healthy' );
+			$subtitle = esc_html__( 'You can view reports on the contest here.', 'healthy' );			
 
 			// The edit profile form.
-			$content = healthy_switch_to_user_form();
+			$content = healthy_get_report( 'all' );
 		
 		} elseif( healthy_is_week_full() ) {
 
@@ -333,6 +365,93 @@ function healthy_controller() {
 }
 
 /**
+ * Returns an array of slugs for roles that public users are allowed to occupy.
+ * 
+ * @return An array of slugs for roles that public users are allowed to occupy.
+ */
+function healthy_get_allowed_roles() {
+	
+	// Start the output.  WIll hold role slugs.
+	$out = array();
+
+	// All the roles in our app.
+	$roles = healthy_get_roles();
+	
+	// For each role, see if it's public.
+	foreach( $roles as $r ) {
+
+		// If it's not public, bail.
+		if( ! isset( $r[ 'is_public' ] ) ) { continue; }
+		
+		// If we made it this far, ass the slug to the output.
+		$slug = $r[ 'slug' ];
+		$out []= $slug;
+	}
+
+	return $out;
+}
+
+/**
+ * There's no case in which an object ID should have special chars.  Sanitize them.
+ *
+ * @param string $object_id An object ID.
+ * @return string An object ID, sanitized.
+ */
+function healthy_sanitize_object_id( $object_id ) {
+	$object_id = sanitize_text_field( $object_id );
+	return $object_id;
+}
+
+/**
+ * Return the number of days complete in a week for a user.
+ * 
+ * @param  int $week_id Which week of our contest to check ( 1 - 6 )
+ * @param  int $user_id The user ID to check.
+ * @return int The number of days complete in a week for a user.
+ */
+function healthy_days_complete( $week_id, $user_id = ''  ) {
+	
+	// Which contest week.
+	$week_id = absint( $week_id );
+
+	// Convert the contest week to a query date( 'W' ) for querying.
+	$query_week = healthy_convert_contest_week_to_query_week( $week_id );
+
+	// $r is a query object.
+	$user_id = absint( $user_id );
+	if ( empty( $user_id ) ){
+		$user_id = healthy_get_active_user_id();
+	}
+
+	// Get posts for this user in this week.
+	$r = healthy_get_posts( $user_id, 7, false, false, false, $query_week );
+
+	// The posts for thsi week for this author.
+	$found_posts = $r -> found_posts;
+
+	// If there are no entries this week, bail.
+	if( empty( $found_posts ) ) { return 0; }
+
+	// The entries for this week.
+	$days = $r -> posts;
+
+	// Will hold a counter for how many days complete so far this week.
+	$out = 0;
+
+	// For each day...
+	foreach ( $days as $day ) {
+		
+		// if it's complete, increment the counter.
+		if ( healthy_is_day_complete( $day -> ID ) ) {
+			$out++;
+		}
+	}
+
+	return $out;
+
+}
+
+/**
  * Return the User ID for the active user -- that's the user on whose
  * behalf a teacher would choose to act.
  * 
@@ -340,15 +459,26 @@ function healthy_controller() {
  */
 function healthy_get_active_user_id() {
 
-	// If the user has switched users, grab the ID of the switced_to user.
-	if ( $active_user_id = healthy_has_switched_users() ) {
-		return $active_user_id;
+	// Our app-wide cookie key.
+	$cookie_key = healthy_switched_user_cookie_key();
 
-	// Else, return the current user.
-	} else {
-		return get_current_user_id();
-	}
+	// The state of having switched to a user is determined by this cookie.
+	if ( ! isset( $_COOKIE[ $cookie_key ] ) ) { return get_current_user_id(); }
 
+	// $active_user refers to the user whose been switched to, or, failiing that, the active user.
+	$active_user_id = absint( $_COOKIE[ $cookie_key ] );
+
+	return $active_user_id;
+
+}
+
+/**
+ * Return the key used for the switched_user cookie.
+ * 
+ * @return string The key used for the switched_user cookie
+ */
+function healthy_switched_user_cookie_key() {
+	return 'healthy_active_user';
 }
 
 /**
@@ -358,6 +488,9 @@ function healthy_get_active_user_id() {
  * @return string|boolean Returns the school name or false on failure.
  */
 function healthy_get_user_school( $user_id ) {
+
+	// If the user is a boss, allow all schools.
+	if( healthy_user_is_role( true, 'boss' ) ) { return 'all'; }
 
 	// Grab the current user.
 	$user_id = absint( $user_id );
@@ -377,8 +510,70 @@ function healthy_get_user_school( $user_id ) {
  * @return obj The object of the active user.
  */
 function healthy_get_active_user() {
-	return get_userdata( healthy_get_active_user_id() );
+
+	// Get the active user ID.
+	$healthy_get_active_user_id = healthy_get_active_user_id();
+
+	// Get the user object for that ID.
+	$userdata = get_userdata( $healthy_get_active_user_id );
+
+	return $userdata;
 }
+
+/**
+ * Returns the average for a stat in a given week.
+ * 
+ * @param  int $week_id The week of the contest to analyze.
+ * @param  string $slug The slug for the stat we're analyzing.
+ * @return string A number rounded to the nearest tenth, representing the average value.
+ */
+function healthy_get_weekly_average( $week_id, $slug, $user_id = false ) {
+	
+	// Start the output.
+	$out = '';
+
+	// Convert the contest week into a date( 'W' ).
+	$query_week = healthy_convert_contest_week_to_query_week( $week_id );
+
+	$user_id = absint( $user_id );
+	if( empty( $user_id ) ) { $user_id = false; }
+
+	// Get Posts from that week.
+	$r = healthy_get_posts( $user_id, 7, false, false, false, $query_week );
+
+	// The posts from that week.
+	$days = $r -> posts;
+
+	// Will hold the running tally for this stat in this week.
+	$weekly_total = 0;
+
+	// For each day...
+	foreach( $days as $day ) {
+
+		// Get the amount for that day
+		$daily_amount = get_post_meta( $day -> ID, $slug, TRUE );
+		$daily_amount = absint( $daily_amount );
+
+		// Add it to the output
+		$weekly_total = $weekly_total + $daily_amount;
+
+	}
+
+	// For past weeks, we divide by 7.
+	$divide_by = 7;
+
+	// For the current week, we divide by date( 'N' ).
+	$current_week = date( 'W' );
+	if( $current_week == $query_week ) {
+		$divide_by = date( 'N' );
+	}
+
+	// Round it to the nearest 10th.
+	$out = round( ( $weekly_total / $divide_by ), 1 );
+
+	return $out;
+}
+
 
 /**
  * Returns an array of schools for our app.
@@ -387,39 +582,24 @@ function healthy_get_active_user() {
  */
 function healthy_get_schools() {
 
-	// If we're on the front end either the user is a student or we're making a new user, just offer the school for the active user.
-	if ( ! is_admin() && ( healthy_user_is_role( true, 'student' ) || healthy_current_user_is_acting( 'create', 'user', 'new' ) ) ) {
-
-		$user_id = healthy_get_active_user_id();
-		$school  = healthy_get_user_school( $user_id );
-
-		$out = array(
-			array(
-				'slug' => sanitize_key( $school ),
-				'label' => ucwords( $school ),
-			),
-		);
-
-	// If we're in the back end, offer all the schools.
-	} else {
-
-		$out = array(
+	$out = array(
 			
-			// Each school gets a slug and a label.
-			array(
-				'slug'  => sanitize_key( 'begich' ),
-				'label' => 'Begich',
-			),
-			array(
-				'slug'  => sanitize_key( 'goldenview' ),
-				'label' => 'Goldenview',
-			),
-			array(
-				'slug'  => sanitize_key( 'hanshew' ),
-				'label' => 'Hanshew',
-			),
-		);
-	}
+		// Each school gets a slug and a label.
+		array(
+			'slug'  => sanitize_key( 'begich' ),
+			'label' => 'Begich',
+		),
+	
+		array(
+			'slug'  => sanitize_key( 'goldenview' ),
+			'label' => 'Goldenview',
+		),
+	
+		array(
+			'slug'  => sanitize_key( 'hanshew' ),
+			'label' => 'Hanshew',
+		),
+	);
 
 	return $out;
 
@@ -437,7 +617,7 @@ function healthy_profile_fields() {
 		// The user first name.
 		array(
 
-			// The human-readable label for our fiel.
+			// The human-readable label for our field.
 			'label' 	=> 'First Name',
 
 			// The slug, used as a meta key, so we might as well sanitize it.
@@ -454,6 +634,8 @@ function healthy_profile_fields() {
 
 			// Is this field required?
 			'required' 	=> 1,
+
+			'exportable' => 1,
 		),
 
 		array(
@@ -463,6 +645,7 @@ function healthy_profile_fields() {
 			'default' 	=> '',
 			'is_meta' 	=> 1,
 			'required' 	=> 1,
+			'exportable' => 1,
 		),
 
 		// Email is part of userdata, not usermeta.
@@ -473,6 +656,7 @@ function healthy_profile_fields() {
 			'default' 	=> '',
 			'is_meta' 	=> 0,
 			'required' 	=> 1,
+			'exportable' => 1,
 		),
 
 		/*
@@ -497,32 +681,40 @@ function healthy_profile_fields() {
 
 	);
 
+	// Grab the object id.
+	$object_id = '';
+	if( isset ( $_REQUEST['object_id'] ) ) {
+		$object_id = $_REQUEST['object_id'];
+	}
+
 	// If the user is a student, or if we are creating a new user, allow him to pick a school & grade.
-	if ( healthy_user_is_role( true, 'student' ) || healthy_current_user_is_acting( 'create', 'user', 'new' ) ) {
+	if ( healthy_user_is_role( true, 'student' ) || healthy_current_user_is_acting( 'create', 'user', 'new' ) || healthy_current_user_is_acting( 'review', 'report', $object_id ) ) {
 
 		// The school.
 		$school = array(
-			'label' 	=> 'School',
-			'slug' 		=> sanitize_key( 'school' ),
-			'type' 		=> 'school',
-			'default' 	=> '',
-			'is_meta' 	=> 1,
-			'required' 	=> 1,
+			'label' 				  => 'School',
+			'slug' 					  => sanitize_key( 'school' ),
+			'type' 					  => 'school',
+			'default' 				  => '',
+			'is_meta' 				  => 1,
+			'required' 				  => 1,
 			'is_hidden_from_teachers' => 1,
+			'exportable' 			  => 1,
 		);
 		array_push( $out, $school );
 
 		// The grade.
 		$grade = array(
-			'label' 	=> 'Grade',
-			'slug' 		=> sanitize_key( 'grade' ),
-			'type' 		=> 'range',
-			'min' 		=> '1',
-			'max' 		=> '12',
-			'default' 	=> '1',
-			'is_meta' 	=> 1,
-			'required' 	=> 1,
+			'label' 				  => 'Grade',
+			'slug' 					  => sanitize_key( 'grade' ),
+			'type' 					  => 'range',
+			'min' 					  => '1',
+			'max' 					  => '12',
+			'default' 				  => '1',
+			'is_meta' 				  => 1,
+			'required' 				  => 1,
 			'is_hidden_from_teachers' => 1,
+			'exportable' 			  => 1,
 		);
 		array_push( $out, $grade);
 
@@ -531,24 +723,30 @@ function healthy_profile_fields() {
 	return $out;
 }
 
+function healthy_get_first_weekday_of_week() {
+	return 'monday';
+}
+
 /**
- * Returns the date for monday of the current week.
+ * Returns the date for $first_day_of_week of the current week.
  *
- * @return string The date for monday of the current week.
+ * @return string The date for $first_day_of_week of the current week.
  */
-function healthy_get_monday() {
+function healthy_get_first_day_of_week() {
 	
 	// The epoch time for tomorrow.
 	$tomorrow = strtotime('tomorrow');
 	
-	// Whichever monday comes before tomorrow.
-	$the_monday_before_tomorrow = strtotime('last monday', $tomorrow );
+	$first_day_of_week = healthy_get_first_weekday_of_week();
+
+	// Whichever $first_day_of_week comes before tomorrow.
+	$the_first_day_of_week_before_tomorrow = strtotime("last $first_day_of_week", $tomorrow );
 	
-	// Format monday for display in our application.
-	$monday = date( 'l, F d, Y', $the_monday_before_tomorrow );
+	// Format $first_day_of_week for display in our application.
+	$first_day_of_week = date( 'l, F d, Y', $the_first_day_of_week_before_tomorrow );
 	
-	//$monday = date( 'l, F d, Y', strtotime('monday') );
-	return $monday;
+	//$$first_day_of_week = date( 'l, F d, Y', strtotime('$first_day_of_week') );
+	return $first_day_of_week;
 }
 
 /**
@@ -561,8 +759,7 @@ function healthy_get_monday() {
  */
 function healthy_get_the_title_and_content( $title, $content, $subtitle = '' ) {
 	
-	// Remind the user that they have switched.
-	$out = healthy_get_switched_warning();
+	$out = '';
 
 	// The title for our page.
 	$title = "<h1>$title</h1>";
@@ -578,8 +775,11 @@ function healthy_get_the_title_and_content( $title, $content, $subtitle = '' ) {
 	// The content for our page.
 	$content = "<section class='entry-content editable-content content-holder'>$content</section>";
 
+	// Warn the user if they have switched.
+	$warning = healthy_the_switched_warning();
+
 	// Complete the output.
-	$out .= $header.$content;
+	$out .= $warning.$header.$content;
 
 	return $out;
 }
@@ -616,9 +816,10 @@ function healthy_get_post_date_by_id( $post_id ) {
  * @param  string $object_type The type of object on which we'll act (user, post, week).
  * @param  string $action The agtion we'll perform (create, edit, delete, review).
  * @param  int $object_id  The ID upon which we'll act.
+ * @param  string $unit_time The unit of time by which we'll query.
  * @return string A url query string for our application.
  */
-function healthy_controller_query_string( $object_type, $action, $object_id ) {
+function healthy_controller_query_string( $object_type, $action, $object_id, $unit_time = '' ) {
 
 	// User, post, week.
 	$object_type = urlencode( $object_type );
@@ -629,9 +830,17 @@ function healthy_controller_query_string( $object_type, $action, $object_id ) {
 	// User id, post id, contest week #.
 	$object_id = urlencode( $object_id );
 
+	// User id, post id, contest week #.
+	$unit_time = urlencode( $unit_time );
+
 	// Output.
 	$out = "?object_type=$object_type&action=$action&object_id=$object_id";
 
+	// Unit time is an optional param.
+	if( ! empty( $unit_time ) ) {
+		$out .= "&unit_time=$unit_time";
+	} 
+	
 	return $out;
 }
 
@@ -761,7 +970,7 @@ EOT;
  * @param  int $week  The date( 'W' ).
  * @return boolean|object Returns a wp_query object or false on failure.
  */
-function healthy_get_posts( $user_id = false, $posts_per_page = false, $year = false, $month = false, $day = false, $week = false ) {
+function healthy_get_posts( $user_id = false, $posts_per_page = false, $year = false, $month = false, $day = false, $week = false, $dayofweek = false ) {
 
 	// For what user are we querying?
 	$user_id = absint( $user_id );
@@ -786,7 +995,7 @@ function healthy_get_posts( $user_id = false, $posts_per_page = false, $year = f
 		$date_query['month']=$month;
 	}
 
-	// What date?
+	// What date ( 1-31 )?
 	$day = absint( $day );
 	if( ! empty ( $day ) ) {
 		$date_query['day']=$day;
@@ -798,11 +1007,17 @@ function healthy_get_posts( $user_id = false, $posts_per_page = false, $year = f
 		$date_query['week']=$week;
 	}
 
+	// What dayofweek (1-7)?
+	$dayofweek = absint( $dayofweek );
+	if( !empty ( $dayofweek ) ) {
+		$date_query['dayofweek']=$dayofweek;
+	}
+
 	// Build the args.
 	$args = array(
 		'post_type' 	 => 'healthy_day',
 		'post_status' 	 => array( 'any' ),
-		'author' 	 => $user_id,
+		'author' 	     => $user_id,
 		'posts_per_page' => $posts_per_page,
 		'date_query' 	 => $date_query,
 		
@@ -812,6 +1027,73 @@ function healthy_get_posts( $user_id = false, $posts_per_page = false, $year = f
 	$query = new WP_Query( $args );
 	
 	return $query;
+}
+
+/**
+ * Get the total minutes of exercise for a user for a week.
+ * 
+ * @param  int $user_id The User id.
+ * @param  int $week_id The week id.
+ * @return int          The total minutes of exercise for this week.
+ */
+function healthy_get_total_exercise_for_week( $user_id, $week_id ) {
+
+	// The user id.
+	$user_id = absint( $user_id );
+	if( empty( $user_id ) ) { return false; }
+
+	// The week id.
+	$week_id = absint( $week_id );
+	if( empty( $week_id ) ) { return false; }
+
+	// Convert the contest week into a date( 'W' ).
+	$query_week = healthy_convert_contest_week_to_query_week( $week_id );
+
+	// Get Posts from that week.
+	$r = healthy_get_posts( $user_id, 7, false, false, false, $query_week );
+
+	// The posts from that week.
+	$days = $r -> posts;
+
+	// Will hold the running tally for this stat in this week.
+	$weekly_total = 0;
+
+	// App wide definition of a day.
+	$healthy_day = healthy_day();
+
+	// The fields that compose a day.
+	$fields = $healthy_day[ 'components' ];
+
+	// Will hold the minutes of exercise.
+	$out = 0;
+
+	// For each day...
+	foreach( $days as $day ) {
+
+		// Will hold the minutes of exercise for this day.
+		$exercise_for_this_day = 0;
+
+		// For each field...
+		foreach( $fields as $f ) {
+			
+			// If it's not exercise, skip it.
+			if ( ! isset( $f[ 'is_exercise' ] ) ) { continue; }
+		
+			$slug = $f[ 'slug' ];
+
+			$this_exercise = get_post_meta( $day -> ID, $slug, TRUE );
+			$this_exercise = absint( $this_exercise );
+			$exercise_for_this_day = ( $this_exercise + $exercise_for_this_day ); 
+
+		}
+
+		// Add it to the output
+		$out = $out + $exercise_for_this_day;
+
+	}
+
+	return $out;
+
 }
 
 /**
@@ -859,7 +1141,16 @@ function healthy_day() {
 				'min' 		=> 0,
 				'max' 		=> 480,
 				'default' 	=> 0,
+
+				// We'll flag things as exercise for computing the total minutes of exercise.
+				'is_exercise' => 1,
 				'step'		=> 5,
+
+				// Does this field get rolled into the daily total for exercise time?
+				'is_exercise' => 1,
+
+				// Do we incude this field in the weekly average report?
+				'is_weekly_metric' => 1,
 			),
 
 			// A range input for exercise.
@@ -871,6 +1162,8 @@ function healthy_day() {
 				'max' 		=> 480,
 				'default' 	=> 0,
 				'step'		=> 5,
+				'is_exercise' => 1,
+				'is_weekly_metric' => 1,
 			),
 
 			// A range input for exercise.
@@ -882,6 +1175,8 @@ function healthy_day() {
 				'max' 		=> 480,
 				'default' 	=> 0,
 				'step'		=> 5,
+				'is_exercise' => 1,
+				'is_weekly_metric' => 1,
 			),
 
 			// A range input for drinks.
@@ -892,6 +1187,7 @@ function healthy_day() {
 				'min' 		=> 0,
 				'max' 		=> 24,
 				'default' 	=> 0,
+				'is_weekly_metric' => 1,
 			),
 			/*array(
 				'label' 	=> esc_html__( 'I declare, this is the truth.', 'healthy' ),

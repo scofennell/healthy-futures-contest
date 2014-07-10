@@ -19,8 +19,6 @@
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
 	<meta name="viewport" content="width=device-width">
 	<title><?php wp_title( '|', true, 'right' ); ?></title>
-	<link rel="profile" href="http://gmpg.org/xfn/11">
-	<link rel="pingback" href="<?php bloginfo( 'pingback_url' ); ?>">
 	
 	<?php
 		//if it's less than html9, get the html5 shiv & print shiv
@@ -49,7 +47,7 @@
 				</h1>
 
 				<?php
-					echo healthy_nav_menu( $healthy_post_author_id );
+					echo healthy_nav_menu();
 				?>
 
 			</div>

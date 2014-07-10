@@ -8,6 +8,90 @@
  */
 
 /**
+ * Returns a definition list of average stats for the week.
+ *
+ * @param  int $week_id From what contest week are we grabbing?
+ * @return  string An HTML definitition list of data for the week.
+ */
+function healthy_get_weekly_averages( $week_id ) {
+
+	// Our plugin-wide definition of a day.
+	$day = healthy_day();
+
+	$week_id = absint( $week_id );
+
+	// Meta fields for a day.
+	$components = $day['components'];
+
+	// This will hold meta keys that relate to exercise time.
+	$keys = array();
+
+	// Start the output.
+	$out = "";
+
+	// For each meta key that relates to exercise...
+	foreach( $components as $c ) {
+
+		// If this isn't measured weekly, skip it.
+		if ( ! isset( $c[ 'is_weekly_metric' ] ) ) { continue; }
+		
+		// Will be used as a key to get the weekly average
+		$slug = $c[ 'slug' ];
+
+		// The label for this component.
+		$label = esc_html( $c[ 'label' ] );
+
+		// The weekly average for this component.
+		$value = healthy_get_weekly_average( $week_id, $slug );
+
+		// The week_id for last week.
+		$last_week = $week_id - 1;
+
+		// This will hold the result of comparing this week to last week for this stat.
+		$compare ='';
+
+		// If there was a last week...
+		if ( ! empty ( $last_week ) ) {
+
+			// Get the value from last week.
+			$last_week_value = healthy_get_weekly_average( $last_week, $slug );
+			
+			// Compare last week to this week.
+			$difference = $value - $last_week_value;
+			
+			// Make it absolute.
+			$difference = str_replace( '-', '', $difference );
+			
+			// Output a string based on the result of the comparison.  More than the week before:
+			if ( $value > $last_week_value ) {
+				$compare = sprintf( esc_html__( " &mdash; That's %s more than the week before.", 'healthy' ), $difference );
+			
+			// Less than the week before.
+			} elseif ( $value < $last_week_value ) {
+				$compare = sprintf( esc_html__( " &mdash; That's %s less than the week before.", 'healthy' ), $difference );	
+			
+			// The same as the week before.
+			} elseif ( $value == $last_week_value ) {
+				esc_html__( "That\'s the same as last week.", 'healthy' );
+			}
+		}
+
+		// Translate 'per day'.
+		$per_day = esc_html( 'Per Day', 'healthy' );
+
+		// Add this stat to the output.
+		$out .= "<dt>$label $per_day </dt><dd>$value $compare</dd>";
+
+	}
+
+	// Complete the output.
+	$out = "<dl>$out</dl>";
+
+	return $out;
+
+}
+
+/**
  * Returns an HTML form to confirm that the user wants to delete a post.
  *
  * @param  int $deleting The ID of the post to delete
@@ -47,13 +131,13 @@ function healthy_delete_confirm( $deleting ) {
 	$no = "<a href='$back_url'>$cancel_text</a>";
 
 	// A hidden field to carry the post ID to delete to the handler script.
-	$object_id = "<input type='hidden' name='object_id' value='$deleting' >";
+	$object_id = "<input type='hidden' name='object_id' value='$deleting'>";
 
 	// A hidden field to carry the post ID to delete to the handler script.
-	$object_type = "<input type='hidden' name='object_type' value='post' >";
+	$object_type = "<input type='hidden' name='object_type' value='post'>";
 
 	// A hidden field to carry the post ID to delete to the handler script.
-	$action = "<input type='hidden' name='action' value='delete' >";
+	$action = "<input type='hidden' name='action' value='delete'>";
 
 	// A submit button for out form.
 	$submit = "<input type='submit' name='post_a_day_delete' value='$delete_text'>";
@@ -84,11 +168,17 @@ function healthy_post_a_day_form( $editing = false ) {
 	// Only logged in users can use this.
 	if ( ! is_user_logged_in() ) { return false; }
 
+	// Start the output var.
+	$out = '';
+
 	// The base url off of which we'll build various links and for actions.
 	$base_url = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
 
 	// The author to whom we'll attribute this post.
 	$post_author_id = healthy_get_active_user_id();
+
+	// Will get pre filled if we are editing.
+	$post_date_to_edit = '';
 
 	// If we're editing, do some checks and set some values
 	if ( $editing ) {
@@ -188,10 +278,9 @@ function healthy_post_a_day_form( $editing = false ) {
 		}
 
 		// Draw the input.
-		$input = "<input name='$slug' class='$type' $min $max $step type='$type' id='$slug' value='$default'>";
-		
-		// If it's a date, drawing the input is a little more complicated.
-		if( $type == 'date' ) {
+		if( $type == 'range' ) {
+			$input = "<input name='$slug' class='$type' $min $max $step type='$type' id='$slug' value='$default'>";
+		} elseif ( $type == 'date' ) {
 			
 			// determine the post author, as different dates will be avaiulable for different authors.
 			$post_author_id = absint( $post_author_id );
@@ -205,6 +294,8 @@ function healthy_post_a_day_form( $editing = false ) {
 				$week_is_full = true;
 			}
 
+		} else {
+			$input = "<input name='$slug' class='$type' type='$type' id='$slug' value='$default'>";
 		}
 
 		// if the week is full, don't throw a date input
@@ -307,9 +398,8 @@ function healthy_days_of_week_select( $post_author_id, $post_date_to_edit = '' )
 	$options ="";
 
 	// Get the time in seconds for the first day of the week.
-	$monday = healthy_get_monday();
-	$monday_in_days = date( 'z' );
-
+	$first_day_of_week = healthy_get_first_day_of_week();
+	
 	// The current day.
 	$current_day_in_days = date( 'z', strtotime( 'today' ) );
 	$current_day_in_text = date( 'l, F d, Y', strtotime( 'today' )  );
@@ -322,7 +412,7 @@ function healthy_days_of_week_select( $post_author_id, $post_date_to_edit = '' )
 	while( $i < 7 ) {
 				
 		// Grab the text value for easier comparision to the current day
-		$next_day_in_text = date( 'l, F d, Y', strtotime( "$monday + $i days" ) ); 
+		$next_day_in_text = date( 'l, F d, Y', strtotime( "$first_day_of_week + $i days" ) ); 
 
 		// Jan 1 = 0, dec 31 = 364.
 		$next_day_in_days = date( 'z', strtotime( $next_day_in_text ) );
@@ -346,9 +436,9 @@ function healthy_days_of_week_select( $post_author_id, $post_date_to_edit = '' )
 		if( $next_day_in_days > ( $current_day_in_days ) ) {
 			$i++;
 			break;
-			continue;
 		}
 
+		// Increment to the next day of the week.
 		$i++;
 
 		// Add this day the output.
@@ -398,7 +488,7 @@ function healthy_choose_day_from_week( $week ) {
 	if( empty( $found_posts ) ) {
 		
 		// Tell the user there are no posts this week.
-		$no_entries = sprintf( esc_html__( 'No entries for week %s', 'healthy' ), $week );
+		$no_entries = sprintf( esc_html__( 'No entries for week %s.', 'healthy' ), $week );
 
 		// Holder var to build a link prompting the user to add some posts for this week.
 		$prompt = '';
@@ -412,7 +502,7 @@ function healthy_choose_day_from_week( $week ) {
 		}
 
 		// Return text to instruct the user on the status of this week.
-		return $no_entries.$prompt;
+		return $no_entries.' '.$prompt;
 	}
 
 	// The posts tht we found.
@@ -420,6 +510,9 @@ function healthy_choose_day_from_week( $week ) {
 
 	// Will hold links for each post.
 	$days = '';
+
+	// We'll increment this to make sure we don't loop past the current day.
+	$i = 0;
 
 	// Foreach post
 	foreach( $posts as $p ) {
@@ -459,8 +552,15 @@ function healthy_choose_day_from_week( $week ) {
 			$delete_link = "<a class='deemphasize' href='$delete_href'>$delete_text</a>";
 		}
 
+		// If the day is/not complete, offer a message to describe the day.
+		if ( healthy_is_day_complete( $post_id ) ) {
+			$status = esc_html__( 'Complete!', 'healthy' );
+		} else {
+			$status = esc_html__( 'Not quite enough exercise this day.', 'healthy' );
+		}
+
 		// Output the text for this day.
-		$days.="<li><a href='$href'>$date</a> $delete_link</li>";
+		$days.="<li><a href='$href'>$date</a> &mdash; <em>$status</em> $delete_link</li>";
 		
 		// Increment the day for this week.
 		$i++;
@@ -485,6 +585,9 @@ function healthy_choose_day_from_week( $week ) {
  */
 function healthy_week_by_week(){
 
+	// Start our output variable.
+	$out = '';
+
 	// The base url off of which we'll build links.
 	$base_url = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
 
@@ -505,7 +608,6 @@ function healthy_week_by_week(){
 	
 	// Increment through the weeks of the competition.
 	while( $week <= $final_week ) {
-
 
 		// Increment the values for $i and $week.
 		$i++;
@@ -557,12 +659,30 @@ function healthy_week_by_week(){
 			continue;
 		}
 
+		// Is the week complete?
+		if( healthy_is_week_complete( $i ) ) {
+			$complete = sprintf( esc_html( 'Nice! This week is complete.', 'healthy' ), $i );
+		} else {
+			$complete = sprintf( esc_html( 'Rest week, eh?', 'healthy' ), $i );
+		}
+
 		// Translate.
 		$week_string = sprintf( __( 'Week %d:', 'healthy' ), $i );
-		$you_entered = sprintf( _n( 'You entered %d day.', 'You entered %d days.', 'healthy' ), $number_of_days_entered );
-		
+		$week_string = "<span class='week-label'>$week_string</span>";
+
+		// Add a label for the week, tensed for past/present. 
+		if ( $current_week == $week ) {
+			$you_entered = sprintf( _n( "You&#8217;ve entered %d day so far.", "You&#8217;ve entered %d days so far.", $number_of_days_entered, 'healthy' ), $number_of_days_entered );
+		} else {
+			$you_entered = sprintf( _n( "You&#8217;ve entered %d day.", "You&#8217;ve entered %d days.", $number_of_days_entered, 'healthy' ), $number_of_days_entered );		
+		}
+		$you_entered = "<p>$you_entered $complete $maybe_edit_or_create_or_review</p>";
+
+		// Get the average values for this week.
+		$averages = healthy_get_weekly_averages( $i );
+
 		// Add this week to the output.
-		$out .= "<li>$week_string $you_entered $maybe_edit_or_create_or_review</li>";
+		$out .= "<li>$week_string $you_entered $averages</li>";
 
 	}
 
@@ -624,8 +744,10 @@ function healthy_review_a_post( $post_id ) {
 
 	}
 
+	// If there is not post data, bail.
 	if( empty( $out ) ) { return false; }
 
+	// Wrap the output as a dl.
 	$out = "$title<dl>$out</dl>";
 
 	return $out;

@@ -253,7 +253,7 @@ samp {
 }
 
 /* Forms */
-
+label,
 [type="range"] { cursor: pointer; }
 
 /**
@@ -398,13 +398,13 @@ optgroup {
 
 /*Forms*/
 select,
-input[type="search"],
-input[type="url"],
-input[type="tel"],
-input[type="text"],
-input[type="email"],
-input[type="date"],
-input[type="password"],
+[type="search"],
+[type="url"],
+[type="tel"],
+[type="text"],
+[type="email"],
+[type="date"],
+[type="password"],
 textarea {
 	border-radius: $small_border_radius;
 	padding: $small_padding;

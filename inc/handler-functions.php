@@ -63,12 +63,15 @@ function healthy_process_switch_to_user_form() {
 	// If the current user does not own the user we're switching to, bail.
 	if ( ! healthy_does_user_own_user( get_current_user_id(), $object_id ) ) { return false; }
 
+	// Grab the app-wide value for our cookie key so we don't have to keep repeating it.
+	$cookie_key = healthy_switched_user_cookie_key();
+
 	// If the user is switching back to himself, delete the cookie, redir, and bail.
 	if ( get_current_user_id() == $object_id ) {
 		
 		// Delete the cookie if it exists.
-		if ( isset( $_COOKIE[ 'healthy_active_user' ] ) ) {
-			setcookie( 'healthy_active_user', get_current_user_id(), time() - 3600, COOKIEPATH, COOKIE_DOMAIN );
+		if ( isset( $_COOKIE[ $cookie_key ] ) ) {
+			setcookie( $cookie_key, get_current_user_id(), time() - 3600, COOKIEPATH, COOKIE_DOMAIN );
 		}
 
 		// Redir so as to get a fresh page updated with menu items and such that reflect the active user.
@@ -79,7 +82,7 @@ function healthy_process_switch_to_user_form() {
 	} else {
 
 		// Set the switch cookie.
-		setcookie( 'healthy_active_user', $object_id, time() + 3600, COOKIEPATH, COOKIE_DOMAIN );
+		setcookie( $cookie_key, $object_id, time() + 3600, COOKIEPATH, COOKIE_DOMAIN );
 		
 		// Redir so as to get a fresh page updated with menu items and such that reflect the active user.
 		wp_safe_redirect( esc_url( get_bloginfo( 'url' ) ) );
@@ -128,9 +131,9 @@ function healthy_process_profile_form() {
 	// Grab the active user ID.
 	$active_user_id = healthy_get_active_user_id();
 	if ( empty( $active_user_id ) ) { return false; }
-	
-	// The email submnitted in the form.
-	$user_email = $_POST['user_email'];
+
+	// The email submitted in the form.
+	$user_email = $_POST[ 'user_email' ];
 
 	// Sanitize the email address.
 	$san_email = sanitize_email( $user_email );
@@ -178,9 +181,24 @@ function healthy_process_profile_form() {
 	// Start populating the user data.
 	$userdata[ 'user_email' ] = $user_email;
 
-	// If we're editing, we have to specify a user ID.
+	// The role submitted in the form.
+	if( isset( $_POST[ 'role' ] ) ) {
+		$role = $_POST[ 'role' ];
+
+		// The roles that users are allowed to occupy in our app.
+		$allowed_roles = healthy_get_allowed_roles();
+
+		// If it's not an allowed role, die.
+		if( ! in_array( $role, $allowed_roles ) ) { wp_die( 'There has been a problem. 136' ); }
+		
+		// If we made it this far, assign the role.
+		$userdata[ 'role' ] = $role;
+	}
+
+	// If we're editing...
 	if( $editing ) {
 
+		// ... we have to specify a user ID.
 		$userdata[ 'ID' ] = $user_to_edit_id;
 
 		// wp_update_user returns The ID of the user we just edited.
@@ -194,11 +212,11 @@ function healthy_process_profile_form() {
 		$user_pass = $_POST['password'];
 		$user_pass_confirm = $_POST['password_confirm'];
 		if ( $user_pass != $user_pass_confirm ) { wp_die( "The passwords did not match, please try again." ); }
-		
-		// Set the user PW.
-		$userdata[ 'user_pass' ] = $user_pass; // A string that contains the plain text password for the user. 
 		*/
-	
+		
+		// Set the user PW.  Null means wp will assign a random one.
+		$userdata[ 'user_pass' ] = null; // A string that contains the plain text password for the user. 
+		
 		// Convert the user email into the user name.
 		$user_login = sanitize_user( $user_email );
 
@@ -209,7 +227,7 @@ function healthy_process_profile_form() {
 		// Set the display name to something remotely recognizable.
 		$first_name = sanitize_text_field( $_POST['first_name'] );
 		$last_name = sanitize_text_field( $_POST['last_name'] );
-		$userdata[ 'display_name' ] = $first_name.' '.$last_name; 
+		$userdata[ 'display_name' ] = $first_name.' '.$last_name;
 
 		// Returns the ID of the newly created user.
 		$affected = wp_insert_user( $userdata ) ;
@@ -313,8 +331,6 @@ function healthy_process_post_a_day_form() {
 	// Make-sure-we're-in-the-right-place check.
 	if( ! isset( $_POST[ 'post_a_day_submit' ] ) ) { return false; }
 	
-	// Are we editing?
-	
 	// On what post are we acting?
 	if( ! isset( $_POST['object_id'] ) ) { wp_die( 'There has been an error. 407' ); }
 	$post_id_to_act_upon = $_POST['object_id'];
@@ -344,7 +360,11 @@ function healthy_process_post_a_day_form() {
 
 	// The post author is the student who created the post.
 	$post_author_id = absint( healthy_get_active_user_id() );
+
+	// If there is no author ID, something is wrong, bail.
 	if ( empty( $post_author_id ) ) { wp_die( 'There has been a problem. 586' ); }
+
+	// Get the user for this ID.
 	$post_author_obj = get_userdata( $post_author_id );
 
 	// Grab user and post data to build the post title, to make for easier searching.
@@ -359,7 +379,7 @@ function healthy_process_post_a_day_form() {
     $week = date( 'W', $date_stamp );
 
     // Build our search-friendly post title.
-	$title = " author first name: $post_author_first_name | author last name: $post_author_last_name | author ID: $post_author | author email: $post_author_email | week $week | $date_string ";
+	$title = " author first name: $post_author_first_name | author last name: $post_author_last_name | author ID: $post_author_id | author email: $post_author_email | week $week | $date_string ";
 	
 	// The post slug
 	$name = sanitize_html_class( $title );

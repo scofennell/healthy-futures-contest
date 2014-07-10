@@ -3,7 +3,7 @@
 /**
  * healthy template tags.
  *
- * Tags to draw UI elements.
+ * Tags to draw UI elements for the front end.
  *
  * @package WordPress
  * @subpackage healthy
@@ -11,7 +11,9 @@
  */
 
 /**
- * Return the fist name for the active user.
+ * Return the first name for the active user.
+ *
+ * @return The first name for the active user.
  */
 function healthy_active_user_first_name() {
 
@@ -25,7 +27,6 @@ function healthy_active_user_first_name() {
 	$out = esc_html( $first_name );
 
 	return $out;
-
 }
 
 /**
@@ -37,38 +38,82 @@ function healthy_create_user_link() {
 
 	// Only logged-in users would need this.
 	if ( ! is_user_logged_in () ) { return false; }
-	
+
 	// Only profile complete users can do this.
 	if ( ! healthy_is_profile_complete() ) { return false; }
 
-	// Only teachers can do this.
-	if ( ! healthy_user_is_role( true, 'teacher' ) ) { return false; }
+	// Only priveleged users can do this.
+	if ( ! healthy_user_is_role( true, 'teacher' ) && ! healthy_user_is_role( true, 'boss' ) ) { return false; }
 
-	//The base url for our link.
+	// The base url for our link.
 	$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
 
-	// The query for making a new post.
+	// The query for making a new user.
 	$query = healthy_controller_query_string( 'user', 'create', 'new' );
 
-	// The url to the post-a-day view.
+	// The url to the make-a-user view.
 	$url = esc_url( $base.$query );
 	
 	// The link text.
-	$create = esc_html__( 'Create a User', 'healthy' );
+	$create = esc_html__( 'Enroll a User', 'healthy' );
 
-	// The outpsut.
+	// The output.
 	$out = "<a href='$url'>$create</a>";
 
 	return $out;
-
 }
 
 /**
- * Returns a link prompting the user to post information, if applicaple.
+ * Returns a link to allow a teacher to view reports for her school.
  *
- * @param  int $post_author_id The ID of the author we're prompting.
+ * @return string A link to allow a teacher to view reports for her school.
+ */
+function healthy_review_reports_link() {
+	
+	// If the user is a boss, he can see reports from all schools.
+	if( healthy_user_is_role( true, 'boss' ) ) {
+
+		// The label for bosses.
+		$report_label = esc_html__( 'View Reports', 'healthy' );
+		
+		// Which school to offer.
+		$school = 'all';
+
+	// If the suer is a teacher, show a link for his school.
+	} elseif( healthy_user_is_role( true, 'teacher' ) ) {
+		
+		// Get the school for the user.
+		$school = healthy_get_user_school( get_current_user_id() );
+		
+		// Convert the school into a label.
+		$school_label = ucwords( $school );
+		$school_label = str_replace( '_', ' ', $school_label );
+
+		// The label for teachers.
+		$report_label = sprintf( esc_html__( 'View Reports from %s', 'healthy' ), $school_label );
+	}
+
+
+	// The base for our link.
+	$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
+
+	// The query string for getting to the reports screen.
+	$query = healthy_controller_query_string( 'report', 'review', $school );
+
+	// The href for our link.
+	$report_href = esc_url( $base.$query );
+
+	// Output the link.
+	$out = "<a href='$report_href'>$report_label</a>";
+
+	return $out;
+}
+
+/**
+ * Returns a link prompting the user to post information, if applicable.
+ *
  * @param  int $week The current week.
- * @return string An html link to the create-post form.
+ * @return bool|string An html link to the create-post form, or false if no slots available for new posts.
  */
 function healthy_enter_day_link( $week ) {
 	
@@ -87,12 +132,18 @@ function healthy_enter_day_link( $week ) {
 	// The url to the post-a-day view.
 	$url = esc_url( $base.$query );
 	
-	// The link text.
+	// The link text.  If it's a teacher who is acting on behalf of a student:
 	if ( healthy_has_switched_users() ) {
+		
+		// Grab the name of the student being acted upon.
 		$active_user_display_name = healthy_get_active_user() -> display_name;
+		
+		// The label for acting on a student.
 		$record = sprintf( esc_html__( 'Record a Day for %s', 'healthy' ), $active_user_display_name );	
+	
+	// The link text for when the active user is not switched.
 	} else {
-		$record = esc_html__( 'Record My Day', 'healthy' );
+		$record = esc_html__( 'Record my Day', 'healthy' );
 	}
 
 	// The output.
@@ -102,7 +153,7 @@ function healthy_enter_day_link( $week ) {
 }
 
 /**
- * Sniffs to see if user is logged in, is fo, gives a link to edit profile.
+ * Sniffs to see if user is logged in, if so, gives a link to edit profile.
  * 
  * @return string A url to the new post form.
  */
@@ -112,12 +163,18 @@ function healthy_edit_profile_link() {
 	if ( ! is_user_logged_in () ) { return false; }
 	
 	// Our base url.
-	$home = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
+	$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
 
-	// Translate.
+	// The link text for editing a profile.  If the user is acting on behalf of a student:
 	if ( healthy_has_switched_users() ) {
+
+		// Grab the name of the student being acted upon.
 		$active_user_display_name = healthy_get_active_user() -> display_name;
+		
+		// Link text for editing a students profile.
 		$edit = sprintf( esc_html__( "Edit %s's Profile", 'healthy' ), $active_user_display_name );	
+	
+	// Else, text to edit one's own profile.
 	} else {
 		$edit = esc_html__( 'Edit Profile', 'healthy' );
 	}
@@ -127,9 +184,12 @@ function healthy_edit_profile_link() {
 
 	// A query to navigate to the edit profile page.
 	$query = healthy_controller_query_string( 'user', 'edit', $user_id );
-	
+
+	// The href for editing a profile.	
+	$href = esc_url( $base.$query );
+
 	// Complete the output.
-	$out = "<a href='$home$query'>$edit</a>";
+	$out = "<a href='$href'>$edit</a>";
 	return $out;
 }
 
@@ -140,25 +200,38 @@ function healthy_edit_profile_link() {
  */
 function healthy_my_weeks_select() {
 
-	// Translate.
+	// If the user is acting on behalf of another user:
 	if ( healthy_has_switched_users() ) {
+		
+		// Grab the first name of the user being acted upon.
 		$active_user_display_name = healthy_get_active_user() -> display_name;
-		$browse = sprintf( esc_html__( 'Browse data for %s', 'healthy' ), $active_user_display_name );	
+		
+		// Text prompting the user to browse data for another user.
+		$browse = sprintf( esc_html__( 'Browse Data for %s', 'healthy' ), $active_user_display_name );	
+	
+	// Else, text prompting the user to browse his own data.
 	} else {
-		$browse = esc_html__( 'Browse my data&hellip;', 'healthy' );
+		$browse = esc_html__( 'Browse my Data', 'healthy' );
 	}
 
 	// Our base url.
-	$home = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
+	$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
 
 	// The default, empty option.
 	$options="<option>$browse</option>";
 
-	// We will incement this number.
+	// We will increment this number for each week of the contest.
 	$week = 1;
 
-	// watch out for teacher mode here, teachers want to be able to edit stuff from any week
+	// Grab the current week so we don't prompt the user to browse future weeks.
 	$current_week_of_contest = healthy_current_week_of_contest();
+
+	// If the user has switched users...
+	if ( healthy_has_switched_users() ) {
+
+		// Grab the name of the active user.
+		$active_user_display_name = healthy_get_active_user() -> display_name;	
+	}
 
 	// For each week in the contest...
 	while ( $week <= ( $current_week_of_contest ) ) {
@@ -167,35 +240,42 @@ function healthy_my_weeks_select() {
 		$query = healthy_controller_query_string( 'week', 'review', $week );
 	
 		// The url to which we'll navigate.
-		$value = esc_url( $home.$query );
+		$value = esc_url( $base.$query );
 	
-		// Add this option to the output.
+		// If the user has switched users...
 		if ( healthy_has_switched_users() ) {
-			$active_user_display_name = healthy_get_active_user() -> display_name;
-			$week_label = sprintf( esc_html__( "See %s's data from week %d", 'healthy' ), $active_user_display_name, $week );
+
+			// Draw a label to browse the week for that user.
+			$week_label = sprintf( esc_html__( "See %s&#8217;s data from week %d", 'healthy' ), $active_user_display_name, $week );
+		
+		// Otherwise, speak in the first person.
 		} else {
 			$week_label = sprintf( esc_html__( 'See my data from week %d', 'healthy' ), $week );	
 		}
 
+		// Add this option to the output.
 		$options .= "<option value = '$value'>$week_label</option>";
 		
 		// Increment the value for week.
 		$week++;
 	}
 
-	// Translate.
+	// If the user has switched users...
 	if ( healthy_has_switched_users() ) {
-		$active_user_display_name = healthy_get_active_user() -> display_name;
+		
+		// Prompt the user to browse week-by-week for that user.
 		$week_by_week = sprintf( esc_html( 'Week by Week data for %s', 'healthy' ), $active_user_display_name );
+	
+	// Else, speak in the first person.
 	} else {	
-		$week_by_week = esc_html__( 'Week by Week', 'healthy' );
+		$week_by_week = esc_html__( 'Week by week', 'healthy' );
 	}
 
 	// Query to view all weeks.
 	$query = healthy_controller_query_string( 'week', 'review', 'all' );
 
 	// A Url to view all weeks.
-	$value = $home.$query;
+	$value = esc_url( $base.$query );
 
 	// Add the all weeks option.
 	$options .= "<option value='$value'>$week_by_week</option>";
@@ -209,10 +289,9 @@ function healthy_my_weeks_select() {
 /**
  * Returns a nav menu for our app.
  * 
- * @param  int $post_author_id The ID of the user to whom these links apply.
  * @return string An HTML nave menu.
  */
-function healthy_nav_menu( $post_author_id ) {
+function healthy_nav_menu() {
 
 	// A loginout link.
 	$loginout = healthy_login_link();
@@ -220,9 +299,10 @@ function healthy_nav_menu( $post_author_id ) {
 	// We'll add items to this array, conditionally.
 	$menu_items = array( $loginout );
 
-	// watch out for teacher mode here -- teachers want to be able to edit stuff for any date
+	// Grab the current week so we can see if it's full.
 	$week = date( 'W' );
 
+	// Some items only make sense for logged in users.
 	if( is_user_logged_in() ) {
 
 		// Logged in users can edit their profile.
@@ -230,7 +310,7 @@ function healthy_nav_menu( $post_author_id ) {
 
 		// If the user is able, give links to create and browse data.
 		if( healthy_is_profile_complete() && healthy_user_is_role( true, 'student' ) ) {
-	
+
 			// Browse by week
 			$my_weeks = healthy_my_weeks_select();
 			$menu_items []= $my_weeks;
@@ -241,9 +321,8 @@ function healthy_nav_menu( $post_author_id ) {
 
 		}
 
-		// Teachers can create new users.
-		if( healthy_user_is_role( true, 'teacher' ) ) {
-
+		// Teachers can create new users and browse reports.
+		if( healthy_user_is_role( true, 'teacher' ) || healthy_user_is_role( true, 'boss' ) ) {
 
 			// Create a new user.
 			$create_user = healthy_create_user_link();
@@ -253,27 +332,31 @@ function healthy_nav_menu( $post_author_id ) {
 			$healthy_review_students_link = healthy_review_students_link();
 			$menu_items []= $healthy_review_students_link;
 
+			// Review reports from your school.
+			$healthy_review_reports_link = healthy_review_reports_link();
+			$menu_items []= $healthy_review_reports_link;
 		}
-
+	
+	// End if user is logged in.
 	}
 
 	// Start the output.
 	$out ='';
 
-	// Foreach item in our array...
-	foreach( $menu_items as $i ){
+	// Foreach item in our array of menu items:
+	foreach( $menu_items as $item ){
 		
 		// Make sure it's not empty.
-		if( empty( $i ) ){ continue; }
+		if( empty( $item ) ){ continue; }
 		
 		// Add it to the output.
-		$out.= $i;
+		$out.= $item;
 
 	}
 
 	// Complete the output.
 	$out = "
-		<nav>
+		<nav class='healthy-menu content-holder'>
 			$out
 		</nav>
 	";

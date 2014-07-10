@@ -3,7 +3,7 @@
 /**
  * Healthy user fields.
  *
- * Register user fields.
+ * Register user fields, unregister clutter fields.
  *
  * @package WordPress
  * @subpackage healthy
@@ -12,12 +12,13 @@
 
 /**
  * Unset and set contact methods for users.
+ * 
  * @param  array $contactmethods An array of contact methods for users.
  * @return array $contactmethods An array of contact methods for users, customized.
  */
 function healthy_contact_methods( $contactmethods ) {
 	
-    // Gte rid of unwanted fields.
+    // Get rid of unwanted fields.
     unset($contactmethods['aim']);
 	unset($contactmethods['yim']);
 	unset($contactmethods['jabber']);
@@ -54,7 +55,7 @@ function healthy_remove_user_fields() {
 			}
 
             // While we're here, remove some other distracting things entirely
-            $( '#wpbody form h3, .show-admin-bar').remove();
+            $( '#wpbody form h3, .show-admin-bar' ).remove();
 		
         });
 
@@ -65,6 +66,28 @@ function healthy_remove_user_fields() {
 add_action( 'admin_footer-user-edit.php', 'healthy_remove_user_fields' );
 add_action( 'admin_footer-profile.php', 'healthy_remove_user_fields' );
 
+/**
+ * Output jQuery to validate custom user fields. 
+ */
+/*
+function healthy_validate_admin_user_fields() {
+    ?>
+
+    <script>
+
+        jQuery( document ).ready( function( $ ) {
+            
+            
+
+        });
+
+    </script>
+
+<?php
+}
+add_action( 'admin_footer-user-edit.php', 'healthy_validate_admin_user_fields' );
+add_action( 'admin_footer-profile.php', 'healthy_validate_admin_user_fields' );
+*/
 
 /**
  * Output our custom user fields.
@@ -72,29 +95,39 @@ add_action( 'admin_footer-profile.php', 'healthy_remove_user_fields' );
  * @param  object $user a WordPress user object.
  */
 function healthy_add_custom_user_profile_fields( $user ) {
-    ?>
-        
-    <table class="form-table school">
-        <tr>
-            <th>
-                <label for="school">School
-                </label>
-            </th>
-            <td>
-                <select name="school" id="school" class="regular-text" />
-                <?php echo healthy_get_schools_as_options( $user->ID, true ); ?>
-                <select>
-                <br />
-                <span class="description">Select the school for this user.</span>
-            </td>
-        </tr>
-    </table>
+   
+    // Grab the user id.
+    $user_id = absint( $user -> ID );
+
+    // Get the schools to choose from, with the user ID to power selected();
+    $schools = healthy_get_schools_as_options( $user_id, true );
     
-    <script>
-        jQuery('.school').insertAfter('.form-table:eq(1)');
-    </script>
-        
-    <?php 
+    // Draw a form table for our new field and use jquery to insert it into the UI.
+    $out = "
+        <table class='form-table school'>
+            <tr>
+                <th>
+                    <label for='school'>School</label>
+                </th>
+                <td>
+                    <select name='school' id='school' class='regular-text' />
+                        $schools
+                    <select>
+                    <br />
+                    <span class='description'>Select the school for this user.</span>
+                </td>
+            </tr>
+        </table>
+    
+        <script>
+            jQuery( document ).ready( function() {
+                jQuery( '.school' ).insertAfter( '.form-table:eq(1)' );
+                //jQuery( '#your-profile' ).validate();
+            });
+        </script>
+    ";
+
+    echo $out;
 }
 add_action( 'show_user_profile', 'healthy_add_custom_user_profile_fields' );
 add_action( 'edit_user_profile', 'healthy_add_custom_user_profile_fields' );
@@ -107,7 +140,7 @@ add_action( 'edit_user_profile', 'healthy_add_custom_user_profile_fields' );
 function healthy_save_custom_user_profile_fields( $user_id ) {
         
     // If the user can't edit users, bail.
-    if ( !current_user_can( 'edit_user', $user_id ) ) { return false; }
+    if ( ! current_user_can( 'edit_user', $user_id ) ) { return false; }
     
     // If we selected a school, sanitize and update the user meta.
     if( isset( $_POST[ 'school' ] ) ) {

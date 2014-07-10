@@ -8,6 +8,42 @@
  */
 
 /**
+ * Returns an HTML select menu for the roles in our app.
+ *
+ * @return An HTML select menu for the roles in our app.
+ */
+function healthy_get_roles_as_select() {
+	
+	if( healthy_user_is_role( true, 'student' ) ) { return false; }
+
+	$out = '';
+    
+	$roles = healthy_get_roles();
+	foreach( $roles as $r ) {
+		
+		if ( ! isset( $r [ 'is_public' ] ) ) { continue; }
+
+		$slug = $r[ 'slug' ];
+		$label = $r[ 'label' ];
+
+		$out.= "<option value='$slug'>$label</option>";
+	}
+
+	$choose = esc_html__( 'Teacher or Student', 'healthy' );
+	$role = esc_html__( 'Role', 'healthy' );
+
+    $out = "
+    	<label for='role'>$role
+    	<select id='role' name='role' required='required'>
+    		<option value=''>$choose</option>
+    		$out
+    	</select>
+    	</label>
+    ";
+    return $out;
+}
+
+/**
  * Returns an HTML form to confirm that the user wants to delete a post.
  *
  * @param  int $deleting The ID of the post to delete
@@ -41,7 +77,10 @@ function healthy_delete_user_confirm( $deleting ) {
 	$cancel_text = esc_attr__( 'No, go back.', 'healthy' );
 	
 	// The url of the referring page ( aka "back" )
-	$back_url = esc_url( $_SERVER['HTTP_REFERER'] );
+	$back_url = '';
+	if( isset (  $_SERVER['HTTP_REFERER']  ) ) {
+		$back_url = esc_url( $_SERVER['HTTP_REFERER'] );
+	}
 
 	// A link to cancel the deletion and go back to the previous screen.
 	$no = "<a href='$back_url'>$cancel_text</a>";
@@ -134,9 +173,9 @@ function healthy_switch_to_user_form() {
 
 		// Make an input to switch back to the current user.
 		$out = "
-			<label class='inverse-color switch_back' for='$current_user_id'>
+			<label class='switch-back' for='$current_user_id'>
 				<input reuired id='$current_user_id' value='$current_user_id 'type='radio' name='object_id' >
-				$switch_back_label
+				<strong>$switch_back_label</strong>
 			</label>
 		";
 	
@@ -171,14 +210,13 @@ function healthy_switch_to_user_form() {
 		$out.="
 			<label for='$class' >
 				<input required id='$class' name='object_id' value='$user_id' type='radio' $checked >
-				$display_name | $email
+				$display_name | $email | <a href='$delete_href'>$delete_label</a>
 			</label>
-			<a href='$delete_href'>$delete_label</a>
 		";
 	}
 
 	// The submit button for this form.
-	$switch_text = esc_html( 'Switch', 'healthy' );
+	$switch_text = esc_html( 'Act on Behalf of Selected User', 'healthy' );
 	$submit="<input type='submit' name='healthy_switch_to_user' value='$switch_text'>";
 
 	// Make a nonce.
@@ -234,7 +272,7 @@ function healthy_review_students_link() {
 
 	// The clickable link text.
 	$school = ucwords( $school );
-	$label = sprintf( esc_html( 'Review students from %s', 'healthy' ), $school );
+	$label = sprintf( esc_html( 'Review Students from %s', 'healthy' ), $school );
 
 	// Output.
 	$out = "<a href='$href'>$label</a>";
@@ -302,14 +340,14 @@ function healthy_login_panels() {
  * 
  * @return string|boolean HTML to prompt the user to switch back to being the current user, or false if the user has not switched.
  */
-function healthy_get_switched_warning() {
+function healthy_the_switched_warning() {
 
 	// Has the user actually switched?
 	if ( $switched_to_user_id = healthy_has_switched_users() ) {
 
 		// The display name of the switched_to user.
 		$switched_to_display_name = esc_html( healthy_get_active_user() -> display_name );
-		$out = sprintf( esc_html__( 'You are acting on behalf of %s', 'healthy' ), $switched_to_display_name );
+		$out = sprintf( esc_html__( 'You are acting on behalf of %s.', 'healthy' ), $switched_to_display_name );
 
 		if ( ! healthy_current_user_is_acting( 'review', 'user', 'all' ) ) {
 
@@ -326,7 +364,7 @@ function healthy_get_switched_warning() {
 			$switch_href = esc_url( $base.$switch_query );
 			$switch_link = "<a href='$switch_href'>$switch_label</a>";
 
-			$out .= $switched_to.' '.$switch_link;
+			$out .= ' '.$switch_link;
 	
 		}
 	
@@ -401,21 +439,38 @@ function healthy_get_schools_as_options( $user_id = '', $include_empty = false )
 
 	// Maybe start with an empty option for situations where school is not mandatory.
 	if ( $include_empty ) {
-		$out.="<option value=''>Choose a school</option>";
+		if ( ! healthy_user_is_role ( false, 'teacher' ) ) {
+			$out.="<option value=''>Choose a school</option>";
+		}
 	}
 
-	// Get the school.s
+	// Get the schools
 	$schools = healthy_get_schools();
+
+	//wp_die(var_dump($schools));
 
 	// Get the user meta, so we can power selected().
 	$user_id = absint( $user_id );
 	$meta = healthy_get_user_school( $user_id );
 	
+	// Teachers don't get to change schools.
+	$teacher_school = '';
+	if ( healthy_user_is_role( false, 'teacher' ) ) {
+		$teacher_school = healthy_get_user_school( get_current_user_id() );
+	}
+
+	
 	// For each school, loop it into an <option>
-	foreach ( $schools as $s ){
-		
+	foreach ( $schools as $s ) {
+	
 		// The value for this option.
 		$slug = $s['slug'];
+
+		// Teachers don't get to change schools.
+		if ( healthy_user_is_role( false, 'teacher' ) ) {
+			//wp_die("$slug != $teacher_school");
+			if ( $slug != $teacher_school ) { continue; }
+		}
 
 		// The label for this option.
 		$label = $s['label'];
@@ -530,19 +585,24 @@ function healthy_profile_form( $creating = false ) {
 		if( $type == 'school' ) {
 
 			// Grab the schools as <option>'s and wrap them in a <select>.
-			if( $creating ) {
-				$include_empty = false;
-			} else {
-				$include_empty = true;
-			}
+			//if( $creating ) {
+			//	$include_empty = true;
+			//} else {
+			//	$include_empty = false;
+			//}
 
-			$schools_as_options = healthy_get_schools_as_options( $user_to_edit_id, $include_empty );
-			$input = "
-				<select $required name='school'>
-					$schools_as_options
-				</select>
-			";
-		
+			// If a teacher is creating a user, don't let them choose a school.
+			if ( healthy_user_is_role ( true, 'teacher' ) && ! healthy_current_user_is_acting( 'create', 'user', 'new' ) ) { continue; }
+
+				$schools_as_options = healthy_get_schools_as_options( $user_to_edit_id, true );			
+				$input = "
+					<select $required name='school'>
+						$schools_as_options
+					</select>
+				";
+			
+	//		}
+
 		// Else, it's a fairly normal input.
 		} else {
 
@@ -601,11 +661,18 @@ function healthy_profile_form( $creating = false ) {
 		</script>
 	';
 
+	// Role.
+	$role = '';		
+	if( get_current_user_id() != $user_to_edit_id ) {
+		$role = healthy_get_roles_as_select();
+	}
+
 	// Complete the output.
 	$out = "
 		<form id='profile-form' method='$method' action='$form_action'>
 			$nonce
 			$out
+			$role
 			$object_id
 			$object_type
 			$action
