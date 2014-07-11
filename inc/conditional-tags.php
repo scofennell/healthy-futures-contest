@@ -6,20 +6,38 @@
  * @subpackage healthy
  * @since healthy 1.0
  */
+
+/**
+ * Is the user eligible for the grand prize?
+ * 
+ * @param  int $user_id The user id to check.
+ * @todo   Check the current week to see if the user is still eligible to complete the current week.
+ * @return boolean      If the user has recorded the minimum amount of exercise, return true.  Else, false.
+ */
 function healthy_user_is_all_star( $user_id ) {
 
+	// The user ID to check.
 	$user_id = absint( $user_id );
 
+	// Check all weeks up until the current one.
 	$current_week_of_contest = healthy_current_week_of_contest();
 
+	// This will increment up until the current week.
 	$week = 1;
-	while( $week <= $current_week_of_contest ) {
-		if ( ! healthy_is_week_complete( $week, $user_id = '' ) ) {
+
+	// While the week is less than the current week.
+	while( $week < $current_week_of_contest ) {
+		
+		// If the week is not complete, bail.
+		if ( ! healthy_is_week_complete( $week, $user_id ) ) {
 			return false;
 		}
+
+		// Go to the next week.
 		$week ++;
 	}
 
+	// We made it!  the user is still eligible.
 	return true;
 }
 
