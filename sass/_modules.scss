@@ -96,7 +96,6 @@ img.wp-smiley,
 	position: relative;
 }
 
-
 /**
  * Marquee
  */
@@ -856,11 +855,21 @@ button {
  * =============================================================================
  */
 
-/*
+/**
+ Post a day
+ */
+.notes {
+	display: block;
+	font-style: italic;
+	line-height: 1.3em;
+	margin-bottom: 10px;
+}
+
+/**
  Switch / Delete Users
  */
 
-/*
+/**
  Reports
  */
 #healthy_report {

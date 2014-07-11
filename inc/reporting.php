@@ -86,8 +86,7 @@ function healthy_reporting_menu() {
 
 	// Build a link to view all-stars
 	$all_stars_label = esc_html( 'All-Stars', 'healthy' );
-	$all_stars_query = healthy_controller_query_string( 'report', 'review', $school, 'all' ).'&all_stars=1';
-	$all_stars_href = $base.$all_stars_query;
+	$all_stars_href = healthy_controller_query_string( 'report', 'review', $school, 'all', 1 );
 	$all_stars_link = "<a href='$all_stars_href'>$all_stars_label</a>";
 
 	// This may hold a value for a link to download the report as csv.
@@ -784,21 +783,30 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 			// Grab pagination if necessary.
 			$pagination = '';
 			if( $school != 'all' ) {
-				$pagination = healthy_report_pagination( $school );
+				$pagination = healthy_report_pagination( $school, $all_stars );
 			}
 
 			// Grab a count of users for this school.
-			$count = healthy_count_users_by_school( $school );
+			$count = healthy_count_users_by_school( $school, $all_stars );
 
-			// Add a label to explain how many users.
-			if ( $school == 'all' ) {
-				$count_label = sprintf( esc_html__( 'There are %d students in the contest.', 'healthy' ), $count );
+			// Translate all-star for all-star reports.
+			if( ! empty( $all_stars ) ) {
+				$all_star_str = esc_html( 'all-star', 'healthy' );
 			} else {
+				$all_star_str = '';	
+			}
 
+			// Add a label to explain how many users.  If we're grabbing from all schools:
+			if ( $school == 'all' ) {
+				$count_label = sprintf( _n( 'There is one %s student in the contest.', 'There are %d %s students in the contest.', $count, 'healthy' ), $count, $all_star_str );
+			
+			// Else, we're grabbing from a specific school.
+			} else {
 				// Convert the school slug into a nice label.
 				$school_label = ucwords( $school );
 				$school_label = str_replace( '_', ' ', $school_label );
-				$count_label = sprintf( esc_html__( 'There are %d %s students in the contest.', 'healthy' ), $count, $school_label );
+				$count_label = sprintf( _n( 'There is %d %s %s student in the contest.', 'There are %d %s %s students in the contest.', $count, 'healthy' ), $count, $all_star_str, $school_label );
+			
 			}
 
 			// Wrap the user count for output.
@@ -823,6 +831,7 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 
 /**
  * How many users per page?
+ * 
  * @return int Number of users per page in reports.
  */
 function healthy_users_per_page() {
@@ -831,13 +840,15 @@ function healthy_users_per_page() {
 
 /**
  * Return an HTML nav for paging through a report.
+ * 
  * @param  string $school For which school to show page links.
+ * @param  int $all_stars Are we grabbing only all-stars?
  * @return string         An HTML nav for paging through a report.
  */
-function healthy_report_pagination( $school ) {
+function healthy_report_pagination( $school, $all_stars = '' ) {
 
 	// How many users in this school?
-	$count = healthy_count_users_by_school( $school );
+	$count = healthy_count_users_by_school( $school, $all_stars );
 
 	// Is there a url var for offset?
 	$offset = '';
@@ -878,9 +889,15 @@ function healthy_report_pagination( $school ) {
 		$unit_time = $_GET[ 'unit_time' ];
 	}
 
-	// The url for this page link.
-	$url = "$base?object_id=$object_id&object_type=$object_type&action=$action&unit_time=$unit_time";
+	// Are we grabbing all-stars?
+	$all_stars = absint( $all_stars );
 
+	// The url for this page link.
+	$query = healthy_controller_query_string( $object_type, $action, $school, $unit_time, $all_stars );
+	
+	//?object_id=$object_id&object_type=$object_type&action=$action&unit_time=$unit_time";
+	$url = $base.$query;
+	
 	// Will increment for each page.
 	$i = 0;
 
@@ -925,7 +942,7 @@ function healthy_report_pagination( $school ) {
  * @param  string $school For which school to count users.
  * @return int The number of users for this school.
  */
-function healthy_count_users_by_school( $school ) {
+function healthy_count_users_by_school( $school, $all_stars = '' ) {
 	
 	// The schools in our contest.
 	$schools = healthy_get_schools();
@@ -947,13 +964,25 @@ function healthy_count_users_by_school( $school ) {
 		'meta_value'   => $school,
 		'count_total'  => true,
 		'role' 		   => 'student',
+		'fields'	   => array( 'ID' ),
 	);
 
 	// THe users.
 	$r = new WP_User_Query( $args );
 
 	// The user count.
-	$count = $r -> get_total();
+	if( empty ( $all_stars ) ) {
+		$count = $r -> get_total();
+	} else {
+		$count = 0;
+		$users = $r -> results;
+		foreach( $users as $u ) {
+			if( healthy_user_is_all_star( $u -> ID) ) {
+				$count++;
+			}
+		}
+	}
+
 
 	// Sanitize the output.
 	$out = absint( $count );

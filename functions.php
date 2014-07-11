@@ -36,7 +36,7 @@ if( is_admin() ) {
 /**
  * Custom user meta fields.
  *
- * @todo:  Grab user fields by a callback function instead of spelling out each field one by one. (DRY alert)
+ * @todo Grab user fields by a callback function instead of spelling out each field one by one. (DRY alert)
  */
 if( is_admin() ) {
 	require_once( get_template_directory()."/admin/user-fields.php" );
@@ -45,7 +45,7 @@ if( is_admin() ) {
 /**
  * Customizations for login template files.
  *
- * @todo Be sure to destroy the healthy_user_has_switched cookie any time the user logs out.
+ * @todo Add styles for register & change password views.
  */
 require_once( get_template_directory()."/inc/login-customizations.php" );
 
@@ -70,7 +70,7 @@ if( ! is_admin() ) {
 
 /**
  * Custom conditional tags used in theme template files.
- * @todo in the function to check if a user can act on an object, return false by default, and only return true if a whitelisted scenario is met.
+ * @todo In the function to check if a user can act on an object, return false by default, and only return true if a whitelisted scenario is met.
  */
 require_once( get_template_directory()."/inc/conditional-tags.php" );
 
@@ -83,7 +83,6 @@ if( ! is_admin() ) {
 
 /**
  * Body classes, posts classes, wp_title, etc.
- * @todo See if the menu item filter is still necessary in recent wordpress 
  * versions.
  */
 require_once( get_template_directory()."/inc/misc-filters.php" );

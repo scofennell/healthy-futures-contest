@@ -831,9 +831,10 @@ function healthy_get_post_date_by_id( $post_id ) {
  * @param  string $action The agtion we'll perform (create, edit, delete, review).
  * @param  int $object_id  The ID upon which we'll act.
  * @param  string $unit_time The unit of time by which we'll query.
+ * @param  int limit our query to all_star users.
  * @return string A url query string for our application.
  */
-function healthy_controller_query_string( $object_type, $action, $object_id, $unit_time = '' ) {
+function healthy_controller_query_string( $object_type, $action, $object_id, $unit_time = '', $all_stars = '' ) {
 
 	// User, post, week.
 	$object_type = urlencode( $object_type );
@@ -844,11 +845,15 @@ function healthy_controller_query_string( $object_type, $action, $object_id, $un
 	// User id, post id, contest week #.
 	$object_id = urlencode( $object_id );
 
-	// User id, post id, contest week #.
+	// 1, 2, 3, weekly.
 	$unit_time = urlencode( $unit_time );
 
+	// 0, 1.
+	$all_stars = urlencode( $all_stars );
+
+
 	// Output.
-	$out = "?object_type=$object_type&action=$action&object_id=$object_id";
+	$out = "?object_type=$object_type&action=$action&object_id=$object_id&all_stars=$all_stars";
 
 	// Unit time is an optional param.
 	if( ! empty( $unit_time ) ) {
@@ -1155,6 +1160,7 @@ function healthy_day() {
 				'min' 		=> 0,
 				'max' 		=> 480,
 				'default' 	=> 0,
+				'notes'		=> esc_html__( "You will be moving, but your heart beat and breathing will not change much.", 'healthy' ),
 
 				// We'll flag things as exercise for computing the total minutes of exercise.
 				'is_exercise' => 1,
@@ -1175,6 +1181,7 @@ function healthy_day() {
 				'min' 		=> 0,
 				'max' 		=> 480,
 				'default' 	=> 0,
+				'notes'		=> esc_html__( "While performing the physical activity, if your breathing and heart rate is noticeably faster but you can still carry on a conversation, it's probably moderately intense.", 'healthy' ),
 				'step'		=> 5,
 				'is_exercise' => 1,
 				'is_weekly_metric' => 1,
@@ -1186,8 +1193,9 @@ function healthy_day() {
 				'slug' 		=> sanitize_key( 'vigorous_exercise' ),
 				'type' 		=> 'range',
 				'min' 		=> 0,
-				'max' 		=> 480,
+				'max' 		=> 240,
 				'default' 	=> 0,
+				'notes'		=> esc_html__( "If your heart rate is increased substantially and you are breathing too hard and fast to have a conversation, it's probably vigorously intense.", 'healthy' ),
 				'step'		=> 5,
 				'is_exercise' => 1,
 				'is_weekly_metric' => 1,
@@ -1201,6 +1209,7 @@ function healthy_day() {
 				'min' 		=> 0,
 				'max' 		=> 24,
 				'default' 	=> 0,
+				'notes'		=> esc_html__( "Soda, powdered drinks, energy drinks, fruit-flavored juices, or any drink that has added sugar, corn syrup, or another type of caloric sweetener in the ingredient list.", 'healthy' ),
 				'is_weekly_metric' => 1,
 			),
 			/*array(

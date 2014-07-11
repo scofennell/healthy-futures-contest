@@ -257,6 +257,12 @@ function healthy_post_a_day_form( $editing = false ) {
 		// A default value.
 		$default = $f['default'];
 
+		// A notes value.
+		$notes = '';
+		if (isset ( $f[ 'notes' ] ) ){
+			$notes = "<small class='notes'>".esc_html( $f[ 'notes' ] )."</small>";
+		}
+
 		// If we're editing, things are a little different.
 		if( $editing ) {
 
@@ -313,6 +319,7 @@ function healthy_post_a_day_form( $editing = false ) {
 		$out.="
 			<label for='$slug'>
 				$label
+				$notes
 				$input
 				$output
 			</label>
@@ -330,7 +337,7 @@ function healthy_post_a_day_form( $editing = false ) {
 		$submit_text = esc_attr__( 'Go', 'healthy' );
 	}
 
-	// The submnit button for out form.
+	// The submit button for out form.
 	$submit = "<input type='submit' name='post_a_day_submit' value='$submit_text'>";
 
 	// JS to power our slider inputs.

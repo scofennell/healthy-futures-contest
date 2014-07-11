@@ -49,6 +49,11 @@ function healthy_login_styles() { ?>
             box-shadow: none;
         }
 
+        #login {
+            width: auto;
+            max-width: 500px;
+        }
+
         #login form {
             padding: 20px 20px 24px;
             border-radius: 5px;
@@ -76,6 +81,7 @@ function healthy_login_styles() { ?>
             float: none;
         }
 
+        body.login .button-primary:hover,
         body.login .button-primary {
             background: #000;
             color: #fff;
@@ -91,6 +97,25 @@ function healthy_login_styles() { ?>
             width: 200px;
             background-size: contain;
             -webkit-background-size: contain;
+        }
+
+
+        .login #backtoblog,
+        .login #nav {
+            text-align: center;
+        }
+        
+        .login #backtoblog a,
+        .login #nav a {
+            text-decoration: underline;
+            color: #000;
+            text-align: center;
+        }
+
+        .login #backtoblog a:hover,
+        .login #nav a:hover {
+            text-decoration: none;
+            color: #000;
         }
 
     </style>
@@ -119,3 +144,23 @@ function healthy_login_logo_url_title() {
     return $out;
 }
 add_filter( 'login_headertitle', 'healthy_login_logo_url_title' );
+
+/**
+ * Deletes the switch-user cookie on logout.
+ *
+ * @return  boolean Returns true if the cookie was deleted, else false.
+ */
+function healthy_delete_switch_users_cookie_on_logout() {
+    
+    // Our app-wide cookie key.
+    $cookie_key = healthy_switched_user_cookie_key();
+
+    // Delete the cookie if it exists.
+    if ( isset( $_COOKIE[ $cookie_key ] ) ) {
+        setcookie( $cookie_key, get_current_user_id(), time() - 3600, COOKIEPATH, COOKIE_DOMAIN );
+        return true;
+    }
+
+    return false;
+}
+add_action( 'wp_logout', 'healthy_delete_switch_users_cookie_on_logout' );
