@@ -99,30 +99,52 @@ function healthy_add_custom_user_profile_fields( $user ) {
     // Grab the user id.
     $user_id = absint( $user -> ID );
 
-    // Get the schools to choose from, with the user ID to power selected();
-    $schools = healthy_get_schools_as_options( $user_id, true );
-    
-    // Draw a form table for our new field and use jquery to insert it into the UI.
-    $out = "
-        <table class='form-table school'>
+    $fields = healthy_profile_fields();
+
+    foreach( $fields as $f ) {
+        
+        if( ! isset( $f[ 'add_to_wp_admin' ] ) ) { continue; }
+        
+        $slug = $f[ 'slug' ];
+        $label = $f[ 'label' ];
+        $type = $f[ 'type' ];
+
+        $out .= "
             <tr>
                 <th>
-                    <label for='school'>School</label>
+                    <label for='$slug'>$label</label>
                 </th>
                 <td>
-                    <select name='school' id='school' class='regular-text' />
-                        $schools
-                    <select>
+        ";
+                
+        if( $slug == 'school' ) {                   
+            $options = healthy_get_schools_as_options( $user_id, true );
+        } elseif( $slug == 'teacher' ) {
+            $school = healthy_get_user_school( $user_id );
+            $teacher = get_user_meta( $user_id, 'teacher', TRUE );
+            $options = healthy_get_teachers_as_options( $school, $teacher );
+        }
+
+        $out .= "
+            <select name='$slug' id='$slug' class='regular-text' />
+                $options
+            <select>
+        ";
+                
+        $out.="
                     <br />
-                    <span class='description'>Select the school for this user.</span>
+                    <span class='description'>Select the $label for this user.</span>
                 </td>
             </tr>
-        </table>
+        ";
+ 
+    }
+
+    $out = " <table class='form-table healthy'>$out</table>
     
         <script>
             jQuery( document ).ready( function() {
-                jQuery( '.school' ).insertAfter( '.form-table:eq(1)' );
-                //jQuery( '#your-profile' ).validate();
+                jQuery( '.healthy' ).insertAfter( '.form-table:eq(1)' );
             });
         </script>
     ";
@@ -142,12 +164,19 @@ function healthy_save_custom_user_profile_fields( $user_id ) {
     // If the user can't edit users, bail.
     if ( ! current_user_can( 'edit_user', $user_id ) ) { return false; }
     
-    // If we selected a school, sanitize and update the user meta.
-    if( isset( $_POST[ 'school' ] ) ) {
-        $school = sanitize_text_field ( $_POST[ 'school' ] );
-    }
-    update_user_meta( $user_id, 'school', $school );
+     $fields = healthy_profile_fields();
 
+    foreach( $fields as $f ) {
+        
+        if( ! isset( $f[ 'add_to_wp_admin' ] ) ) { continue; }
+        
+        $slug = $f[ 'slug' ];
+        
+        if( isset( $_POST[ $slug ] ) ) {
+            $meta = sanitize_text_field ( $_POST[ $slug ] );
+        }
+        update_user_meta( $user_id, $slug, $meta );
+    }
 }
 add_action( 'personal_options_update', 'healthy_save_custom_user_profile_fields' );
 add_action( 'edit_user_profile_update', 'healthy_save_custom_user_profile_fields' );

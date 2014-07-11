@@ -688,7 +688,7 @@ function healthy_profile_fields() {
 	}
 
 	// If the user is a student, or if we are creating a new user, allow him to pick a school & grade.
-	if ( healthy_user_is_role( true, 'student' ) || healthy_current_user_is_acting( 'create', 'user', 'new' ) || healthy_current_user_is_acting( 'review', 'report', $object_id ) ) {
+	if ( is_admin() || healthy_user_is_role( true, 'student' ) || healthy_current_user_is_acting( 'create', 'user', 'new' ) || healthy_current_user_is_acting( 'review', 'report', $object_id ) ) {
 
 		// The school.
 		$school = array(
@@ -700,6 +700,7 @@ function healthy_profile_fields() {
 			'required' 				  => 1,
 			'is_hidden_from_teachers' => 1,
 			'exportable' 			  => 1,
+			'add_to_wp_admin'		  => 1,
 		);
 		array_push( $out, $school );
 
@@ -717,6 +718,19 @@ function healthy_profile_fields() {
 			'exportable' 			  => 1,
 		);
 		array_push( $out, $grade);
+
+		// The teacher of this student.
+		$teacher = array(
+			'label' 				  => 'Teacher',
+			'slug' 					  => sanitize_key( 'teacher' ),
+			'type' 					  => 'teacher',
+			'default' 				  => '',
+			'is_meta' 				  => 1,
+			'is_hidden_from_teachers' => 1,
+		//	'exportable' 			  => 1,
+			'add_to_wp_admin'		  => 1,
+		);
+		array_push( $out, $teacher);
 
 	}
 

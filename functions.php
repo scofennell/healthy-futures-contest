@@ -35,6 +35,8 @@ if( is_admin() ) {
 
 /**
  * Custom user meta fields.
+ *
+ * @todo:  Grab user fields by a callback function instead of spelling out each field one by one. (DRY alert)
  */
 if( is_admin() ) {
 	require_once( get_template_directory()."/admin/user-fields.php" );
@@ -42,6 +44,8 @@ if( is_admin() ) {
 
 /**
  * Customizations for login template files.
+ *
+ * @todo Be sure to destroy the healthy_user_has_switched cookie any time the user logs out.
  */
 require_once( get_template_directory()."/inc/login-customizations.php" );
 

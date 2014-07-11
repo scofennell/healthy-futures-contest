@@ -43,6 +43,51 @@ function healthy_get_roles_as_select() {
     return $out;
 }
 
+
+/**
+ * Returns HTML <option>s for the teachers in our app.
+ *
+ * @param  string $school The slug of a school from which to grab trachers.
+ * @param  int $current_teacher_id The ID of a teacher to power selected().
+ * @return HTML <options> for the teachers in our app.
+ */
+function healthy_get_teachers_as_options( $school = '', $current_teacher_id = '' ) {
+	
+	$out = '';
+    
+	$current_teacher_id = absint( $current_teacher_id );
+
+	$school = esc_attr( $school );
+
+	$args = array(
+		'meta_value' => $school,
+		'meta_key'   => 'school',
+		'number'	 => 9999,
+		'role' 		 => 'teacher',
+		'fields'	 => array( 'ID', 'display_name' ),
+	); 
+
+	$teachers = get_users( $args );
+	foreach( $teachers as $t ) {
+		
+		$value = absint( $t -> ID );
+		$label = esc_html( $t -> display_name );
+
+		$selected = selected( $value, $current_teacher_id, false );
+
+		$out.= "<option $selected value='$value'>$label</option>";
+	}
+
+	$choose = esc_html__( 'Choose Your Teacher', 'healthy' );
+
+    $out = "
+    	<option value=''>$choose</option>
+    	$out
+    ";
+
+    return $out;
+}
+
 /**
  * Returns an HTML form to confirm that the user wants to delete a post.
  *
@@ -604,6 +649,18 @@ function healthy_profile_form( $creating = false ) {
 	//		}
 
 		// Else, it's a fairly normal input.
+		} elseif( $type == 'teacher' ) {
+			$current_user_school = healthy_get_user_school( $user_to_edit_id );
+			if( ! empty( $current_user_school ) ) {
+				$current_user_teacher = get_user_meta( $user_to_edit_id, 'teacher', TRUE );
+				$teachers_as_options = healthy_get_teachers_as_options( $current_user_school, $current_user_teacher );
+				
+				$input =  "
+					<select $required name='teacher'>
+						$teachers_as_options
+					</select>
+				";
+			}
 		} else {
 
 			// Draw the input.

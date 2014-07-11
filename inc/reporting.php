@@ -84,6 +84,12 @@ function healthy_reporting_menu() {
 		$by_school = "<a href='$by_school_href'>$by_school_label</a>";
 	}
 
+	// Build a link to view all-stars
+	$all_stars_label = esc_html( 'All-Stars', 'healthy' );
+	$all_stars_query = healthy_controller_query_string( 'report', 'review', $school, 'all' ).'&all_stars=1';
+	$all_stars_href = $base.$all_stars_query;
+	$all_stars_link = "<a href='$all_stars_href'>$all_stars_label</a>";
+
 	// This may hold a value for a link to download the report as csv.
 	$as_csv_link = '';
 
@@ -106,7 +112,7 @@ function healthy_reporting_menu() {
 	}
 	
 	// Complete the output.
-	$out = "<nav class='reporting-menu'>$by_school ".$weekly_link.' '.$week_by_week.' '.$as_csv_link."</nav>";
+	$out = "<nav class='reporting-menu'>$by_school ".$weekly_link.' '.$week_by_week.' '.$all_stars_link.' '.$as_csv_link."</nav>";
 
 	return $out;
 
@@ -212,9 +218,10 @@ function healthy_school_report_cells( $school ) {
  * @param  boolean $user_id   		The user ID from whom we'll grab data.  If none provided, grabs the table header cells.
  * @param  string  $format    		As table or csv.
  * @param  string  $school 			From what school are we grabbing?
+ * @param  string  $all_stars 		Restrict our search to all-star users?
  * @return string|array             Returns an html <tr> or an array of cells.
  */
-function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $school = '' ) {
+function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $school = '', $all_stars = '' ) {
 
 	// Start the output var.  If it's a table, start a string.
 	if ( $format == 'table' ) {
@@ -335,6 +342,8 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 			// If we're grabbing from a user...
 			if( $user_id ) {
 
+				if ( ! empty( $all_stars ) && ! healthy_user_is_all_star( $user_id ) ) { continue; }
+
 				// Start the cell.
 				$cell = '';
 
@@ -349,7 +358,6 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 					$meta = ucwords( $meta );
 					$meta = str_replace( '_', ' ', $meta  );
 				}
-
 
 				// If there is meta, populate the cell.
 				if( ! empty( $meta ) ) {
@@ -748,6 +756,12 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 				$per_page = healthy_users_per_page();
 			}
 
+			// Are we just grabbing all-star users?
+			$all_stars = '';
+			if ( isset( $_GET[ 'all_stars' ] ) ) {
+				$all_stars = absint( $_GET[ 'all_stars' ] );
+			}
+
 			// Meta user query.
 			$args = array(
 				'meta_key'     => 'school',
@@ -756,7 +770,8 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 				'number'	   => $per_page,
 				'format' 	   => $format,
 				'unit_time'	   => $unit_time,
-				'role' 		   => 'student'
+				'role' 		   => 'student',
+				'all_stars'	   => $all_stars,
 			);
 
 			$body = healthy_get_rows_for_report( $args );
@@ -1082,7 +1097,7 @@ function healthy_get_rows_for_report( $args = array() ) {
 			$user_id = absint( $row -> ID );
 
 			// The cells for this user.
-			$cells = healthy_get_row( $unit_time, $user_id, $format );
+			$cells = healthy_get_row( $unit_time, $user_id, $format, '', $args[ 'all_stars' ] );
 
 		}
 

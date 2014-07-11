@@ -6,6 +6,22 @@
  * @subpackage healthy
  * @since healthy 1.0
  */
+function healthy_user_is_all_star( $user_id ) {
+
+	$user_id = absint( $user_id );
+
+	$current_week_of_contest = healthy_current_week_of_contest();
+
+	$week = 1;
+	while( $week <= $current_week_of_contest ) {
+		if ( ! healthy_is_week_complete( $week, $user_id = '' ) ) {
+			return false;
+		}
+		$week ++;
+	}
+
+	return true;
+}
 
 /**
  * Determine if the current user has the authority to act on a "thing" in our app.
@@ -37,10 +53,14 @@ function healthy_current_user_can_act_on_object( $object_id, $action, $object_ty
 		$post = get_post( $object_id );
 
 		// If the post is not an object, something is wrong.
-		if ( ! is_object( $post ) ) { return false; }
+		if ( $object_id != 'new' ) {
+		
+			if ( ! is_object( $post ) ) { return false; }
 
-		// The ID of the author of the post to act upon.
-		$post_author_id = absint( $post -> post_author );
+			// The ID of the author of the post to act upon.
+			$post_author_id = absint( $post -> post_author );
+
+		}
 
 		// If the user is not done filling his profile data, return false.
 		if ( ! healthy_is_profile_complete() ) { return false; }
@@ -73,6 +93,7 @@ function healthy_current_user_can_act_on_object( $object_id, $action, $object_ty
 		
 		// The contest must be happening in order to create posts
 		} elseif ( $action == 'create' ) {
+
 			if ( ! healthy_contest_is_happening() ) { return false; }
 		} 
 
