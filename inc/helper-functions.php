@@ -1243,3 +1243,13 @@ function healthy_day() {
 
 	return $day;
 }
+
+/**
+ * Get the src for our logo.
+ *
+ * @return  The src for our logo.
+ */
+function healthy_logo_src() {
+	$out = esc_url( get_bloginfo( 'template_directory' ) ).'/images/logo.png';
+	return $out;
+}

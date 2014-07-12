@@ -232,7 +232,7 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 	}
 
 	// If the user is a boss and is grabbing from all weeks ( That is, grabbing by school. )
-	if( healthy_user_is_role( false, 'boss' ) && ( $unit_time == 'all' ) ) {
+	if( healthy_user_is_role( false, 'boss' ) && ( $unit_time == 'all' ) && ( $all_stars != 1 ) ) {
 
 		// The schools in our contest.
 		$schools = healthy_get_schools();
@@ -684,8 +684,14 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 			$unit_time = 'weekly';
 		}
 
+		// Are we just grabbing all-star users?
+		$all_stars = '';
+		if ( isset( $_GET[ 'all_stars' ] ) ) {
+			$all_stars = absint( $_GET[ 'all_stars' ] );
+		}
+
 		// Get the header row.
-		$header_cells = healthy_get_row( $unit_time, false, $format, $school );
+		$header_cells = healthy_get_row( $unit_time, false, $format, $school, $all_stars );
 
 		// If we're outputting as a table, wrap it as a row.
 		if ( $format == 'table' ) {
@@ -719,6 +725,7 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 				'format' 	   => $format,
 				'unit_time'	   => $unit_time,
 				'role' 		   => 'student',
+				'all_stars'	   => $all_stars,
 			);
 
 			$body = healthy_get_rows_for_report( $args );
@@ -753,12 +760,6 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 			$per_page = 0;
 			if ( $format == 'table' ) {
 				$per_page = healthy_users_per_page();
-			}
-
-			// Are we just grabbing all-star users?
-			$all_stars = '';
-			if ( isset( $_GET[ 'all_stars' ] ) ) {
-				$all_stars = absint( $_GET[ 'all_stars' ] );
 			}
 
 			// Meta user query.
@@ -1091,11 +1092,11 @@ function healthy_get_rows_for_report( $args = array() ) {
 	}
 
 	// If a boss is browsing by school...
-	if( ( $args[ 'meta_value' ] == '' ) && ( $unit_time == 'all' ) && healthy_user_is_role( false, 'boss' ) ) {
+	if( ( $args[ 'meta_value' ] == '' ) && ( $unit_time == 'all' ) && healthy_user_is_role( false, 'boss' ) && $args[ 'all_stars' ] != 1 ) {
 
 		// Each table row is a school.
 		$rows = healthy_get_schools();
-	
+
 	// Else, each table row is a user.
 	} else {
 
@@ -1111,7 +1112,7 @@ function healthy_get_rows_for_report( $args = array() ) {
 	foreach ($rows as $row ) {
 		
 		// If a boss is browsing by school...
-		if( ( $args[ 'meta_value' ] == '' ) && ( $unit_time == 'all' ) && healthy_user_is_role( false, 'boss' ) ) {
+		if( ( $args[ 'meta_value' ] == '' ) && ( $unit_time == 'all' ) && healthy_user_is_role( false, 'boss' ) && $args[ 'all_stars' ] != 1 ) {
 
 			// The key for this row is the school slug.
 			$school = $row[ 'slug' ];

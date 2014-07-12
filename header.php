@@ -33,6 +33,8 @@
 </head>
 
 <body <?php body_class(); ?>>
+
+	<img class='logo body-logo' width=600 height=600 src='<?php echo healthy_logo_src(); ?>' alt='<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>'>
 	
 	<div id="body-wrapper">
 
@@ -40,7 +42,7 @@
 
 			<a class="screen-reader-text skip-link" href="#loop"><?php _e( 'Skip to content', 'healthy' ); ?></a>
 			
-			<div id="blog-header-inner-wrapper" class="inner-wrapper has-halfs">
+			<div id="blog-header-inner-wrapper" class="inner-wrapper">
 
 				<h1 class="blog-title blog-title-blog-header">
 					<a class="home-link" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" title="<?php echo esc_attr(get_bloginfo('name')); ?>"><?php bloginfo('name'); ?></a>

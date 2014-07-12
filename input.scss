@@ -19,19 +19,18 @@ $small_device: 421px;
  * Colors
  */
 $color: #000;
-$mix_color: #666;
-$inverse_color: invert( $color );
-
-$bg_color: mix( $inverse_color, $mix_color, 92% );
-$inverse_bg_color: $color;
-
-$accent_color: mix( $color, $mix_color, 50% );
-$inverse_accent_color: mix( $inverse_color, $mix_color, 50% );
+$inverse_color: #fff;
+$secondary_color: #0F2C52;
+$tertiary_color: #7CC24D;
 
 $translucent_color: transparentize( $color, .3 );
 $transparent_color: transparentize( $color, .9 );
 $translucent_inverse_color: transparentize( $inverse_color, .3 );
 $transparent_inverse_color: transparentize( $inverse_color, .9 );
+$translucent_secondary_color: transparentize( $secondary_color, .3 );
+$transparent_secondary_color: transparentize( $secondary_color, .9 );
+$translucent_tertiary_color: transparentize( $tertiary_color, .3 );
+$transparent_tertiary_color: transparentize( $tertiary_color, .9 );
 
 $bottom_shadow_color: rgba( 255, 255, 255, .6 );
 $top_shadow_color: rgba( 0, 0, 0, .05 );

@@ -1,6 +1,5 @@
 /* Color Pallette */
 body,
-select,
 input[type="search"],
 input[type="url"],
 input[type="tel"],
@@ -13,12 +12,21 @@ textarea,
 .inverse-color .widget_search input[type="search"],
 .inverse-color .widget_search input[type="submit"],
 .ui-datepicker {
-	background: $bg_color;
+	background-color: $inverse_color;
 	color: $color;
 }
 
-a {color: $accent_color;}
-a:hover {color: $color;}
+a {color: $secondary_color;}
+
+a.button,
+.button,
+[type='submit'],
+[type='image'],
+button,
+.inverse-color,
+.inverse-color .sub-menu {
+	background-color: $secondary_color; 
+}
 
 a.button,
 .button,
@@ -28,7 +36,6 @@ button,
 .inverse-color,
 .inverse-color a,
 .inverse-color .sub-menu {
-	background: $inverse_bg_color; 
 	color: $inverse_color;
 }
 
@@ -43,8 +50,8 @@ button,
 	input[type="date"],
 	input[type="password"],
 	textarea {
-		background: $inverse_bg_color;
-		color: $inverse_color;
+		background-color: $inverse_color;
+		color: $color;
 	}
 }
 
@@ -54,12 +61,12 @@ input.inverse-color:focus,
 .inverse-color input:focus,
 a.inverse-color:hover,
 .inverse-color a:hover {
-	color: $inverse_accent_color;
+	color: $tertiary_color;
 }
 
 /* Mildly accented items */
 .mild-contrast-color {
-	background: $top_shadow_color;
+	background-color: $top_shadow_color;
 }
 
 .comments-loop table,
@@ -74,7 +81,7 @@ figure,
 form,
 .comments-loop pre,
 .entry-content pre {
-	background: $bottom_shadow_color;
+	background-color: $transparent_secondary_color;
 }
 
 /* excepted from mild accent */
@@ -83,8 +90,14 @@ form,
 .comments-loop table thead tr > *,
 .entry-content table thead tr > *,
 .gallery figure {
-	background: $bg_color;
+	background-color: $transparent_tertiary_color;
 }
+
+/* state colors */
+
+a:hover { color: $tertiary_color; }
+
+[type="submit"]:hover { background-color: $tertiary_color; }
 
 /* Typograhpy */
 h1,
@@ -106,10 +119,14 @@ button,
 }
 
 body,
+output,
 .notes,
 .post-format-label,
 .blog-description-link .word_3,
-.blog-description-link .word_5 {
+.blog-description-link .word_5,
+input,
+select,
+textarea {
 	font-family: georgia, times, sans-serif;
 }
 
@@ -144,7 +161,7 @@ body,
 
 .comments-loop tr:nth-child(odd) > *,
 .entry-content tr:nth-child(odd) > * {
-	border-right: 1px solid $bg_color;
+	border-right: 1px solid $inverse_color;
 }
 
 .comments-loop tr:nth-child(odd) > :last-child,
@@ -155,7 +172,7 @@ body,
 /* Borders & Box Shadow */
 
 fieldset {
-	border: 1px solid $inverse_accent_color;
+	border: 1px solid $tertiary_color;
 }
 
 select,
@@ -167,11 +184,13 @@ input[type="email"],
 input[type="date"],
 input[type="password"],
 textarea {
-	border: 1px solid $inverse_accent_color;
 	box-shadow: inset -1px 1px 3px $transparent_color;
 }
 
+select,
+textarea,
 .ui-datepicker,
+input[type="password"],
 input[type="search"],
 input[type="url"],
 input[type="tel"],
@@ -179,7 +198,7 @@ input[type="text"],
 input[type="email"],
 input[type="date"],
 textarea {
-	border: 1px solid $inverse_accent_color;
+	border: 1px solid $secondary_color;
 }
 
 .inverse-color {
@@ -205,7 +224,7 @@ textarea {
 	input[type="date"],
 	input[type="password"],
 	textarea {
-		border: 1px solid $inverse_accent_color;
+		border: 1px solid $color;
 	}
 
 }

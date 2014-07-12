@@ -99,10 +99,26 @@ img.wp-smiley,
 /**
  * Marquee
  */
+
+.marquee  {
+	text-align: center;
+	position: relative;
+}
+
+.body-logo {
+	opacity: .03;
+	position: fixed;
+	left: 50%;
+	margin-left: -300px;
+	top: 50%;
+	margin-top: -300px;
+	z-index: -1;
+}
+
 .blog-title-blog-header {
 	vertical-align: top;
-	font-size: 45px;
-	line-height: 1.2em;
+	font-size: 50px;
+	line-height: 1.1em;
 
 	-webkit-animation: FADEIN 2.5s 1; /* Safari 4+ */
  	-moz-animation:    FADEIN 3.5s 1; /* Fx 5+ */
@@ -114,10 +130,6 @@ img.wp-smiley,
 	.blog-title-blog-header {
 		font-size: 30px;
 	}
-}
-
-.blog-title-blog-header {
-	padding-top: 6px;
 }
 
 /**
@@ -242,9 +254,8 @@ img.wp-smiley,
 }
 
 .healthy-menu > * {
-	display: block;
-	width: 100%;
-	margin-bottom: $medium_margin;
+	display: inline-block;
+	margin: $small_margin $medium_margin 0;
 }
 
 /** 
@@ -278,7 +289,7 @@ img.wp-smiley,
 
 .footer-widget:after {
 	content: "";
-	border-bottom: 1px dotted $inverse_accent_color;
+	border-bottom: 1px dotted $inverse_color;
 	display: block;
 	margin: $medium_margin auto 0;
 }
@@ -348,6 +359,7 @@ img.wp-smiley,
 }
 
 .entry-header {
+	text-align: center;
 	margin-bottom: $large_margin;
 }
 

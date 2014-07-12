@@ -68,6 +68,8 @@ blockquote > :last-child,
 .has-halfs >:nth-child(2),
 .has-halfs >:nth-child(2) > * {
 		text-align: right;
+		float: right;
+		clear: right;
 }
 
 .archive-header,

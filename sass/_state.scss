@@ -20,6 +20,7 @@ input,
 a,
 a > * {
 	transition: color $transition,
+	background $transition,
 	transform $transition;
 }
 
@@ -53,11 +54,10 @@ a > * {
 
 	.shadowed,
 	.shadowed .search-field {
-	text-shadow: 1px 1px 0 $color,
-			     2px 2px 0 $inverse_color;
-	padding-left: 0px;
-	padding-right: 2px;
-}
-
+		text-shadow: 1px 1px 0 $color,
+		2px 2px 0 $inverse_color;
+		padding-left: 0px;
+		padding-right: 2px;
+	}
 
 }

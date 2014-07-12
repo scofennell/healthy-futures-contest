@@ -186,7 +186,7 @@ i {
  * Address styling not present in IE 8/9.
  */
 mark {
-	background: $inverse_accent_color;
+	background: $translucent_inverse_color;
 }
 
 /**
@@ -255,6 +255,12 @@ samp {
 /* Forms */
 label,
 [type="range"] { cursor: pointer; }
+
+label { font-weight: bold; }
+
+label input,
+label select,
+label textarea { font-weight: normal; }
 
 /**
  * Known limitation: by default, Chrome and Safari on OS X allow very limited
