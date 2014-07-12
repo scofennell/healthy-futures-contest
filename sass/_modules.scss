@@ -870,10 +870,15 @@ button {
 /**
  Post a day
  */
+.error,
 .notes {
 	display: block;
 	font-style: italic;
 	line-height: 1.3em;
+	margin-bottom: 10px;
+	font-weight: 400;
+}
+.notes {
 	margin-bottom: 10px;
 }
 
