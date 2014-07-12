@@ -293,11 +293,19 @@ function healthy_my_weeks_select() {
  */
 function healthy_nav_menu() {
 
-	// A loginout link.
-	$loginout = healthy_login_link();
+	// Will hold each menu item.
+	$menu_items = array();
+
+	// If the user is logged in, givehim a logout link.
+	if( is_user_logged_in() ) {
+
+		// A loginout link.
+		$loginout = healthy_login_link();
 	
-	// We'll add items to this array, conditionally.
-	$menu_items = array( $loginout );
+		// Add the logout link.
+		$menu_items []= $loginout;
+
+	}
 
 	// Grab the current week so we can see if it's full.
 	$week = date( 'W' );

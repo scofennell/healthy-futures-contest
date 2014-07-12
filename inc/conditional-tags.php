@@ -453,8 +453,11 @@ function healthy_is_profile_complete() {
 			continue;
 		}
 
+		// See if the field is required.
+		if( ! isset ( $field[ 'required' ] ) ) { continue; }
+
 		// If it's not a meta field, like email or password, don't bother.
-		$is_meta = $field['is_meta'];
+		$is_meta = $field[ 'is_meta' ];
 		if ( empty ( $is_meta ) ) { continue; }
 
 		// Get the slug to use as meta key.

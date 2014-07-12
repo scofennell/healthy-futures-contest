@@ -243,6 +243,9 @@ function healthy_process_profile_form() {
 		// Use the slug for that field as a meta key
 		$slug = sanitize_key( $f[ 'slug' ] );
 
+		// Some fields are not always submitted.
+		if( ! isset( $_POST[ $slug ] ) ) { continue; }
+
 		// email is not meta.
 		if( $slug == 'user_email' ) { continue; }
 		
@@ -259,13 +262,7 @@ function healthy_process_profile_form() {
 		$value = preg_replace( '/[^,a-zA-Z 0-9_-]|[,;]$/s', '', $value );
 		
 		// Make sure required fields are not skipped.
-		$required = $f['required'];
-		$label = $f['label'];
-
-		// Pass an error message if a required field is skipped.
-		if( ( ! empty( $required ) ) && empty ( $value ) ) {
-			wp_die( "Please enter a value for $label." );
-		}
+		$label = $f[ 'label' ];
 
 		// Use update_user_meta regardless of if we're creating or editing.
 		update_user_meta( $affected, $slug, $value );

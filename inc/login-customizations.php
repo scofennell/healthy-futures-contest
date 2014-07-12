@@ -164,3 +164,26 @@ function healthy_delete_switch_users_cookie_on_logout() {
     return false;
 }
 add_action( 'wp_logout', 'healthy_delete_switch_users_cookie_on_logout' );
+
+
+add_filter( 'show_admin_bar', '__return_false' );
+
+/**
+ * [healthy_filter_wp_mail_from description]
+ * @param  [type] $email [description]
+ * @return [type]        [description]
+ */
+function healthy_filter_wp_mail_from($email){
+    get_bloginfo( 'admin_email' );
+}
+add_filter( 'wp_mail_from', 'healthy_filter_wp_mail_from', 999 );
+
+/**
+ * [xyz_filter_wp_mail_from_name description]
+ * @param  [type] $from_name [description]
+ * @return [type]            [description]
+ */
+function healthy_filter_wp_mail_from_name( $from_name ){
+    return get_bloginfo( 'name' );
+}
+add_filter( 'wp_mail_from_name', 'healthy_filter_wp_mail_from_name', 999 );

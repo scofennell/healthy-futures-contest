@@ -133,16 +133,36 @@ function healthy_controller() {
 
 		// use their first name.
 		$first_name = healthy_active_user_first_name();
-
-		// Thank them for completing their profile.
-		$title = sprintf( esc_html__( 'Hey %s, how\'s it going?', 'healthy' ), $first_name );
-		
+	
 		// If the contest has started:
 		if ( healthy_contest_is_happening() ){
-			$subtitle = esc_html__( 'Your profile is complete, but you can still edit it if you want.', 'healthy' );
+
+			// A query to post a new day.
+			$query = healthy_controller_query_string( 'post', 'create', 'new' );
+		
+			// A base for the link.
+			$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
+		
+			// The href to start a new day.
+			$href = $base.$query;
+		
+			// The label to start a new day.
+			$label = esc_html__( 'Meet the challenge here.', 'healthy' );
+		
+			// The link to start a new day.
+			$link = "<a href='$href'>$label</a>";
+		
+			// The page title.
+			$title = sprintf( esc_html__( 'Hey %s, how\'s it going? %s', 'healthy' ), $first_name, $link );
+
+			// The subtitle.
+			$subtitle = esc_html__( 'Your profile is complete, but you can still edit it here anytime you want.', 'healthy' );
 		
 		// If the contest has not yet started.
 		} else {
+
+			$title = sprintf( esc_html__( 'Hey %s, how\'s it going?', 'healthy' ), $first_name );
+
 			$subtitle = esc_html__( 'Come back soon, once the contest starts!', 'healthy' );
 		}
 
@@ -709,8 +729,8 @@ function healthy_profile_fields() {
 			'label' 				  => 'Grade',
 			'slug' 					  => sanitize_key( 'grade' ),
 			'type' 					  => 'range',
-			'min' 					  => '1',
-			'max' 					  => '12',
+			'min' 					  => '5',
+			'max' 					  => '8',
 			'default' 				  => '1',
 			'is_meta' 				  => 1,
 			'required' 				  => 1,

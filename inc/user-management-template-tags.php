@@ -629,38 +629,34 @@ function healthy_profile_form( $creating = false ) {
 		// If we're on the school input, grab a special field for that.
 		if( $type == 'school' ) {
 
-			// Grab the schools as <option>'s and wrap them in a <select>.
-			//if( $creating ) {
-			//	$include_empty = true;
-			//} else {
-			//	$include_empty = false;
-			//}
-
 			// If a teacher is creating a user, don't let them choose a school.
 			if ( healthy_user_is_role ( true, 'teacher' ) && ! healthy_current_user_is_acting( 'create', 'user', 'new' ) ) { continue; }
 
-				$schools_as_options = healthy_get_schools_as_options( $user_to_edit_id, true );			
-				$input = "
-					<select $required name='school'>
-						$schools_as_options
-					</select>
-				";
-			
-	//		}
+			$schools_as_options = healthy_get_schools_as_options( $user_to_edit_id, true );			
+			$input = "
+				<select $required name='school'>
+					$schools_as_options
+				</select>
+			";
 
-		// Else, it's a fairly normal input.
+		// If we're on the teacher input, grab a special field for that.
 		} elseif( $type == 'teacher' ) {
+
 			$current_user_school = healthy_get_user_school( $user_to_edit_id );
-			if( ! empty( $current_user_school ) ) {
-				$current_user_teacher = get_user_meta( $user_to_edit_id, 'teacher', TRUE );
-				$teachers_as_options = healthy_get_teachers_as_options( $current_user_school, $current_user_teacher );
-				
-				$input =  "
-					<select $required name='teacher'>
-						$teachers_as_options
-					</select>
-				";
-			}
+			
+			$current_user_teacher = get_user_meta( $user_to_edit_id, 'teacher', TRUE );
+
+			$teachers_as_options = healthy_get_teachers_as_options( $current_user_school, $current_user_teacher );
+
+			if( empty( $current_user_school ) || empty( $teachers_as_options ) ) { continue; }
+					
+			$input =  "
+				<select $required name='teacher'>
+					$teachers_as_options
+				</select>
+			";
+		
+		// Else, it's a fairly normal input.		
 		} else {
 
 			// Draw the input.
