@@ -253,9 +253,9 @@ function healthy_switch_to_user_form() {
 
 		// Output the input for this user.
 		$out.="
-			<label for='$class' >
+			<label class='switch-to-user' for='$class' >
 				<input required id='$class' name='object_id' value='$user_id' type='radio' $checked >
-				$display_name | $email | <a href='$delete_href'>$delete_label</a>
+				<span class='switch-to-user-display-name'>$display_name</span> | <span class='switch-to-user-email'>$email</span> | <a class='delete-user-link' href='$delete_href'><small>$delete_label</small></a>
 			</label>
 		";
 	}
@@ -281,7 +281,7 @@ function healthy_switch_to_user_form() {
 
 	// Complete the output.
 	$out = "
-	<form method='$method' action='$form_action'>
+	<form class='switch-to-users' method='$method' action='$form_action'>
 		$nonce
 		$out
 		$object_type
@@ -308,7 +308,7 @@ function healthy_review_students_link() {
 	$query = healthy_controller_query_string( 'user', 'review', 'all' );
 	
 	// Base url.
-	$base = esc_url( get_bloginfo( 'url' ) );
+	$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
 
 	// The url which will handle this request.
 	$href = esc_url( $base.$query );
@@ -366,15 +366,15 @@ function healthy_login_panels() {
 		$callback_out = call_user_func( $callback );
 
 		$out.="
-			<div class='login-panel $key'>
-				<h3>$callback_out</h3>
-			</div>
+			<li class='login-panel $key'>
+				<strong class='login-panel-header'>$callback_out</strong>
+			</li>
 		";
 
 	}
 	
 	// Wrap the output.
-	$out = "<div class='login-panels'>$out</div>";
+	$out = "<nav class='island content-holder login-panels'><ul>$out</ul></nav>";
 
 	return $out;
 
@@ -407,13 +407,17 @@ function healthy_the_switched_warning() {
 			$switch_query = healthy_controller_query_string( 'user', 'review', 'all' );
 			$base = get_bloginfo( 'url' );
 			$switch_href = esc_url( $base.$switch_query );
-			$switch_link = "<a href='$switch_href'>$switch_label</a>";
+			$switch_link = "<a class='switched-warning-link' href='$switch_href'>$switch_label</a>";
 
 			$out .= ' '.$switch_link;
 	
+			$out = "$out";
+
 		}
 	
 		// The user has switched.  Throw some disclaimer text.
+		$out = "<p class='inverse-color warning island switched-warning'>$out</p>";
+
 		return $out;
 
 	}

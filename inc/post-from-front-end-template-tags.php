@@ -15,79 +15,98 @@
  */
 function healthy_get_weekly_averages( $week_id ) {
 
-	// Our plugin-wide definition of a day.
-	$day = healthy_day();
+	// Grab the active user id.
+	$user_id = healthy_get_active_user_id();
 
-	$week_id = absint( $week_id );
+	// Check for a transient.
+	$transient_key = 'healthy_weekly_avs_'.$user_id.$week_id;
+	$transient = get_transient( $transient_key );
+	if( $transient === false ) {
 
-	// Meta fields for a day.
-	$components = $day['components'];
+		// Our plugin-wide definition of a day.
+		$day = healthy_day();
 
-	// This will hold meta keys that relate to exercise time.
-	$keys = array();
+		$week_id = absint( $week_id );
 
-	// Start the output.
-	$out = "";
+		// Meta fields for a day.
+		$components = $day['components'];
 
-	// For each meta key that relates to exercise...
-	foreach( $components as $c ) {
+		// This will hold meta keys that relate to exercise time.
+		$keys = array();
 
-		// If this isn't measured weekly, skip it.
-		if ( ! isset( $c[ 'is_weekly_metric' ] ) ) { continue; }
-		
-		// Will be used as a key to get the weekly average
-		$slug = $c[ 'slug' ];
+		// Start the output.
+		$out = "";
 
-		// The label for this component.
-		$label = esc_html( $c[ 'label' ] );
+		// For each meta key that relates to exercise...
+		foreach( $components as $c ) {
 
-		// The weekly average for this component.
-		$value = healthy_get_weekly_average( $week_id, $slug );
-
-		// The week_id for last week.
-		$last_week = $week_id - 1;
-
-		// This will hold the result of comparing this week to last week for this stat.
-		$compare ='';
-
-		// If there was a last week...
-		if ( ! empty ( $last_week ) ) {
-
-			// Get the value from last week.
-			$last_week_value = healthy_get_weekly_average( $last_week, $slug );
+			// If this isn't measured weekly, skip it.
+			if ( ! isset( $c[ 'is_weekly_metric' ] ) ) { continue; }
 			
-			// Compare last week to this week.
-			$difference = $value - $last_week_value;
-			
-			// Make it absolute.
-			$difference = str_replace( '-', '', $difference );
-			
-			// Output a string based on the result of the comparison.  More than the week before:
-			if ( $value > $last_week_value ) {
-				$compare = sprintf( esc_html__( " &mdash; That's %s more than the week before.", 'healthy' ), $difference );
-			
-			// Less than the week before.
-			} elseif ( $value < $last_week_value ) {
-				$compare = sprintf( esc_html__( " &mdash; That's %s less than the week before.", 'healthy' ), $difference );	
-			
-			// The same as the week before.
-			} elseif ( $value == $last_week_value ) {
-				esc_html__( "That\'s the same as last week.", 'healthy' );
+			// Will be used as a key to get the weekly average
+			$slug = $c[ 'slug' ];
+
+			// The label for this component.
+			$label = esc_html( $c[ 'label' ] );
+
+			// The weekly average for this component.
+			$value = healthy_get_weekly_average( $week_id, $slug );
+
+			// The week_id for last week.
+			$last_week = $week_id - 1;
+
+			// This will hold the result of comparing this week to last week for this stat.
+			$compare ='';
+
+			// If there was a last week...
+			if ( ! empty ( $last_week ) ) {
+
+				// Get the value from last week.
+				$last_week_value = healthy_get_weekly_average( $last_week, $slug );
+				
+				// Compare last week to this week.
+				$difference = $value - $last_week_value;
+				
+				// Make it absolute.
+				$difference = str_replace( '-', '', $difference );
+				
+				// Output a string based on the result of the comparison.  More than the week before:
+				if ( $value > $last_week_value ) {
+					$compare = sprintf( esc_html__( " &mdash; That's %s more than the week before.", 'healthy' ), $difference );
+				
+				// Less than the week before.
+				} elseif ( $value < $last_week_value ) {
+					$compare = sprintf( esc_html__( " &mdash; That's %s less than the week before.", 'healthy' ), $difference );	
+				
+				// The same as the week before.
+				} elseif ( $value == $last_week_value ) {
+					esc_html__( "That\'s the same as last week.", 'healthy' );
+				}
 			}
+
+			// Translate 'per day'.
+			$per_day = esc_html( 'Per Day: ', 'healthy' );
+
+			// Add this stat to the output.
+			$out .= "<li><strong>$label $per_day $value </strong> <i>$compare</i></li>";
+
 		}
 
-		// Translate 'per day'.
-		$per_day = esc_html( 'Per Day', 'healthy' );
+		// Complete the output.
+		$out = "<ul>$out</ul>";
 
-		// Add this stat to the output.
-		$out .= "<dt>$label $per_day </dt><dd>$value $compare</dd>";
+		// Grab the transient time.
+		$transient_time = healthy_transient_time();
 
+		// Stash the output.
+		set_transient( $transient_key, $out, $transient_time );
+
+		return $out;
+
+	// If we have a transient, return it.
+	} else {
+		return $transient;
 	}
-
-	// Complete the output.
-	$out = "<dl>$out</dl>";
-
-	return $out;
 
 }
 
@@ -674,8 +693,8 @@ function healthy_week_by_week(){
 		}
 
 		// Translate.
-		$week_string = sprintf( __( 'Week %d:', 'healthy' ), $i );
-		$week_string = "<span class='week-label'>$week_string</span>";
+		$week_string = sprintf( __( 'Week %d', 'healthy' ), $i );
+		$week_string = "<p class='island inverse-color week-label'><strong>$week_string</strong></p>";
 
 		// Add a label for the week, tensed for past/present. 
 		if ( $current_week == $week ) {
@@ -689,12 +708,12 @@ function healthy_week_by_week(){
 		$averages = healthy_get_weekly_averages( $i );
 
 		// Add this week to the output.
-		$out .= "<li>$week_string $you_entered $averages</li>";
+		$out .= "<li class='weekly-average'>$week_string $you_entered $averages</li>";
 
 	}
 
 	// Wrap the output, return.
-	$out = "<ul>$out</ul>";
+	$out = "<ul class='weekly-averages'>$out</ul>";
 	return $out;
 
 }

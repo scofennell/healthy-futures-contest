@@ -15,6 +15,12 @@
  */
 function healthy_reporting_menu() {
 
+	// Will hold selected="selected" for current menu item.
+	$selected = '';
+
+	// Get the current url to power selected().
+	$current_url = healthy_current_url();
+
 	// Get the school for the current user.
 	$school = healthy_get_user_school( get_current_user_id() );
 
@@ -25,13 +31,18 @@ function healthy_reporting_menu() {
 	$query = healthy_controller_query_string( 'report', 'review', $school, 'weekly' );
 	
 	// A query string to view weekly.
-	$weekly_href = $base.$query;
+	$weekly_href = esc_url( $base.$query );
+
+	// If we're viewing any kind of weekly report, this is the correct menu item.
+	if( ( $_GET[ 'unit_time' ] == 'weekly' ) && ( $_GET[ 'object_id' ] == $school ) ) {
+		$selected = 'selected="selected"';
+	}
 
 	// A lebel to view weekly reports.
 	$weekly_label = esc_html__( 'All Weeks', 'healthy' );
 
 	// A link to view weekly reports.
-	$weekly_link = "<a href='$weekly_href'>$weekly_label</a>";
+	$weekly_link = "<option $selected value='$weekly_href'>$weekly_label</option>";
 
 	// Get the contest length.
 	$max_week = healthy_length_of_contest();
@@ -58,14 +69,25 @@ function healthy_reporting_menu() {
 		$week_by_week_label = sprintf( esc_html__( 'Week %d', 'healthy' ), $week );
 
 		// The href for the report for this week.
-		$week_by_week_href = $base.$query."&unit_time=$week";
+		$query = healthy_controller_query_string( 'report', 'review', $school, $week );
+
+		// An href for viewing this week.	
+		$week_by_week_href = esc_url( $base.$query );
+
+		// Since we're looping thorugh weeks, we may need to reset this var.
+		$selected = '';
+
+		// If we're viewing this week, this is the correct menu item.
+		if( ( $_GET['unit_time'] == ( $week ) ) && ( $_GET['object_id'] == $school ) ) {
+			$selected = 'selected="selected"';
+		}
 
 		// The link for the report for this week.
-		$week_by_week.="<a href='$week_by_week_href'>$week_by_week_label</a> ";
+		$week_by_week.="<option $selected value='$week_by_week_href'>$week_by_week_label</option> ";
 
 	}
 
-	// May hold a link to browse all schools.
+	// May hold a link to browse all schools if the user is priveleged enough to do so.
 	$by_school = '';
 	
 	// If the user is a boss, he can browse info from all schools.
@@ -75,43 +97,44 @@ function healthy_reporting_menu() {
 		$by_school_query = healthy_controller_query_string( 'report', 'review', 'all', 'all' );
 
 		// An href to browse all schools for all time.
-		$by_school_href = $base.$by_school_query;
+		$by_school_href = esc_url( $base.$by_school_query );
+
+		// If we're viewing by school, this is the menu item.
+		if( ( $_GET['unit_time'] == 'all' ) && ( $_GET['object_id'] == 'all' ) ) {
+			$selected = 'selected="selected"';
+		}
 
 		// A label to browse all schools.
 		$by_school_label = esc_html__( 'By School', 'healthy' );
 
 		// A link to browse all schools.
-		$by_school = "<a href='$by_school_href'>$by_school_label</a>";
+		$by_school = "<option $selected value='$by_school_href'>$by_school_label</option>";
 	}
 
 	// Build a link to view all-stars
 	$all_stars_label = esc_html( 'All-Stars', 'healthy' );
-	$all_stars_href = healthy_controller_query_string( 'report', 'review', $school, 'all', 1 );
-	$all_stars_link = "<a href='$all_stars_href'>$all_stars_label</a>";
+	$all_stars_href = esc_url( $base.healthy_controller_query_string( 'report', 'review', $school, 'all', 1 ) );
 
-	// This may hold a value for a link to download the report as csv.
-	$as_csv_link = '';
+	// If we're viewing all stars, this is the menu item.
+	$selected = selected( $all_stars_href, $current_url, false );
 
-	// If the screen is downloadable:
-	if ( isset( $_GET[ 'object_type' ] ) && isset( $_GET[ 'action' ] ) && isset( $_GET[ 'object_id' ] ) ) {
+	// Make a link to view all stars.
+	$all_stars_link = "<option $selected value='$all_stars_href'>$all_stars_label</option>";
 
-		// A label to grab as csv. 
-		$as_csv_label = esc_html( 'Download as CSV', 'healthy' );
+	// Text pormpting the user to view a report.
+	$choose = esc_html__( 'Choose a View', 'healthy' );
 	
-		// A query string to grab as csv.
-		$as_csv_arg = '&as_csv=1';
-		$as_csv_base = healthy_current_url();
-
-		// An href to grab as csv.
-		$as_csv_href = $as_csv_base.$as_csv_arg;
+	// Provide a blank option.
+	$blank_option = "<option>$choose</option>";
 	
-		// A link to grab as csv.
-		$as_csv_link = "<a class='as_csv' href='$as_csv_href'>$as_csv_label</a>";
-
-	}
+	// concat the options.
+	$options = $blank_option.$weekly_link.$week_by_week.$all_stars_link.$by_school;
 	
+	// Create the select menu.
+	$select = "<p><select onchange='document.location.href=this.options[this.selectedIndex].value;'>$options</select></p>";
+
 	// Complete the output.
-	$out = "<nav class='reporting-menu'>$by_school ".$weekly_link.' '.$week_by_week.' '.$all_stars_link.' '.$as_csv_link."</nav>";
+	$out = "<nav class='reporting-menu'>$select</nav>";
 
 	return $out;
 
@@ -122,7 +145,11 @@ function healthy_reporting_menu() {
  *
  * @return string A transient key for our reports.
  */
-function healthy_transient_key() {
+function healthy_reports_transient_key() {
+
+	// The user role.
+	$role = '';
+	if( healthy_user_is_role( false, 'boss' ) ) { $role = 'boss'; }
 
 	// The output format.
 	$format = 'table';
@@ -130,25 +157,24 @@ function healthy_transient_key() {
 
 	// The object ID.
 	$object_id = '';
-	if( isset( $_GET[ 'object_id' ] ) ) { $object_id = sanitize_text_field( $_GET['object_id'] ); }
+	if( isset( $_GET[ 'object_id' ] ) ) { $object_id = sanitize_text_field( $_GET[ 'object_id' ] ); }
 
 	// The unit time.
 	$unit_time = '';
-	if( isset( $_GET[ 'unit_time' ] ) ) { $unit_time = sanitize_text_field( $_GET['unit_time'] ); }
+	if( isset( $_GET[ 'unit_time' ] ) ) { $unit_time = sanitize_text_field( $_GET[ 'unit_time' ] ); }
+
+	// The all star param.
+	$all_stars = '';
+	if( isset( $_GET[ 'all_stars' ] ) ) { $all_stars = sanitize_text_field( $_GET[ 'all_stars' ] ); }
+
+	// The page number.
+	$offset = '';
+	if( isset( $_GET[ 'offset' ] ) ) { $offset = sanitize_text_field( $_GET[ 'offset' ] ); }
 
 	// Bundle it up as a transient key.
-	$out = "healthy_report_$format$object_id$unit_time";
+	$out = "healthy_reporting_$role$format$object_id$unit_time$all_stars$offset";
 
 	return $out;
-}
-
-/**
- * A transient lifespan in seconds for our reports.
- *
- * @return string A transient lifespan in seconds for our reports.
- */
-function healthy_transient_time () {
-	return '1';
 }
 
 /**
@@ -156,12 +182,15 @@ function healthy_transient_time () {
  * 
  * @param  string|array 	$out The value to which we're appending.
  * @param  string $cell   	The value we're appending.
- * @param  string $format 	Table or csv.
  * @param  string $before 	<td> or <th> for tables, or empty string for arrays.
  * @param  string $after  	</td> or </th> for tables, or empty string for arrays.
  * @return string|array  	The output var for the report, with the nw cell appended.
  */
-function healthy_append_cell( $out, $cell, $format = 'table', $before='', $after = '' ) {
+function healthy_append_cell( $out, $cell, $before='', $after = '' ) {
+
+	// Are we appending to a table or a csv?
+	$format = 'table';
+	if( isset( $_GET[ 'as_csv' ] ) ) { $format = 'csv'; }
 
 	// In the case of a table, add the table cell.
 	if ( $format == 'table' ) {
@@ -178,7 +207,6 @@ function healthy_append_cell( $out, $cell, $format = 'table', $before='', $after
 /**
  * When reporting on a school, offer these fields.
  *
- * @todo  I don't think slug is being used anywhere.
  * @return  array An array to denote what fileds to report on when reporting on a school.
  */
 function healthy_school_report_cells( $school ) {
@@ -188,23 +216,20 @@ function healthy_school_report_cells( $school ) {
 
 		// The total students in the contest for this school.
 		array(
-			'slug' 	   => 'total_students_in_contest',
-			'label'    => 'Total Students In Contest',
-			'callback' => 'healthy_count_users_by_school'
+			'label'    => esc_html__( 'Total Students In Contest' ),
+			'callback' => 'healthy_count_users_by_school',
 		),
 		
 		// The total days complete for this school.
 		array(
-			'slug' 	   => 'total_days_complete',
-			'label'    => 'Total Days Complete',
-			'callback' => 'healthy_days_complete_by_school'
+			'label'    => esc_html__( 'Total Days Complete' ),
+			'callback' => 'healthy_days_complete_by_school',
 		),
 
 		// The average days complete per student in this school.		
 		array(
-			'slug'     => 'days_complete_per_student',
-			'label'    => 'Days Complete Per Student',
-			'callback' => 'healthy_days_complete_per_student_by_school'
+			'label'    => esc_html__( 'Days Complete Per Student' ),
+			'callback' => 'healthy_days_complete_per_student_by_school',
 		),
 	);
 	return $out;
@@ -214,21 +239,43 @@ function healthy_school_report_cells( $school ) {
  * Get a row of cells for a report.
  * 
  * @param  int|string $unit_time 	Grab one week (week ID number), or all weeks ("weekly").
- * @param  boolean $user_id   		The user ID from whom we'll grab data.  If none provided, grabs the table header cells.
- * @param  string  $format    		As table or csv.
- * @param  string  $school 			From what school are we grabbing?
- * @param  string  $all_stars 		Restrict our search to all-star users?
  * @return string|array             Returns an html <tr> or an array of cells.
  */
-function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $school = '', $all_stars = '' ) {
+function healthy_get_row( $user_id = false ) {
+
+	// Determine the output format.
+	$format = 'table';
+	if( isset( $_GET[ 'as_csv' ] ) ) {
+		$format =  'csv';
+	}
 
 	// Start the output var.  If it's a table, start a string.
 	if ( $format == 'table' ) {
 		$out = '';
 		
-		// If csv, append the cell as an array member.
+	// If csv, append the cell as an array member.
 	} elseif( $format == 'csv' ) {
 		$out = array();
+	}
+
+	// Are we only viewing all-stars?
+	$all_stars = '';
+	if( isset( $_GET[ 'all_stars' ] ) ) {
+		if( $_GET[ 'all_stars' ] == 1 ) {
+			$all_stars = 1;
+		}
+	}
+
+	// For what unit time are we viewing?
+	$unit_time = '';
+	if( isset( $_GET[ 'unit_time' ] ) ) {
+		$unit_time =  sanitize_text_field( $_GET[ 'unit_time' ] );
+	}
+
+	// What school are we viewing?
+	$school = '';
+	if( isset( $_GET[ 'school' ] ) ) {
+		$school = sanitize_text_field( $_GET[ 'school' ] );
 	}
 
 	// If the user is a boss and is grabbing from all weeks ( That is, grabbing by school. )
@@ -240,7 +287,7 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 		// The slugs for each school.
 		$school_slugs = array();
 		foreach( $schools as $s ) {
-			$school_slugs []= $s['slug'];
+			$school_slugs []= $s[ 'slug' ];
 		}
 
 		// If school still equals 'all', we're on the first row of the table.
@@ -277,7 +324,7 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 		}
 
 		// Append to the output var.
-		$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+		$out = healthy_append_cell( $out, $cell, $before, $after );
 
 		// The fields on which we report for each school.
 		$school_report_cells = healthy_school_report_cells( $school );
@@ -296,9 +343,8 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 				$cell = call_user_func( $callback, $school );
 			}
 
-
 			// Append to the output var.
-			$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+			$out = healthy_append_cell( $out, $cell, $before, $after );
 		}  
 
 	// Endif the user is a boss and is grabbing from all weeks (that is, grabbing by school).  We're grabbing data by users now.
@@ -341,6 +387,7 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 			// If we're grabbing from a user...
 			if( $user_id ) {
 
+				// If we're only grabbing all-stars and this user is nt an all-star, continue.
 				if ( ! empty( $all_stars ) && ! healthy_user_is_all_star( $user_id ) ) { continue; }
 
 				// Start the cell.
@@ -376,7 +423,7 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 			}
 
 			// Append to the outout var.
-			$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+			$out = healthy_append_cell( $out, $cell, $before, $after );
 
 		// End for each user field.
 		}
@@ -421,7 +468,7 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 						$slug = $f[ 'slug' ];
 
 						// Get the average for this user/week/value.
-						$cell = healthy_get_weekly_average( $i, $slug, $user_id );
+						$cell = healthy_get_weekly_average( $i, $slug );
 				
 						// If we're writing a table, append this cell.
 						if( $format == 'table' ) {
@@ -441,15 +488,15 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 					} else {
 						$cell = esc_html__( 'nope', 'healthy' );
 					}
-					$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+					$out = healthy_append_cell( $out, $cell, $before, $after );
 
 					// How many days are complete this week?
 					$cell = healthy_days_complete( $i, $user_id );
-					$out = healthy_append_cell( $out, $cell, $format, $before, $after );	
+					$out = healthy_append_cell( $out, $cell, $before, $after );	
 
 					// Total exercise for this week?
 					$cell = healthy_get_total_exercise_for_week( $user_id, $i );
-					$out = healthy_append_cell( $out, $cell, $format, $before, $after );	
+					$out = healthy_append_cell( $out, $cell, $before, $after );	
 
 				// If we're not grabbing from a user, just output the header row.
 				} else {
@@ -465,22 +512,22 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 
 						// The week ID.
 						$cell = sprintf( esc_html__( 'Week %d Average %s', 'healthy' ), $i, $label );
-						$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+						$out = healthy_append_cell( $out, $cell, $before, $after );
 				
 					// End for each day field.
 					} 
 
 					// Is this week complete?
 					$cell = sprintf( esc_html__( 'Week %d Complete?', 'healthy' ), $i );
-					$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+					$out = healthy_append_cell( $out, $cell, $before, $after );
 
 					// How many days are complete this week?
 					$cell = sprintf( esc_html__( 'Week %d Days Complete', 'healthy' ), $i );			
-					$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+					$out = healthy_append_cell( $out, $cell, $before, $after );
 
 					// Total exercise for this week?
 					$cell = sprintf( esc_html__( 'Week %d Total Exercise', 'healthy' ), $i );			
-					$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+					$out = healthy_append_cell( $out, $cell, $before, $after );
 
 				}
 			
@@ -499,30 +546,30 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 				} else {
 					$cell = esc_html( 'nope' );	
 				}		
-				$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+				$out = healthy_append_cell( $out, $cell, $before, $after );
 
 				// How many days are complete this week?
 				$cell = healthy_days_complete( $unit_time, $user_id );
-				$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+				$out = healthy_append_cell( $out, $cell, $before, $after );
 
 				// Total exercise for this week?
 				$cell = healthy_get_total_exercise_for_week( $user_id, $unit_time );
-				$out = healthy_append_cell( $out, $cell, $format, $before, $after );	
+				$out = healthy_append_cell( $out, $cell, $before, $after );	
 
 			// If we're not grabbing data from a user, just make the table header.
 			} else {
 
 				// Is the week complete?
 				$cell = sprintf( esc_html__( "Week %d Complete?", 'healthy' ), $unit_time );
-				$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+				$out = healthy_append_cell( $out, $cell, $before, $after );
 
 				// How many days complete this week?
 				$cell = sprintf( esc_html__( 'Week %d Days Complete', 'healthy' ), $unit_time );
-				$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+				$out = healthy_append_cell( $out, $cell, $before, $after );
 
 				// Total exercise for this week?
 				$cell = sprintf( esc_html__( 'Week %d Total Exercise', 'healthy' ), $unit_time );			
-				$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+				$out = healthy_append_cell( $out, $cell, $before, $after );
 
 			}
 
@@ -621,7 +668,7 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 					}
 			
 					// Append to output.
-					$out = healthy_append_cell( $out, $cell, $format, $before, $after );
+					$out = healthy_append_cell( $out, $cell, $before, $after );
 
 				// End for each day cell.					
 				}
@@ -635,6 +682,7 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 		// End if unit_time is numeric.
 		}
 
+	// End if we're grabbing by user or by school.
 	}
 	return $out;
 }
@@ -642,20 +690,13 @@ function healthy_get_row( $unit_time, $user_id = false, $format = 'table', $scho
 /**
  * Get a report in table or csv format.
  * 
- * @param  string $school    From which school are we grabbing data?
- * @param  string $filter_by Unused.
- * @param  string $format    In what format are we reporting?
  * @return string|array      An HTML table or a CSV array.
  */
-function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) {
-
-	// Will hold the table head.
-	$head = '';
-
-	// Will hold the table body.
-	$body = '';
+function healthy_get_report() {
 
 	// If we're outputting a table, start with a  menu.
+	$format = 'table';
+	if( isset( $_GET[ 'as_csv' ] ) ) { $format = 'csv'; }
 	if ( $format == 'table' ) {
 
 		// Nav links for viewing reports.
@@ -670,19 +711,47 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 	}
 
 	// If we have all the fields we need:
-	if ( isset( $_GET[ 'object_type' ] ) && isset( $_GET[ 'action' ] ) && isset( $_GET[ 'object_id' ] ) ) {
+	if ( ! isset( $_GET[ 'object_type' ] ) || ! isset( $_GET[ 'action' ] ) || ! isset( $_GET[ 'object_id' ] ) || ! isset( $_GET[ 'unit_time' ] ) ) { return $out; }
 
-		// From what time are we grabbing?
-		if ( isset ( $_GET[ 'unit_time' ] ) ) {
-			$unit_time = $_GET[ 'unit_time' ];
+	// Grab the school from the url.
+	$school = sanitize_text_field( $_GET[ 'object_id' ] );
 
-			// We either grab all weeks or a given week.
-			if( ( $unit_time != 'weekly' ) && ( $unit_time != 'all' ) && ( ! is_numeric( $unit_time ) ) ) { return false; }
+	// Confirm that the current user can view data for the selected school.  Bosses can view any school.
+	if ( ! healthy_user_is_role( false, 'boss' ) ) {
+		
+		// Grab the user school for comparisomn.
+		$user_school = healthy_get_user_school( get_current_user_id() );
+		
+		// If the user isn't from this school, bail.
+		if( $user_school != $school ) { wp_die( 'There has been an error. 706' ); }
+	}
 
-		// Default to all weeks.
+	// Grab the transient key for this view.
+	$transient_key = healthy_reports_transient_key();
+
+	//  Grab the transient value for this view.
+	$transient = get_transient( $transient_key );
+
+	// If there is no transient, build it, save it, and output it.
+	if( false === ( $transient ) ) {
+
+		// Will hold the table head.
+		$head = '';
+
+		// Will hold the table body.
+		$body = '';
+
+		// From what school are we grabbing?
+		if ( healthy_user_is_role( false, 'boss' ) ) {
+			$school = 'all';
 		} else {
-			$unit_time = 'weekly';
+			$school = sanitize_text_field( $_GET[ 'object_id' ] );
 		}
+
+		// We either grab all weeks or a given week.
+		$unit_time = sanitize_text_field( $_GET[ 'unit_time' ] );
+		if( ( $unit_time != 'weekly' ) && ( $unit_time != 'all' ) && ( ! is_numeric( $unit_time ) ) ) { return false; }
+
 
 		// Are we just grabbing all-star users?
 		$all_stars = '';
@@ -691,7 +760,7 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 		}
 
 		// Get the header row.
-		$header_cells = healthy_get_row( $unit_time, false, $format, $school, $all_stars );
+		$header_cells = healthy_get_row( false );
 
 		// If we're outputting as a table, wrap it as a row.
 		if ( $format == 'table' ) {
@@ -728,6 +797,7 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 				'all_stars'	   => $all_stars,
 			);
 
+			// Get the body rows.
 			$body = healthy_get_rows_for_report( $args );
 
 		// Else, the user is not a boss, so we have to grab from a specific school.
@@ -735,18 +805,6 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 
 			// Build an args array for a call to get_users.
 			$args = array();
-
-			// The schools in our contest.
-			$schools = healthy_get_schools();
-		
-			// The slugs for each school.
-			$school_slugs = array();
-			foreach( $schools as $s ) {
-					$school_slugs []= $s['slug'];
-			}
-
-			// Only grab users from the specified school.
-			if ( ! in_array( $school, $school_slugs ) ) { return false; }
 
 			// Where to start in pagination.
 			$offset = 0;
@@ -774,32 +832,35 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 				'all_stars'	   => $all_stars,
 			);
 
+			// Get the body rows
 			$body = healthy_get_rows_for_report( $args );
 
 		}
 		
-		// If table, append each user to this value.
+		// If table, append the rows this value.
 		if ( $format == 'table' ) {
 		
+			// THe html table.
+			$table = "<table id='healthy_report'>$head$body</table>";
+
 			// Grab pagination if necessary.
 			$pagination = '';
 			if( $school != 'all' ) {
-				$pagination = healthy_report_pagination( $school, $all_stars );
+				$pagination = healthy_report_pagination( $school );
 			}
 
 			// Grab a count of users for this school.
 			$count = healthy_count_users_by_school( $school, $all_stars );
 
 			// Translate all-star for all-star reports.
+			$all_star_str = '';
 			if( ! empty( $all_stars ) ) {
 				$all_star_str = esc_html( 'all-star', 'healthy' );
-			} else {
-				$all_star_str = '';	
 			}
 
 			// Add a label to explain how many users.  If we're grabbing from all schools:
 			if ( $school == 'all' ) {
-				$count_label = sprintf( _n( 'There is one %s student in the contest.', 'There are %d %s students in the contest.', $count, 'healthy' ), $count, $all_star_str );
+				$count_label = sprintf( _n( 'There is one %s %s student in the contest.', 'There are %d %s students in the contest.', $count, 'healthy' ), $count, $all_star_str );
 			
 			// Else, we're grabbing from a specific school.
 			} else {
@@ -813,43 +874,62 @@ function healthy_get_report( $school = '', $filter_by = '', $format = 'table' ) 
 			// Wrap the user count for output.
 			$count_label = "<p>$count_label</p>";
 
+			// A label to grab as csv. 
+			$as_csv_label = esc_html( 'Download as CSV', 'healthy' );
+		
+			// A query string to grab as csv.
+			$as_csv_arg = '&as_csv=1';
+			$as_csv_base = healthy_current_url();
+
+			// An href to grab as csv.
+			$as_csv_href = $as_csv_base.$as_csv_arg;
+		
+			// A link to grab as csv.
+			$as_csv_link = "<p><a class='button island accent-color as_csv' href='$as_csv_href'><strong>$as_csv_label</strong></a></p>";
+
 			// Complete the table.
-			$table = "<table id='healthy_report'>$head$body</table>$pagination $count_label";
+			$out = "$menu $as_csv_link $count_label $pagination $table $pagination";
 
-			$out .= $table;
-
+		// If we're outputting as csv, merge the arrays.
 		} elseif ( $format == 'csv' ) {
-	
 			$out = array_merge( $out, $body );
-
 		}
 
+		// For how many seconds do we store tranients?
+		$transient_time = healthy_transient_time();
+
+		// Set the transient.
+		set_transient( $transient_key, $out, $transient_time );
+
+		// Return the output.
+		return $out;
+
+	// Else, if we have a transient for this view, output it.
+	} else {
+		return $transient;
 	}
-
-	return $out;
-
 }
 
 /**
  * How many users per page?
- * 
+ *
+ * @todo  Set this to 50 when before the project launches.
  * @return int Number of users per page in reports.
  */
 function healthy_users_per_page() {
-	return 1;
+	return 2;
 }
 
 /**
  * Return an HTML nav for paging through a report.
  * 
  * @param  string $school For which school to show page links.
- * @param  int $all_stars Are we grabbing only all-stars?
  * @return string         An HTML nav for paging through a report.
  */
-function healthy_report_pagination( $school, $all_stars = '' ) {
+function healthy_report_pagination( $school ) {
 
 	// How many users in this school?
-	$count = healthy_count_users_by_school( $school, $all_stars );
+	$count = healthy_count_users_by_school( $school );
 
 	// Is there a url var for offset?
 	$offset = '';
@@ -891,12 +971,15 @@ function healthy_report_pagination( $school, $all_stars = '' ) {
 	}
 
 	// Are we grabbing all-stars?
-	$all_stars = absint( $all_stars );
+	$all_stars = 'all_stars';
+	if( isset( $_GET[ 'all_stars' ] ) ) {
+		$all_stars = absint( $_GET[ 'all_stars' ] );
+	}
 
 	// The url for this page link.
 	$query = healthy_controller_query_string( $object_type, $action, $school, $unit_time, $all_stars );
 	
-	//?object_id=$object_id&object_type=$object_type&action=$action&unit_time=$unit_time";
+	// The url for this link.
 	$url = $base.$query;
 	
 	// Will increment for each page.
@@ -943,7 +1026,7 @@ function healthy_report_pagination( $school, $all_stars = '' ) {
  * @param  string $school For which school to count users.
  * @return int The number of users for this school.
  */
-function healthy_count_users_by_school( $school, $all_stars = '' ) {
+function healthy_count_users_by_school( $school ) {
 	
 	// The schools in our contest.
 	$schools = healthy_get_schools();
@@ -968,22 +1051,35 @@ function healthy_count_users_by_school( $school, $all_stars = '' ) {
 		'fields'	   => array( 'ID' ),
 	);
 
-	// THe users.
+	// The users.
 	$r = new WP_User_Query( $args );
 
-	// The user count.
+	// The all star param.
+	$all_stars = '';
+	if( isset( $_GET[ 'all_stars' ] ) ) { $all_stars = sanitize_text_field( $_GET[ 'all_stars' ] ); }
+
+	// The user count.  If we are not grabbing only all-stars, just return the count.
 	if( empty ( $all_stars ) ) {
 		$count = $r -> get_total();
+	
+	// If we are just returning all stars, loop through the users and grab just the all stars.
 	} else {
+
+		// Will increment for every all star.
 		$count = 0;
+
+		// The users from our query.
 		$users = $r -> results;
+		
+		// For each user...
 		foreach( $users as $u ) {
+
+			// If the user is an all-star...
 			if( healthy_user_is_all_star( $u -> ID) ) {
 				$count++;
 			}
 		}
 	}
-
 
 	// Sanitize the output.
 	$out = absint( $count );
@@ -1118,7 +1214,7 @@ function healthy_get_rows_for_report( $args = array() ) {
 			$school = $row[ 'slug' ];
 
 			// Get the row.
-			$cells = healthy_get_row( $unit_time, false, $format, $school );
+			$cells = healthy_get_row( false );
 
 		// Else, we're browsing by user.
 		} else {
@@ -1127,7 +1223,7 @@ function healthy_get_rows_for_report( $args = array() ) {
 			$user_id = absint( $row -> ID );
 
 			// The cells for this user.
-			$cells = healthy_get_row( $unit_time, $user_id, $format, '', $args[ 'all_stars' ] );
+			$cells = healthy_get_row( $user_id );
 
 		}
 
@@ -1169,13 +1265,6 @@ function healthy_get_csv() {
 	// Sniff the url to seee if we're getting by csv.
 	if( ! isset( $_GET[ 'as_csv' ] ) ) { return false; }
 
-	// From what school are we grabbing?
-	if ( isset( $_GET[ 'object_id' ] ) ) {
-		$object_id = $_GET[ 'object_id' ];
-	} elseif ( healthy_user_is_role( false, 'boss' ) ) {
-		$object_id = 'all';
-	}
-
 	// Our action is to review.
 	$action = 'review';
 
@@ -1184,7 +1273,7 @@ function healthy_get_csv() {
 
 	// Determine if the user is allowed to view this.
 	if ( ! healthy_current_user_can_act_on_object( $object_id, $action, $object_type ) ) {
-		wp_die( "There has been an error. 349" );
+		wp_die( 'There has been an error. 1282' );
 	}
 
 	// From what unit time are we grabbing?
@@ -1205,7 +1294,7 @@ function healthy_get_csv() {
 	$fileName = $object_id.'-'.$unit_time.'-'.$current_time.'.csv';
  
  	// The rows of the csv.
-	$rows = healthy_get_report( $object_id, '', 'csv' );
+	$rows = healthy_get_report();
 
  	//set the headers of the file
 	header( 'Cache-Control: must-revalidate, post-check=0, pre-check=0' );

@@ -16,6 +16,10 @@ textarea,
 	color: $color;
 }
 
+.accent-color {
+	background-color: $tertiary_color;
+}
+
 a {color: $secondary_color;}
 
 a.button,
@@ -55,13 +59,26 @@ button,
 	}
 }
 
+.current-pagination-item,
+.current-menu-item,
+input.inverse-color.current-menu-item,
 input.inverse-color:hover,
 input.inverse-color:focus,
+input.inverse-color.current-menu-item,
 .inverse-color input:hover,
+.inverse-color input.current-menu-item,
 .inverse-color input:focus,
+.inverse-color input.current-menu-item,
 a.inverse-color:hover,
-.inverse-color a:hover {
+a.inverse-color.current-menu-item,
+.inverse-color a:hover,
+.inverse-color a.current-menu-item {
 	color: $tertiary_color;
+}
+
+.accent-color a.current-menu-item,
+.accent-color a:hover {
+	color: $secondary_color;
 }
 
 /* Mildly accented items */
@@ -79,6 +96,7 @@ figure,
 .wp-caption,
 #respond,
 form,
+.login-panels,
 .comments-loop pre,
 .entry-content pre {
 	background-color: $transparent_secondary_color;
@@ -121,6 +139,7 @@ button,
 body,
 output,
 .notes,
+small,
 .error,
 .post-format-label,
 .blog-description-link .word_3,
@@ -171,6 +190,14 @@ textarea {
 }
 
 /* Borders & Box Shadow */
+[type='submit'],
+.button,
+button,
+.island,
+.marquee,
+form {
+	box-shadow: $box_shadow;
+}
 
 fieldset {
 	border: 1px solid $tertiary_color;

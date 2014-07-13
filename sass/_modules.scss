@@ -242,20 +242,7 @@ img.wp-smiley,
 
 .current-menu-ancestor > a,
 .current-menu-item > a {
-	font-weight: 600;
 	text-decoration: underline;
-}
-
-/**
- * User-specific menu
- */
-.healthy-menu {
-	line-height: 1.2em;
-}
-
-.healthy-menu > * {
-	display: inline-block;
-	margin: $small_margin $medium_margin 0;
 }
 
 /** 
@@ -603,8 +590,8 @@ button {
 }
 
 /* Pagination */
+.current-menu-item,
 .pagination .current-pagination-item {
-	font-weight: 600;
 	text-decoration: none;
 	cursor: default;
 }
@@ -863,9 +850,29 @@ button {
 
 /** 
  * =============================================================================
- * Specific Pages
+ * Page-specific modules
  * =============================================================================
  */
+
+/**
+ * Login Panels
+ */
+li.login-panel,
+.login-panel-header {
+	list-style: none;
+	margin-left: auto;
+}
+
+/**
+ Reports
+ */
+#healthy_report {
+	overflow-x: scroll;
+	display: block;
+	max-width: 100%;
+}
+
+.reporting-menu { text-align: center; }
 
 /**
  Post a day
@@ -878,19 +885,77 @@ button {
 	margin-bottom: 10px;
 	font-weight: 400;
 }
+
 .notes {
 	margin-bottom: 10px;
 }
 
+/*
+ * Weekly Averages
+ */
+li.weekly-average  { 
+	list-style: none;
+	margin-left: 0;
+}
+
 /**
- Switch / Delete Users
+ * =============================================================================
+ * App-specific modules
+ * =============================================================================
  */
 
 /**
- Reports
+ * User-specific menu
  */
-#healthy_report {
-	overflow-x: scroll;
+
+.header-nav-outer-wrapper {
+	padding-top: $medium_padding;
+	padding-bottom: $medium_padding;
+}
+
+.healthy-menu {
+	line-height: 1.2em;
+}
+
+.healthy-menu > * {
+	display: inline-block;
+	margin: $small_margin $medium_margin $small_margin;
+	font-size: inherit;
+}
+
+/**
+Warnings
+ */
+.warning {
+	text-align: center;
+	padding: $medium_padding;
+	border-radius: $small_border_radius;
+}
+/**
+ * Islands
+ */
+.island { 
 	display: block;
-	max-width: 100%;
+	clear: both;
+	padding: $medium_padding;
+	border-radius: $small_border_radius;
+	text-align: center;
+}
+
+.island > *,
+.island h1 ,
+.island h2 ,
+.island h4 ,
+.island h4 ,
+.island h5 ,
+.island h6  {
+	margin: 0;
+	padding: 0;
+}
+
+/**
+ * Buttons
+ */
+a.button {
+	text-decoration: none;
 }

@@ -143,7 +143,7 @@ function healthy_enter_day_link( $week ) {
 	
 	// The link text for when the active user is not switched.
 	} else {
-		$record = esc_html__( 'Record my Day', 'healthy' );
+		$record = esc_html__( 'Record My Day', 'healthy' );
 	}
 
 	// The output.
@@ -211,7 +211,7 @@ function healthy_my_weeks_select() {
 	
 	// Else, text prompting the user to browse his own data.
 	} else {
-		$browse = esc_html__( 'Browse my Data', 'healthy' );
+		$browse = esc_html__( 'Browse My Data', 'healthy' );
 	}
 
 	// Our base url.
@@ -250,7 +250,7 @@ function healthy_my_weeks_select() {
 		
 		// Otherwise, speak in the first person.
 		} else {
-			$week_label = sprintf( esc_html__( 'See my data from week %d', 'healthy' ), $week );	
+			$week_label = sprintf( esc_html__( 'See My Data from Week %d', 'healthy' ), $week );	
 		}
 
 		// Add this option to the output.
@@ -268,7 +268,7 @@ function healthy_my_weeks_select() {
 	
 	// Else, speak in the first person.
 	} else {	
-		$week_by_week = esc_html__( 'Week by week', 'healthy' );
+		$week_by_week = esc_html__( 'Week by Week', 'healthy' );
 	}
 
 	// Query to view all weeks.

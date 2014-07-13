@@ -32,7 +32,7 @@ function healthy_filter_login_link( $link ) {
 			$hello = sprintf( esc_html__( 'Hi %s!', 'healthy' ), $first_name );
 			
 			// Wrap the string for CSS.
-			$hello = "<span class='healthy-hello'>$hello</span>";
+			$hello = "<em class='healthy-hello'>$hello</em>";
 	
 			// Build the new version of the link text.
 			$link = $hello.' '.$link;

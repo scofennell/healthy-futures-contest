@@ -142,6 +142,7 @@ template {
 }
 
 /* Links */
+body a.current-menu-item,
 a {
 	text-decoration: none;
 }
@@ -194,6 +195,7 @@ mark {
  */
 small {
 	font-size: 85%;
+	font-weight: 400;
 }
 
 /**

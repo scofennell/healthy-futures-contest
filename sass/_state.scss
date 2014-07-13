@@ -19,9 +19,8 @@ input:focus {
 input,
 a,
 a > * {
-	transition: color $transition,
-	background $transition,
-	transform $transition;
+	transition: all $transition;
+	transition-property: color, background, transform, opacity;
 }
 
 .screen-reader-text	 {

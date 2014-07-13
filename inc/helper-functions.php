@@ -306,7 +306,7 @@ function healthy_controller() {
 	} elseif( healthy_current_user_is_acting( 'review', 'week', 'all' ) ) {
 
 		$title = esc_html__( 'Here&#8217;s what you did each week.', 'healthy' );
-		$subtitle = esc_html__( 'You can edit data from the current week and browse data from past weeks.', 'healthy' );
+		$subtitle = esc_html__( 'You can edit data from the current week and browse data from past weeks.  Some of these values take about an hour to catch up after you enter data.', 'healthy' );
 		$content = healthy_week_by_week();
 
 	// If the user is browsing a week
@@ -335,7 +335,7 @@ function healthy_controller() {
 		$title = esc_html__( 'Report Card', 'healthy' );
 		$subtitle = esc_html__( 'You can review reports here.', 'healthy' );	
 
-		$content = healthy_get_report( $object_id );
+		$content = healthy_get_report();
 
 	// As a default, if none of the above are met, offer appropriate defaults.
 	} else {
@@ -347,8 +347,7 @@ function healthy_controller() {
 			$subtitle = esc_html__( 'You can view a broad report for the whole contest, or more detailed reports for each week.', 'healthy' );			
 
 			// The report view.
-			$school = healthy_get_user_school( get_current_user_id() );
-			$content = healthy_get_report( $school );
+			$content = healthy_get_report();
 
 		} elseif( healthy_user_is_role( false, 'boss' ) ) {
 
@@ -357,7 +356,7 @@ function healthy_controller() {
 			$subtitle = esc_html__( 'You can view reports on the contest here.', 'healthy' );			
 
 			// The edit profile form.
-			$content = healthy_get_report( 'all' );
+			$content = healthy_get_report();
 		
 		} elseif( healthy_is_week_full() ) {
 
@@ -382,6 +381,16 @@ function healthy_controller() {
 	$out = healthy_get_the_title_and_content( $title, $content, $subtitle );
 
 	return $out;
+}
+
+/**
+ * A transient lifespan in seconds for our app.
+ *
+ * @todo  Set this to 3600 when the site goes live.
+ * @return int A transient lifespan in seconds for our app.
+ */
+function healthy_transient_time () {
+	return 3600;
 }
 
 /**
@@ -547,7 +556,7 @@ function healthy_get_active_user() {
  * @param  string $slug The slug for the stat we're analyzing.
  * @return string A number rounded to the nearest tenth, representing the average value.
  */
-function healthy_get_weekly_average( $week_id, $slug, $user_id = false ) {
+function healthy_get_weekly_average( $week_id, $slug ) {
 	
 	// Start the output.
 	$out = '';
@@ -555,8 +564,8 @@ function healthy_get_weekly_average( $week_id, $slug, $user_id = false ) {
 	// Convert the contest week into a date( 'W' ).
 	$query_week = healthy_convert_contest_week_to_query_week( $week_id );
 
-	$user_id = absint( $user_id );
-	if( empty( $user_id ) ) { $user_id = false; }
+	// Grab info for the active user.
+	$user_id = healthy_get_active_user_id();
 
 	// Get Posts from that week.
 	$r = healthy_get_posts( $user_id, 7, false, false, false, $query_week );

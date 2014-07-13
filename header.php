@@ -34,24 +34,36 @@
 
 <body <?php body_class(); ?>>
 
-	<img class='logo body-logo' width=600 height=600 src='<?php echo healthy_logo_src(); ?>' alt='<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>'>
-	
 	<div id="body-wrapper">
 
-		<header id="blog-header" class="outer-wrapper marquee inverse-color clear">
+		<header id="blog-header" class="marquee inverse-color">
 
-			<a class="screen-reader-text skip-link" href="#loop"><?php _e( 'Skip to content', 'healthy' ); ?></a>
+			<div class='outer-wrapper'>
+
+				<div class='inner-wrapper content-holder'>
+
+					<a class="screen-reader-text skip-link" href="#loop"><?php _e( 'Skip to content', 'healthy' ); ?></a>
+
+					<h1 class="blog-title blog-title-blog-header">
+						<a class="home-link" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" title="<?php echo esc_attr(get_bloginfo('name')); ?>"><?php bloginfo('name'); ?></a>
+					</h1>
+
 			
-			<div id="blog-header-inner-wrapper" class="inner-wrapper">
-
-				<h1 class="blog-title blog-title-blog-header">
-					<a class="home-link" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" title="<?php echo esc_attr(get_bloginfo('name')); ?>"><?php bloginfo('name'); ?></a>
-				</h1>
-
-				<?php
-					echo healthy_nav_menu();
-				?>
+				</div>
 
 			</div>
 
+			<?php if( is_user_logged_in() ) { ?>
+
+				<div class='header-nav-outer-wrapper outer-wrapper accent-color'>	
+					<div class='inner-wrapper'>
+						<?php
+							echo healthy_nav_menu();
+						?>
+					</div>
+				</div>
+			<?php } ?>
+
 		</header>
+
+		<img class='logo body-logo' width=600 height=600 src='<?php echo healthy_logo_src(); ?>' alt='<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>'>
