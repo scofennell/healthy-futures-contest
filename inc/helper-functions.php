@@ -390,7 +390,7 @@ function healthy_controller() {
  * @return int A transient lifespan in seconds for our app.
  */
 function healthy_transient_time () {
-	return 3600;
+	return 1;
 }
 
 /**

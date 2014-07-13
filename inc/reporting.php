@@ -87,6 +87,16 @@ function healthy_reporting_menu() {
 
 	}
 
+	// Build a link to view all-stars
+	$all_stars_label = esc_html( 'All-Stars', 'healthy' );
+	$all_stars_href = esc_url( $base.healthy_controller_query_string( 'report', 'review', $school, 'all', 1 ) );
+
+	// If we're viewing all stars, this is the menu item.
+	$selected = selected( $all_stars_href, $current_url, false );
+
+	// Make a link to view all stars.
+	$all_stars_link = "<option $selected value='$all_stars_href'>$all_stars_label</option>";
+
 	// May hold a link to browse all schools if the user is priveleged enough to do so.
 	$by_school = '';
 	
@@ -100,7 +110,8 @@ function healthy_reporting_menu() {
 		$by_school_href = esc_url( $base.$by_school_query );
 
 		// If we're viewing by school, this is the menu item.
-		if( ( $_GET['unit_time'] == 'all' ) && ( $_GET['object_id'] == 'all' ) ) {
+		$selected = '';
+		if( ( $_GET['unit_time'] == 'all' ) && ( $_GET['object_id'] == 'all' ) && empty( $_GET[ 'all_stars' ] ) ) {
 			$selected = 'selected="selected"';
 		}
 
@@ -111,15 +122,6 @@ function healthy_reporting_menu() {
 		$by_school = "<option $selected value='$by_school_href'>$by_school_label</option>";
 	}
 
-	// Build a link to view all-stars
-	$all_stars_label = esc_html( 'All-Stars', 'healthy' );
-	$all_stars_href = esc_url( $base.healthy_controller_query_string( 'report', 'review', $school, 'all', 1 ) );
-
-	// If we're viewing all stars, this is the menu item.
-	$selected = selected( $all_stars_href, $current_url, false );
-
-	// Make a link to view all stars.
-	$all_stars_link = "<option $selected value='$all_stars_href'>$all_stars_label</option>";
 
 	// Text pormpting the user to view a report.
 	$choose = esc_html__( 'Choose a View', 'healthy' );
@@ -172,7 +174,7 @@ function healthy_reports_transient_key() {
 	if( isset( $_GET[ 'offset' ] ) ) { $offset = sanitize_text_field( $_GET[ 'offset' ] ); }
 
 	// Bundle it up as a transient key.
-	$out = "healthy_reporting_$role$format$object_id$unit_time$all_stars$offset";
+	$out = "healthy_rep_$role$format$object_id$unit_time$all_stars$offset";
 
 	return $out;
 }
@@ -241,7 +243,7 @@ function healthy_school_report_cells( $school ) {
  * @param  int|string $unit_time 	Grab one week (week ID number), or all weeks ("weekly").
  * @return string|array             Returns an html <tr> or an array of cells.
  */
-function healthy_get_row( $user_id = false ) {
+function healthy_get_row( $user_id = false, $which_school = false ) {
 
 	// Determine the output format.
 	$format = 'table';
@@ -274,24 +276,15 @@ function healthy_get_row( $user_id = false ) {
 
 	// What school are we viewing?
 	$school = '';
-	if( isset( $_GET[ 'school' ] ) ) {
-		$school = sanitize_text_field( $_GET[ 'school' ] );
+	if( isset( $_GET[ 'object_id' ] ) ) {
+		$school = sanitize_text_field( $_GET[ 'object_id' ] );
 	}
 
 	// If the user is a boss and is grabbing from all weeks ( That is, grabbing by school. )
-	if( healthy_user_is_role( false, 'boss' ) && ( $unit_time == 'all' ) && ( $all_stars != 1 ) ) {
-
-		// The schools in our contest.
-		$schools = healthy_get_schools();
-	
-		// The slugs for each school.
-		$school_slugs = array();
-		foreach( $schools as $s ) {
-			$school_slugs []= $s[ 'slug' ];
-		}
+	if( $which_school ) {
 
 		// If school still equals 'all', we're on the first row of the table.
-		if ( $school == 'all' ) {
+		if ( $which_school == 'all' ) {
 
 			// Before each cell.
 			$before = '<th>';
@@ -299,8 +292,11 @@ function healthy_get_row( $user_id = false ) {
 			// After each cell.
 			$after = '</th>';
 
+			// If we're in the header row, start with the label "School".
+			$cell = esc_html__( 'School', 'healthy' );
+
 		// If school refers to a specific school, we're past the header row.
-		} elseif ( in_array( $school, $school_slugs ) ) {
+		} else {
 
 			// Before each cell.
 			$before = '<td>';
@@ -308,39 +304,32 @@ function healthy_get_row( $user_id = false ) {
 			//After each cell.
 			$after = '</td>';
 
-		}
-
-		// If we're in the header row, start with the label "School".
-		if ( $school == 'all' ) {
-			$cell = esc_html__( 'School', 'healthy' );
-		
-		// Else if we're past the header row, grab the label for that school.
-		} else {
-			
 			// Convert the school slug to a readable label.
-			$school_label = ucwords( $school );
+			$school_label = ucwords( $which_school );
 			$school_label = str_replace( '_', ' ', $school_label );
 			$cell = $school_label;
-		}
 
+		}
+		
 		// Append to the output var.
 		$out = healthy_append_cell( $out, $cell, $before, $after );
 
 		// The fields on which we report for each school.
-		$school_report_cells = healthy_school_report_cells( $school );
+		$school_report_cells = healthy_school_report_cells( $which_school );
 
 		// For each field
 		foreach( $school_report_cells as $c ) {
 			
 			// If we're on the header row, start with the label.
-			if ( $school == 'all' ) {
+			if ( $which_school == 'all' ) {
 				$label = $c[ 'label' ];
 				$cell = $label;
 
 			// If we're past the header row, grab the data with a callback function.
 			} else {
 				$callback = $c[ 'callback' ];
-				$cell = call_user_func( $callback, $school );
+				$cell = call_user_func( $callback, $which_school );
+
 			}
 
 			// Append to the output var.
@@ -759,8 +748,14 @@ function healthy_get_report() {
 			$all_stars = absint( $_GET[ 'all_stars' ] );
 		}
 
+		// Is it a boss browsing by school?
+		$by_school = false;
+		if( $school == 'all' && $unit_time == 'all' && ( healthy_user_is_role( false, 'boss' ) && empty( $all_stars ) ) ) {
+			$by_school = 'all';
+		}
+
 		// Get the header row.
-		$header_cells = healthy_get_row( false );
+		$header_cells = healthy_get_row( false, $by_school );
 
 		// If we're outputting as a table, wrap it as a row.
 		if ( $format == 'table' ) {
@@ -782,8 +777,16 @@ function healthy_get_report() {
 
 		}
 
-		// If the user is a boss and is not browsing a specific school, get all users.
-		if( ( empty( $school ) || ( $school == 'all' ) ) && ( healthy_user_is_role( false, 'boss' ) ) ) {
+		// If it's a boss browsing by school...
+		if( $by_school ) {
+
+			$args = array(
+				'by_school' => true,
+				'format' 	   => $format,
+			);
+
+		// If the user is a boss and is not browsing by school, get all users.
+		} elseif( ( empty( $school ) || ( $school == 'all' ) ) && ( healthy_user_is_role( false, 'boss' ) ) ) {
 
 			// Returns all users.
 			$args = array(
@@ -796,9 +799,6 @@ function healthy_get_report() {
 				'role' 		   => 'student',
 				'all_stars'	   => $all_stars,
 			);
-
-			// Get the body rows.
-			$body = healthy_get_rows_for_report( $args );
 
 		// Else, the user is not a boss, so we have to grab from a specific school.
 		} else {
@@ -832,11 +832,11 @@ function healthy_get_report() {
 				'all_stars'	   => $all_stars,
 			);
 
-			// Get the body rows
-			$body = healthy_get_rows_for_report( $args );
-
 		}
 		
+		// Get the body rows
+		$body = healthy_get_rows_for_report( $args );
+
 		// If table, append the rows this value.
 		if ( $format == 'table' ) {
 		
@@ -1188,10 +1188,13 @@ function healthy_get_rows_for_report( $args = array() ) {
 	}
 
 	// If a boss is browsing by school...
-	if( ( $args[ 'meta_value' ] == '' ) && ( $unit_time == 'all' ) && healthy_user_is_role( false, 'boss' ) && $args[ 'all_stars' ] != 1 ) {
+	if( $args[ 'by_school' ] ) {
 
 		// Each table row is a school.
-		$rows = healthy_get_schools();
+		$schools = healthy_get_schools();
+		foreach ( $schools as $s ) {
+			$rows []= $s[ 'slug' ];
+		}
 
 	// Else, each table row is a user.
 	} else {
@@ -1208,13 +1211,10 @@ function healthy_get_rows_for_report( $args = array() ) {
 	foreach ($rows as $row ) {
 		
 		// If a boss is browsing by school...
-		if( ( $args[ 'meta_value' ] == '' ) && ( $unit_time == 'all' ) && healthy_user_is_role( false, 'boss' ) && $args[ 'all_stars' ] != 1 ) {
-
-			// The key for this row is the school slug.
-			$school = $row[ 'slug' ];
+		if( $args[ 'by_school' ] ) {
 
 			// Get the row.
-			$cells = healthy_get_row( false );
+			$cells = healthy_get_row( false, $row );
 
 		// Else, we're browsing by user.
 		} else {
@@ -1229,24 +1229,24 @@ function healthy_get_rows_for_report( $args = array() ) {
 
 		// If it's a table, add and wrap this row.
 		if ( $format == 'table' ) {
-			$row = "<tr>$cells</tr>";
-			$out .= $row;
+			$tr = "<tr>$cells</tr>";
+			$out .= $tr;
 
 		// If it's a CSV, append this row as an array.
 		} elseif( $format == 'csv' ) {
 
 			// This user is an array.
-			$row = array();
+			$tr = array();
 
 			// For each cell...
 			foreach( $cells as $cell ) {
 				
 				// Add the cell to this array.
-				$row []= $cell;
+				$tr []= $cell;
 			}
 		
 			// Add this row to the output.
-			$out []= $row;
+			$out []= $tr;
 		}
 
 
