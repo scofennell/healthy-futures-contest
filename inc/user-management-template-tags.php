@@ -450,6 +450,11 @@ add_shortcode( 'healthy_login_link', 'healthy_login_link' );
  * @return string A register link.
  */
 function healthy_register_link() {
+
+	// Warn the user to check their spam.
+	// $warn_text = esc_html__( 'Check your email spam folder after!', 'healthy' );
+	// $warn = " &mdash; <i>$warn_text</i>";
+
 	$out = wp_register( '', '', false );
 	return $out;
 }
@@ -613,9 +618,6 @@ function healthy_profile_form( $creating = false ) {
 		// If we're editing, draw the appropriate fields.
 		if( $action == 'edit' ) {
 
-			// If we're editing, don't show the password fields.
-			if( $type == 'password' ) { continue; }
-
 			// Get the user meta to pre-pop each field.
 			$meta = get_user_meta( $user_to_edit_id, $slug, TRUE );
 			
@@ -650,9 +652,15 @@ function healthy_profile_form( $creating = false ) {
 			
 			$current_user_teacher = get_user_meta( $user_to_edit_id, 'teacher', TRUE );
 
-			$teachers_as_options = healthy_get_teachers_as_options( $current_user_school, $current_user_teacher );
+			$teachers_as_options = '';
 
-			if( empty( $current_user_school ) || empty( $teachers_as_options ) ) { continue; }
+			if( ! empty( $current_user_teacher ) ) {
+
+				//wp_die(659);
+
+				$teachers_as_options = healthy_get_teachers_as_options( $current_user_school, $current_user_teacher );
+
+			}
 					
 			$input =  "
 				<select $required name='teacher'>
@@ -682,7 +690,7 @@ function healthy_profile_form( $creating = false ) {
 	$method = 'post';
 
 	// The action to which we'll submit our form.
-	$form_action = healthy_current_url();
+	$form_action = esc_url( trailingslashit( get_bloginfo( 'url' ) ) );
 
 	// The submit button text for our form.
 	if ( $creating ) {
@@ -742,6 +750,93 @@ function healthy_profile_form( $creating = false ) {
 	// Grab the validation script.
 	wp_enqueue_script( 'jquery-validation' );
 
+	healthy_load_teachers_async();
+
+
 	return $out;
 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function healthy_get_api_page_slug() {
+	return 'api-response';
+}
+
+
+
+
+
+
+function healthy_get_api_page() {
+	
+	$api_page_slug = healthy_get_api_page_slug();
+
+	$api_page = get_page_by_path( 'api-response' );
+	
+//	if( ! $api_page ) { wp_die( 'There has been a problem. 789' ); }
+
+	$api_page_id = absint( $api_page -> ID );
+
+	$api_page_url = esc_url( get_permalink( $api_page ) );
+
+	return $api_page_url;
+
+}
+
+
+
+
+function healthy_load_teachers_async() {
+	
+
+	$api_page_url = healthy_get_api_page();
+
+	if( empty( $api_page_url ) ) { wp_die( 'There has been a problem. 797' ); }
+
+	?>
+		<script>
+			jQuery( document ).ready( function( $ ) {
+
+				var school = $( '[name="school"]' );
+				
+				var teacher_wrap = $( '[for="teacher"]' );
+
+				var teacher = $( '[name="teacher"]' );
+				
+				$( school ).change( function() {
+
+				var which_school = $( school ).val();
+				
+					var response = $( teacher ).load( '<?php echo $api_page_url; ?>', { post_school: which_school }, function() {
+						// some stuff here to execute after load
+					});
+
+				});		
+
+			});
+		</script>
+	<?php
 }

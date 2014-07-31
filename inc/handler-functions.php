@@ -115,6 +115,9 @@ function healthy_process_profile_form() {
 		$editing = false;
 		$user_to_edit_id = 'new';
 
+		// Set the user PW.  Null means wp will assign a random one.
+		$userdata[ 'user_pass' ] = null; // A string that contains the plain text password for the user. 
+
 	// Or if we're editing...
 	} else {
 		$user_to_edit_id = absint( $_POST[ 'object_id' ] ) ;
@@ -122,6 +125,10 @@ function healthy_process_profile_form() {
 		// If the id of the user we're editing is weird, bail.
 		if ( empty( $user_to_edit_id ) ) { return false; }
 		$editing = true;
+
+		// We want to know if this user is not yet profile complete.
+		$was_user_profile_complete = healthy_is_profile_complete( $user_to_edit_id );
+
 	}
 
 	// Grab the current user ID.
@@ -181,6 +188,19 @@ function healthy_process_profile_form() {
 	// Start populating the user data.
 	$userdata[ 'user_email' ] = $user_email;
 
+	// Do the password comparison
+	if( isset( $_POST[ 'password' ] ) && isset( $_POST[ 'password_confirm' ] ) ) {
+		
+		if( ! empty( $_POST[ 'password' ] ) && ! empty( $_POST[ 'password_confirm' ] ) ) {
+
+			if( $_POST[ 'password' ] != $_POST[ 'password_confirm' ] ) { wp_die( "The passwords did not match, please try again." ); }
+
+			$userdata[ 'user_pass' ] = $_POST[ 'password' ];
+
+		}
+		
+	}		
+
 	// The role submitted in the form.
 	if( isset( $_POST[ 'role' ] ) ) {
 		$role = $_POST[ 'role' ];
@@ -207,16 +227,6 @@ function healthy_process_profile_form() {
 	// If we're creating,
 	} else {
 
-		/*
-		// Compare the pw & pw confirm.
-		$user_pass = $_POST['password'];
-		$user_pass_confirm = $_POST['password_confirm'];
-		if ( $user_pass != $user_pass_confirm ) { wp_die( "The passwords did not match, please try again." ); }
-		*/
-		
-		// Set the user PW.  Null means wp will assign a random one.
-		$userdata[ 'user_pass' ] = null; // A string that contains the plain text password for the user. 
-		
 		// Convert the user email into the user name.
 		$user_login = sanitize_user( $user_email );
 
@@ -272,10 +282,27 @@ function healthy_process_profile_form() {
 	// If we made it this far without doing something, something is wrong.
 	if( empty( $affected ) ) { wp_die( "There has been a problem. 173" ); }
 
+	// If the user was not profile complete before submitting the form...
+	if( empty( $was_user_profile_complete ) ) {
+
+		// Let's see if she is now that she submitted it.
+		$is_user_profile_complete = healthy_is_profile_complete();
+
+		// If she is...
+		if ( ! empty( $is_user_profile_complete ) ) {
+			
+			// Do a redirect to the add-post view.
+			$base = trailingslashit( get_bloginfo( 'url' ) );
+			$query = healthy_controller_query_string( 'post', 'create', 'new' );
+			$url = esc_url( $base.$query );
+			wp_safe_redirect( $url );
+			exit;
+		} 
+	}
+
 	return $affected;
 }
 add_action( 'init', 'healthy_process_profile_form' );
-
 
 /**
  * Delete a post.

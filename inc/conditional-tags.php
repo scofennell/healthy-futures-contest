@@ -87,10 +87,10 @@ function healthy_current_user_can_act_on_object( $object_id, $action, $object_ty
 		if( ( $action == 'edit' ) || ( $action == 'delete' ) ) { 
 
 			// The contenst must be happening in order to edit or delete posts.
-			if ( ! healthy_contest_is_happening() ) { return false; }
-			
+			if ( ! healthy_contest_is_happening() && ! healthy_is_grace_week() ) { return false; }
+
 			// If the post is not for the current week, it's too late to edit or delete.
-			if( ! healthy_is_post_for_current_week( $object_id ) ) { return false; }
+			if( ! healthy_is_post_for_current_fortnight( $object_id ) ) { return false; }
 
 			// If the post is not a "healthy_day", bail.
 			if( $post -> post_type != 'healthy_day' ) { return false; }
@@ -112,7 +112,7 @@ function healthy_current_user_can_act_on_object( $object_id, $action, $object_ty
 		// The contest must be happening in order to create posts
 		} elseif ( $action == 'create' ) {
 
-			if ( ! healthy_contest_is_happening() ) { return false; }
+			if ( ! healthy_contest_is_happening() && ! healthy_is_grace_week() ) { return false; }
 		} 
 
 	// If we're CRUD'ing a user...
@@ -364,6 +364,27 @@ function healthy_contest_is_happening() {
 }
 
 /**
+ * Determine if this is the first week after the contest -- students can still add their days for last week.
+ * 
+ * @return boolean Return true if the contest ended last week.
+ */
+function healthy_is_grace_week() {
+
+	// Grab the current week.
+	$current_week = date( 'W' );
+	
+	// Grab the last week of the contest.
+	$last_week = healthy_last_week_of_contest();
+
+	if( ( $last_week + 1 ) == $current_week ) {
+		return true;
+	}
+
+	return false;
+
+}
+
+/**
  * Sniffs the url to determine if the user is trying to act upon a post.
  * 
  * @param  string $action What action the user is attempting (delete, edit)
@@ -543,6 +564,37 @@ function healthy_is_post_for_current_week( $post_id ) {
 
 	// If the post is from this week, return true.
 	if ( $current_week == $post_date ) { return true; }
+
+	// Otherwise, return false.
+	return false;
+
+}
+
+/**
+ * Determine if a post is for the current fortnight.
+ *
+ * @param int $post_id The ID of the post to check.
+ * @return bool Returns tue if the post is from the current fortnight, otherwise false.
+ */
+function healthy_is_post_for_current_fortnight( $post_id ) {
+
+	// The id of the post to check
+	$post_id = absint( $post_id );
+	
+	// The post object of the post to check
+	$post = get_post( $post_id );
+	
+	// The post date of the post to check, by week #
+	$post_date = date( 'W', strtotime( $post->post_date ) );
+	
+	// The # of the current week.
+	$current_week = date( 'W' );
+
+	// If the post is from this week, return true.
+	if ( $current_week == $post_date ) { return true; }
+
+	// If the post is from last week, return true.
+	if ( ( $current_week - 1 ) == $post_date ) { return true; }
 
 	// Otherwise, return false.
 	return false;

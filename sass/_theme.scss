@@ -32,6 +32,7 @@ button,
 	background-color: $secondary_color; 
 }
 
+.home-link:hover .word_3,
 a.button,
 .button,
 [type='submit'],
@@ -59,6 +60,7 @@ button,
 	}
 }
 
+.home-link .word_3,
 .current-pagination-item,
 .current-menu-item,
 input.inverse-color.current-menu-item,
@@ -136,6 +138,7 @@ button,
 	font-family: helvetica, arial, sans-serif;
 }
 
+.home-link .word_3,
 body,
 output,
 .notes,
@@ -191,6 +194,7 @@ textarea {
 }
 
 /* Borders & Box Shadow */
+.header-logo,
 [type='submit'],
 .button,
 button,

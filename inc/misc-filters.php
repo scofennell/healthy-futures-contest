@@ -38,13 +38,21 @@ function healthy_filter_login_link( $link ) {
 			$link = $hello.' '.$link;
 		}
 
-
 		// Fix the casing of the log out link.  Find the default text.
 		$logout_text_before = 'Log out';
 
 		// Replace it with cased text.
 		$logout_text_after = esc_html( 'Log Out', 'healthy');
 		$link = str_replace( $logout_text_before, $logout_text_after, $link );
+	} else {
+
+		// Fix the casing of the log out link.  Find the default text.
+		$login_text_before = 'Log in';
+
+		// Replace it with cased text.
+		$login_text_after = esc_html( 'Log In', 'healthy');
+		$link = str_replace( $login_text_before, $login_text_after, $link );
+
 	}
 
 	// Always return something in filter functions.
@@ -52,6 +60,41 @@ function healthy_filter_login_link( $link ) {
 
 }
 add_filter( 'loginout', 'healthy_filter_login_link' );
+
+function healthy_register_msg($msg) {
+	$pattern = '/Register For This Site/';
+	$custom_msg = esc_html__( 'Be sure to check your spam email folder after registering!', 'healthy' );
+	return preg_replace( $pattern, $custom_msg, $msg );
+}
+add_filter('login_message','healthy_register_msg');
+
+function healthy_change_registration_button_text ( $text ) {
+	 if ( $text == 'Register' ) {
+	 	$text = esc_html__( 'Register &mdash; check your spam folder!', 'healthy' );
+	}
+	return $text;
+}
+add_filter( 'gettext', 'healthy_change_registration_button_text' );
+
+function healthy_change_password_email_text ( $text ) {
+	 if ( $text == 'A password will be e-mailed to you.' ) {
+	 	$text = esc_html__( 'A password will be e-mailed to you &mdash; check your spam folder!', 'healthy' );
+	}
+	return $text;
+}
+add_filter( 'gettext', 'healthy_change_password_email_text' );
+
+function healthy_replace_register_button() {
+	wp_enqueue_script( 'jquery' );
+	?>
+	<script>
+		jQuery( document ).ready(function( $ ) {
+			jQuery('#registerform [type="submit"]').val( '<?php echo __( "Get Started!", "healthy" ); ?>' );
+		});
+	</script>
+	<?php	
+}
+add_action( 'login_footer', 'healthy_replace_register_button', 999 );
 
 /**
  * Filter the document title, as in <title></title>.

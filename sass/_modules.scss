@@ -79,6 +79,22 @@ img.wp-smiley,
 
 /** 
  * =============================================================================
+ * Body
+ * =============================================================================
+ */
+
+.body-logo {
+	opacity: .06;
+	position: fixed;
+	left: 50%;
+	margin-left: -300px;
+	top: 50%;
+	margin-top: -300px;
+	z-index: -1;
+}
+
+/** 
+ * =============================================================================
  * Blog Header
  * =============================================================================
  */
@@ -100,19 +116,9 @@ img.wp-smiley,
  * Marquee
  */
 
-.marquee  {
+.marquee .inner-wrapper {
 	text-align: center;
 	position: relative;
-}
-
-.body-logo {
-	opacity: .03;
-	position: fixed;
-	left: 50%;
-	margin-left: -300px;
-	top: 50%;
-	margin-top: -300px;
-	z-index: -1;
 }
 
 .blog-title-blog-header {
@@ -130,6 +136,23 @@ img.wp-smiley,
 	.blog-title-blog-header {
 		font-size: 30px;
 	}
+}
+
+.home-link {
+	display: block;
+	padding-top: 3px;
+}
+
+.home-link .word_3 {
+	font-style: italic;
+	font-weight: 400;
+}
+
+.header-logo {
+	position: absolute;
+	bottom: -120px;
+	left: -90px;
+	border-radius: 75px;
 }
 
 /**
@@ -915,6 +938,8 @@ li.weekly-average  {
 
 .healthy-menu {
 	line-height: 1.2em;
+	padding-left: $large_padding;
+	padding-right: $large_padding;
 }
 
 .healthy-menu > * {

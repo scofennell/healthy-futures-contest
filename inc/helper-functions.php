@@ -37,7 +37,7 @@ function healthy_controller() {
 	if( ! is_user_logged_in() ) {
 
 		// It they're not logged in, return the login screen.
-		$title = esc_html__( 'Log in or register to get started.', 'healthy' );
+		$title = esc_html__( 'Log in or register to get started', 'healthy' );
 		$subtitle = esc_html__( 'Only logged in users can partake in the contest!', 'healthy' );
 		$content = healthy_login_panels();
 
@@ -183,12 +183,24 @@ function healthy_controller() {
 			$edit_text = esc_html__( "You can go back and edit your entry if you want.", 'healthy' );
 			
 			// Build an href to edit the newly created post.
-			$query = healthy_controller_query_string( 'post', 'edit', $inserted );
-			$edit_href = $base_url.$query;
+			$edit_query = healthy_controller_query_string( 'post', 'edit', $inserted );
+			$edit_href = $base_url.$edit_query;
+
+			// Build a link to edit the new post.
+			$edit_link = "<p><a href='$edit_href'>$edit_text</a></p>";
+
+			// Translations.
+			$edit_week_text = esc_html__( "Or you can browse your recent posts.", 'healthy' );
+			
+			// Build an href to edit the newly created post.
+			$edit_week_query = healthy_controller_query_string( 'week', 'review', 'all' );
+			$edit_week_href = $base_url.$edit_week_query;
 		
 			// Build a link to edit the new post.
-			$subtitle = "<a href='$edit_href'>$edit_text</a>";
+			$edit_week_link = "<p><a href='$edit_week_href'>$edit_week_text</a></p>";
 		
+			$subtitle = $edit_link.$edit_week_link;
+
 			// If the user just entered data and their week is full...
 			if( healthy_is_week_full() ) {
 				// Tell the user the week is full.
@@ -688,26 +700,6 @@ function healthy_profile_fields() {
 			'exportable' => 1,
 		),
 
-		/*
-		// Password is part of userdata, not usermeta.  Expects plain text.
-		array(
-			'label' 	=> 'Password',
-			'slug' 		=> sanitize_key( 'password' ),
-			'type' 		=> 'password',
-			'default' 	=> '',
-			'is_meta' 	=> 0,
-		),
-
-		// Password is part of userdata, not usermeta.  Expects plain text.
-		array(
-			'label' 	=> 'Password Confirm',
-			'slug' 		=> sanitize_key( 'password_confirm' ),
-			'type' 		=> 'password',
-			'default' 	=> '',
-			'is_meta' 	=> 0,
-		),
-		*/
-
 	);
 
 	// Grab the object id.
@@ -733,6 +725,19 @@ function healthy_profile_fields() {
 		);
 		array_push( $out, $school );
 
+		// The teacher of this student.
+		$teacher = array(
+			'label' 				  => 'Teacher',
+			'slug' 					  => sanitize_key( 'teacher' ),
+			'type' 					  => 'teacher',
+			'default' 				  => '',
+			'is_meta' 				  => 1,
+			'is_hidden_from_teachers' => 1,
+		//	'exportable' 			  => 1,
+			'add_to_wp_admin'		  => 1,
+		);
+		array_push( $out, $teacher);
+
 		// The grade.
 		$grade = array(
 			'label' 				  => 'Grade',
@@ -748,20 +753,27 @@ function healthy_profile_fields() {
 		);
 		array_push( $out, $grade);
 
-		// The teacher of this student.
-		$teacher = array(
-			'label' 				  => 'Teacher',
-			'slug' 					  => sanitize_key( 'teacher' ),
-			'type' 					  => 'teacher',
-			'default' 				  => '',
-			'is_meta' 				  => 1,
-			'is_hidden_from_teachers' => 1,
-		//	'exportable' 			  => 1,
-			'add_to_wp_admin'		  => 1,
-		);
-		array_push( $out, $teacher);
-
 	}
+
+			// Password is part of userdata, not usermeta.  Expects plain text.
+	$password = array(
+		'label' 	=> 'Password',
+		'slug' 		=> sanitize_key( 'password' ),
+		'type' 		=> 'password',
+		'default' 	=> '',
+		'is_meta' 	=> 0,
+	);
+	array_push( $out, $password );
+
+		// Password is part of userdata, not usermeta.  Expects plain text.
+	$password_confirm =	array(
+		'label' 	=> 'Password Confirm',
+		'slug' 		=> sanitize_key( 'password_confirm' ),
+		'type' 		=> 'password',
+		'default' 	=> '',
+		'is_meta' 	=> 0,
+	);
+	array_push( $out, $password_confirm );
 
 	return $out;
 }
@@ -783,13 +795,31 @@ function healthy_get_first_day_of_week() {
 	$first_day_of_week = healthy_get_first_weekday_of_week();
 
 	// Whichever $first_day_of_week comes before tomorrow.
-	$the_first_day_of_week_before_tomorrow = strtotime("last $first_day_of_week", $tomorrow );
+	$the_first_day_of_week_before_tomorrow = strtotime( "last $first_day_of_week", $tomorrow );
 	
 	// Format $first_day_of_week for display in our application.
 	$first_day_of_week = date( 'l, F d, Y', $the_first_day_of_week_before_tomorrow );
 	
 	//$$first_day_of_week = date( 'l, F d, Y', strtotime('$first_day_of_week') );
 	return $first_day_of_week;
+}
+
+/**
+ * Returns the date for $first_day_of_week of the previous week.
+ *
+ * @return string The date for $first_day_of_week of the previous week.
+ */
+function healthy_get_first_day_of_last_week() {
+	
+	// The unix time for the first day of the current week.
+	$first_day_of_current_week = strtotime( healthy_get_first_day_of_week() );
+
+	$first_day_of_last_week = strtotime( '- 1 week', $first_day_of_current_week  );
+
+	$first_day_of_last_week = date( 'l, F d, Y', $first_day_of_last_week );
+
+	return $first_day_of_last_week;
+
 }
 
 /**
@@ -991,7 +1021,7 @@ function healthy_range_script(){
  				var el;
  
  				// Select all range inputs, watch for change
- 				jQuery("input[type='range']").change(function() {
+ 				jQuery("input[type='range']").on( "change mousemove", function() {
  
    					// Cache this for efficiency
    					el = jQuery(this);
@@ -1200,6 +1230,9 @@ function healthy_day() {
 
 				// Do we incude this field in the weekly average report?
 				'is_weekly_metric' => 1,
+			
+				'unit'		=> array( 'minute', 'minutes' ),
+
 			),
 
 			// A range input for exercise.
@@ -1214,6 +1247,8 @@ function healthy_day() {
 				'step'		=> 5,
 				'is_exercise' => 1,
 				'is_weekly_metric' => 1,
+
+				'unit'		=> array( 'minute', 'minutes' ),
 			),
 
 			// A range input for exercise.
@@ -1228,6 +1263,8 @@ function healthy_day() {
 				'step'		=> 5,
 				'is_exercise' => 1,
 				'is_weekly_metric' => 1,
+
+				'unit'		=> array( 'minute', 'minutes' ),
 			),
 
 			// A range input for drinks.
@@ -1240,6 +1277,9 @@ function healthy_day() {
 				'default' 	=> 0,
 				'notes'		=> esc_html__( "Soda, powdered drinks, energy drinks, fruit-flavored juices, or any drink that has added sugar, corn syrup, or another type of caloric sweetener in the ingredient list.", 'healthy' ),
 				'is_weekly_metric' => 1,
+
+				'unit'		=> array( 'drink', 'drinks' ),
+
 			),
 			/*array(
 				'label' 	=> esc_html__( 'I declare, this is the truth.', 'healthy' ),
@@ -1258,7 +1298,8 @@ function healthy_day() {
  *
  * @return  The src for our logo.
  */
-function healthy_logo_src() {
-	$out = esc_url( get_bloginfo( 'template_directory' ) ).'/images/logo.png';
+function healthy_logo_src( $filename = 'logo.png' ) {
+	$filename = esc_attr( $filename );
+	$out = esc_url( get_bloginfo( 'template_directory' ) )."/images/$filename";
 	return $out;
 }

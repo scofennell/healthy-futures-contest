@@ -99,6 +99,8 @@ function healthy_add_custom_user_profile_fields( $user ) {
     // Grab the user id.
     $user_id = absint( $user -> ID );
 
+    $out = '';
+
     $fields = healthy_profile_fields();
 
     foreach( $fields as $f ) {

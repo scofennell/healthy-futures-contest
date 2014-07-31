@@ -45,9 +45,8 @@
 					<a class="screen-reader-text skip-link" href="#loop"><?php _e( 'Skip to content', 'healthy' ); ?></a>
 
 					<h1 class="blog-title blog-title-blog-header">
-						<a class="home-link" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" title="<?php echo esc_attr(get_bloginfo('name')); ?>"><?php bloginfo('name'); ?></a>
+						<a class="home-link" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" title="<?php echo esc_attr(get_bloginfo('name')); ?>"><img class='logo header-logo' width=150 height=150 src='<?php echo healthy_logo_src( 'logo.png' ); ?>' alt='<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>'><?php echo healthy_title_as_spans(); ?></a>
 					</h1>
-
 			
 				</div>
 
@@ -66,4 +65,4 @@
 
 		</header>
 
-		<img class='logo body-logo' width=600 height=600 src='<?php echo healthy_logo_src(); ?>' alt='<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>'>
+		<img class='logo body-logo' width=600 height=600 src='<?php echo healthy_logo_src( 'logo_full.png' ); ?>' alt='<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>'>

@@ -8,6 +8,11 @@
  * @since healthy 1.0
  */
 
+function healthy_login_enqueue_scripts() {
+    wp_enqueue_script('jquery');
+}
+add_action( 'login_enqueue_scripts', 'healthy_login_enqueue_scripts' );
+
 /**
  * Prevent users from accessing wp_admin().
  */
@@ -42,7 +47,66 @@ function healthy_login_styles() { ?>
     <style>
 
         body.login {
+            padding-bottom: 60px;
+            border-top: 10px solid #7CC24D;
+        }
+
+        html,
+        body.login,
+        input[type='text']  {
             font-family: georgia, times, serif;
+            background-color: #fff;
+        }
+
+        input,
+        a {
+            transition: all 0.4s ease-in-out;
+            transition-property: color, background-color;
+        }
+
+        input {
+            float: none !important;
+        }
+
+        input[type='text'],
+        input[type='password'] {
+            border: 1px solid #000;
+            font-weight: 400 !important;
+        }
+
+        input[type='submit'],
+        input[type='text'],
+        input[type='password'] {
+            padding: 3px;
+            border-radius: 3px;
+            width: 100% !important;
+        }
+
+        input[type='submit'] {
+            padding: 10px 14px 8px !important;
+            height: auto !important;
+            color: #fff;
+            border: none !important;
+            background-color: #0F2C52 !important;
+        }
+
+        a:hover { color: #7CC24D !important; }
+        input[type='submit']:hover {
+            background-color: #7CC24D !important;
+        }
+
+        .login form label,
+        .login input[type=submit] {
+            font-family: helvetica, arial, sans-serif;
+            font-weight: 600;
+        }
+
+        .login #backtoblog, .login #nav {
+            font-size: 15px;
+        }
+
+        body.login a {
+            #0F2C52 !important;
         }
 
         body.login * {
@@ -51,21 +115,43 @@ function healthy_login_styles() { ?>
 
         #login {
             width: auto;
-            max-width: 500px;
+            max-width: 680px;
         }
 
-        #login form {
-            padding: 20px 20px 24px;
+        #login form, 
+        .message {
+             padding: 20px 20px 24px;           
+        }
+
+        #login form, 
+        .message {
             border-radius: 5px;
+            background-color: rgba(15, 44, 82, 0.1)  !important;
+        }
+
+        #login form, 
+        .message,
+        form,
+        input[type='submit'] {
+            box-shadow: 0 2px 4px -2px rgba(0, 0, 0, 0.75) !important;
+        }
+
+        .login form label {
+            font-size: 15px !important;
+            color: #000 !important;
         }
 
         .login form label,
         .login form .input,
         .login input[type=text],
         .login input[type=submit] {
-            font-family: helvetica, arial, sans-serif;
-            font-size: 15px !important;
             margin: 0;
+        }
+
+        .login input[type=submit],
+        .login input[type=password],
+        .login input[type=text] {
+            font-size: 30px !important;
         }
 
         #login form > p {
@@ -74,20 +160,6 @@ function healthy_login_styles() { ?>
 
         #login form > p:last-child {
             margin-bottom: 0;
-        }
-
-        body.login .button-primary,
-        body.login .forgetmenot {
-            float: none;
-        }
-
-        body.login .button-primary:hover,
-        body.login .button-primary {
-            background: #000;
-            color: #fff;
-            border: none;
-            box-shadow: none;
-            width: 100%;
         }
 
         body.login div#login h1 a {

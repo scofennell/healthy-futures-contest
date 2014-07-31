@@ -52,6 +52,15 @@ function healthy_get_weekly_averages( $week_id ) {
 			// The weekly average for this component.
 			$value = healthy_get_weekly_average( $week_id, $slug );
 
+			// The unit.
+			$unit = $c[ 'unit' ];
+
+			if( $value == 1 ) {
+				$unit_label = $unit[0];
+			} else {
+				$unit_label = $unit[1];	
+			}
+
 			// The week_id for last week.
 			$last_week = $week_id - 1;
 
@@ -72,11 +81,11 @@ function healthy_get_weekly_averages( $week_id ) {
 				
 				// Output a string based on the result of the comparison.  More than the week before:
 				if ( $value > $last_week_value ) {
-					$compare = sprintf( esc_html__( " &mdash; That's %s more than the week before.", 'healthy' ), $difference );
+					$compare = sprintf( esc_html__( " &mdash; That's %s more %s than the week before.", 'healthy' ), $difference, $unit_label );
 				
 				// Less than the week before.
 				} elseif ( $value < $last_week_value ) {
-					$compare = sprintf( esc_html__( " &mdash; That's %s less than the week before.", 'healthy' ), $difference );	
+					$compare = sprintf( esc_html__( " &mdash; That's %s fewer %s  than the week before.", 'healthy' ), $difference, $unit_label );	
 				
 				// The same as the week before.
 				} elseif ( $value == $last_week_value ) {
@@ -88,7 +97,7 @@ function healthy_get_weekly_averages( $week_id ) {
 			$per_day = esc_html( 'Per Day: ', 'healthy' );
 
 			// Add this stat to the output.
-			$out .= "<li><strong>$label $per_day $value </strong> <i>$compare</i></li>";
+			$out .= "<li><strong>$label $per_day $value $unit_label</strong> <i>$compare</i></li>";
 
 		}
 
@@ -329,8 +338,23 @@ function healthy_post_a_day_form( $editing = false ) {
 		// A holder for min/max ( slider ) inputs.
 		$output = "";
 		if ( $type == 'range' ) {
+			$unit = '';
+			if( isset( $f[ 'unit' ] ) ) {
+				$unit = $f[ 'unit' ];
+				$singular = $unit[0];
+				$plural = $unit[1];
+
+				if( $default == 1 ) {
+					$unit_label = $singular;
+				} else {
+					$unit_label = $plural;	
+				}
+
+				$unit_label = "<span class='unit'>".esc_html( $unit_label )."</span>";
+			}
 			$output ="
 				<output name='amount_$slug' for='$slug'>$default</output>
+				$unit_label
 			";
 		}	
 
@@ -350,11 +374,11 @@ function healthy_post_a_day_form( $editing = false ) {
 	$nonce = wp_nonce_field( 'healthy_create', 'healthy_day_nonce', false, false );
 
 	// The text for our form submit.
-	if ( $editing ) {
-		$submit_text = esc_attr__( 'Edit', 'healthy' );
-	} else {
-		$submit_text = esc_attr__( 'Go', 'healthy' );
-	}
+	//if ( $editing ) {
+	$submit_text = esc_attr__( 'Submit', 'healthy' );
+	//} else {
+	//	$submit_text = esc_attr__( 'Submit', 'healthy' );
+	//}
 
 	// The submit button for out form.
 	$submit = "<input type='submit' name='post_a_day_submit' value='$submit_text'>";
@@ -421,10 +445,21 @@ function healthy_post_a_day_form( $editing = false ) {
 function healthy_days_of_week_select( $post_author_id, $post_date_to_edit = '' ) {
 	
 	// Start the output.  This will remain empty if there are no days available this week.
-	$options ="";
+	$options = "";
 
-	// Get the time in seconds for the first day of the week.
-	$first_day_of_week = healthy_get_first_day_of_week();
+	// Determine if we are in the first week of the contest, so we know if we should grab the previous week or just the current week.
+	$current_week_of_contest = healthy_current_week_of_contest();
+	if( $current_week_of_contest == 1 ) {
+		// Get the time in seconds for the first day of the week.
+		$first_day_of_week = healthy_get_first_day_of_week();
+		$limit = 7;
+	} elseif( $current_week_of_contest > 1 ) {
+		$first_day_of_week = healthy_get_first_day_of_last_week();
+		$limit = 14;
+	} else { wp_die( 'There has been a problem. 446' ); }
+	
+
+
 	
 	// The current day.
 	$current_day_in_days = date( 'z', strtotime( 'today' ) );
@@ -435,7 +470,7 @@ function healthy_days_of_week_select( $post_author_id, $post_date_to_edit = '' )
 
 	// Increment each day of the week.
 	$i=0;
-	while( $i < 7 ) {
+	while( $i < $limit ) {
 				
 		// Grab the text value for easier comparision to the current day
 		$next_day_in_text = date( 'l, F d, Y', strtotime( "$first_day_of_week + $i days" ) ); 
@@ -762,10 +797,19 @@ function healthy_review_a_post( $post_id ) {
 		// Get the value for this field.
 		$meta = get_post_meta( $post_id, $slug, TRUE );
 
+		// The unit.
+		$unit = $f[ 'unit' ];
+
+		if( $meta == 1 ) {
+			$unit_label = $unit[0];
+		} else {
+			$unit_label = $unit[1];	
+		}
+
 		// Output.
 		$out.="
 			<dt>$label</dt>
-			<dd>$meta</dd>
+			<dd>$meta $unit_label</dd>
 		";
 
 	}

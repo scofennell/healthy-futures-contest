@@ -11,6 +11,28 @@
  */
 
 /**
+ * Grab the blog title and wrap each word in a span for lettering.
+ *
+ * @return $string The blog title, word-wrapped.
+ */
+function healthy_title_as_spans() {
+	
+	$word_array = explode(" ", get_bloginfo( 'name' ) );
+	$word_count = count( $word_array );
+	$out = '';
+	$i=0;
+	
+	foreach( $word_array as $word ) {
+		$i++;
+		
+		$out .= " <span class='word_$i'>$word</span> ";
+	}
+	
+	return $out;
+
+}
+
+/**
  * Return the first name for the active user.
  *
  * @return The first name for the active user.
@@ -233,6 +255,9 @@ function healthy_my_weeks_select() {
 		$active_user_display_name = healthy_get_active_user() -> display_name;	
 	}
 
+	// Get the number of weeks for whic the contest runs.
+	$length = healthy_length_of_contest();
+
 	// For each week in the contest...
 	while ( $week <= ( $current_week_of_contest ) ) {
 
@@ -258,6 +283,10 @@ function healthy_my_weeks_select() {
 		
 		// Increment the value for week.
 		$week++;
+
+		// Don't exceed the length of the contest.
+		if( $week > $length ) { break; } 
+
 	}
 
 	// If the user has switched users...

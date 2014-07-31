@@ -34,8 +34,10 @@ function healthy_reporting_menu() {
 	$weekly_href = esc_url( $base.$query );
 
 	// If we're viewing any kind of weekly report, this is the correct menu item.
-	if( ( $_GET[ 'unit_time' ] == 'weekly' ) && ( $_GET[ 'object_id' ] == $school ) ) {
-		$selected = 'selected="selected"';
+	if ( isset( $_GET[ 'unit_time' ] ) && ( $_GET[ 'object_id' ] ) ) {
+		if( ( $_GET[ 'unit_time' ] == 'weekly' ) && ( $_GET[ 'object_id' ] == $school ) ) {
+			$selected = 'selected="selected"';
+		}
 	}
 
 	// A lebel to view weekly reports.
@@ -78,8 +80,10 @@ function healthy_reporting_menu() {
 		$selected = '';
 
 		// If we're viewing this week, this is the correct menu item.
-		if( ( $_GET['unit_time'] == ( $week ) ) && ( $_GET['object_id'] == $school ) ) {
-			$selected = 'selected="selected"';
+		if( isset( $_GET['unit_time'] ) && isset( $_GET['object_id'] ) ) {
+			if( ( $_GET['unit_time'] == ( $week ) ) && ( $_GET['object_id'] == $school ) ) {
+				$selected = 'selected="selected"';
+			}
 		}
 
 		// The link for the report for this week.
@@ -992,7 +996,8 @@ function healthy_report_pagination( $school ) {
 	while( $i < $num_pages ) {
 		
 		// The href for this link.
-		$href = $url."&offset=$i";
+		$this_offset = absint( $i * $per_page );
+		$href = $url."&offset=$this_offset";
 		
 		// Is it the current link?
 		$maybe_current = '';
@@ -1188,12 +1193,14 @@ function healthy_get_rows_for_report( $args = array() ) {
 	}
 
 	// If a boss is browsing by school...
-	if( $args[ 'by_school' ] ) {
+	if( isset( $args[ 'by_school' ] ) ) {
+		if( $args[ 'by_school' ] ) {
 
-		// Each table row is a school.
-		$schools = healthy_get_schools();
-		foreach ( $schools as $s ) {
-			$rows []= $s[ 'slug' ];
+			// Each table row is a school.
+			$schools = healthy_get_schools();
+			foreach ( $schools as $s ) {
+					$rows []= $s[ 'slug' ];
+			}
 		}
 
 	// Else, each table row is a user.
@@ -1211,10 +1218,12 @@ function healthy_get_rows_for_report( $args = array() ) {
 	foreach ($rows as $row ) {
 		
 		// If a boss is browsing by school...
-		if( $args[ 'by_school' ] ) {
+		if( isset( $args[ 'by_school' ] ) ) {
+			if( $args[ 'by_school' ] ) {
 
-			// Get the row.
-			$cells = healthy_get_row( false, $row );
+				// Get the row.
+				$cells = healthy_get_row( false, $row );
+			}
 
 		// Else, we're browsing by user.
 		} else {
@@ -1270,6 +1279,8 @@ function healthy_get_csv() {
 
 	// Our object is a report.
 	$object_type = 'report';
+
+	$object_id = $_GET[ 'object_id' ];
 
 	// Determine if the user is allowed to view this.
 	if ( ! healthy_current_user_can_act_on_object( $object_id, $action, $object_type ) ) {

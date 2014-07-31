@@ -64,8 +64,8 @@ function healthy_length_of_contest() {
  */
 function healthy_first_week_of_contest() {
 	
-	// Let's say the contest starts on the 27th week of the year.
-	return 27;
+	// Let's say the contest starts on the 29th week of the year.
+	return 26;
 }
 
 /**
@@ -168,6 +168,48 @@ function healthy_add_roles() {
 }
 add_action( 'admin_head', 'healthy_add_roles');
 
+
+function healthy_create_api_page() {
+	
+	// If we're not in admin, bail.
+	if( ! is_admin () ) { return false; }
+
+ 	// Get the current screen.
+	$screen = get_current_screen();
+	
+	// Get the screen base.
+	$base = $screen -> base;
+	
+	// If we're not in the themes section, bail.
+	if( $base != 'themes' ) { return false; }
+
+	// If we didn't just activate, bail.
+	if( ! isset( $_GET[ 'activated' ] ) ) { return false; }
+
+	$post_name = healthy_get_api_page_slug();
+	
+	$post_content = esc_html__( 'Do not edit or delete this page', 'healthy' );
+	
+	$post_title = esc_html__( 'Do not edit or delete this page', 'healthy' );
+
+	$page_template = 'page-api-response.php';
+
+	$post = array(
+		'post_title'	=> $post_title,
+		'post_name'		=> $post_name,
+		'post_content'	=> $post_content,
+		'page_template' => $page_template,
+		'post_type'		=> 'page',	
+		'post_status'	=> 'publish',
+	);
+
+	$inserted = wp_insert_post( $post );
+	if( empty ( $inserted ) ) { wp_die( 'There has been an error. 204' ); }
+
+}
+add_action( 'admin_head', 'healthy_create_api_page');
+
+
 /**
  * Draw a favicon. Expects an image, favicon.png, in the parent theme root.
  *
@@ -184,6 +226,7 @@ function healthy_favicon() {
 	echo $out;
 }
 add_action( 'wp_head', 'healthy_favicon' );
+add_action( 'admin_head', 'healthy_favicon' );
 
 /**
  * Set up the content width value based on the theme's design.
