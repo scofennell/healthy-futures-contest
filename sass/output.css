@@ -626,6 +626,9 @@ img.wp-smiley, .rsswidget img {
   display: block;
   padding-top: 3px; }
 
+.home-link:hover {
+  text-decoration: none; }
+
 .home-link .word_3 {
   font-style: italic;
   font-weight: 400; }
@@ -1226,11 +1229,29 @@ li.weekly-average {
   list-style: none;
   margin-left: 0; }
 
+/*
+ * Terms and Cons
+ */
+.terms-cons {
+  height: 200px;
+  overflow-y: scroll;
+  margin-bottom: 28px;
+  padding: 10px;
+  border-radius: 3px; }
+
 /**
  * =============================================================================
  * App-specific modules
  * =============================================================================
  */
+/**
+ * Sponsors
+ */
+.sponsors > * {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 10px; }
+
 /**
  * User-specific menu
  */
@@ -1277,7 +1298,7 @@ a.button {
   text-decoration: none; }
 
 /* Color Pallette */
-body, input[type="search"], input[type="url"], input[type="tel"], input[type="text"], input[type="email"], input[type="date"], input[type="password"], textarea, .sub-menu, .inverse-color .widget_search input[type="search"], .inverse-color .widget_search input[type="submit"], .ui-datepicker {
+.terms-cons, body, input[type="search"], input[type="url"], input[type="tel"], input[type="text"], input[type="email"], input[type="date"], input[type="password"], textarea, .sub-menu, .inverse-color .widget_search input[type="search"], .inverse-color .widget_search input[type="submit"], .ui-datepicker {
   background-color: white;
   color: black; }
 

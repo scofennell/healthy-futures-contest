@@ -143,6 +143,10 @@ img.wp-smiley,
 	padding-top: 3px;
 }
 
+.home-link:hover {
+	text-decoration: none;
+}
+
 .home-link .word_3 {
 	font-style: italic;
 	font-weight: 400;
@@ -921,11 +925,32 @@ li.weekly-average  {
 	margin-left: 0;
 }
 
+/*
+ * Terms and Cons
+ */
+.terms-cons {
+	height: 200px;
+	overflow-y: scroll;
+	margin-bottom: $large_margin;
+	padding: $medium_padding;
+	border-radius: $small_border_radius;
+}
+
 /**
  * =============================================================================
  * App-specific modules
  * =============================================================================
  */
+
+/**
+ * Sponsors
+ */
+.sponsors > * {
+	display: inline-block;
+	vertical-align: middle;
+	margin: 0 10px;
+}
+
 
 /**
  * User-specific menu

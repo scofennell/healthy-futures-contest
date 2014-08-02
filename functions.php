@@ -96,3 +96,8 @@ require_once( get_template_directory()."/inc/footer-scripts.php" );
  * Functions to create data reports.
  */
 require_once( get_template_directory()."/inc/reporting.php" );
+
+/**
+ * Functions to manage sponsors.
+ */
+require_once( get_template_directory()."/inc/sponsors.php" );

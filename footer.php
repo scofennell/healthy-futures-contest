@@ -13,6 +13,10 @@
 		<footer id="blog-footer" class="inverse-color outer-wrapper" role="contentinfo">
 			<div id="blog-footer-inner-wrapper" class="inner-wrapper">		
 
+			<?php
+				echo healthy_get_sponsors();
+			?>
+
 				<?php if ( is_active_sidebar( 'footer-widgets' ) ) { ?>
 			
 					<aside id="footer-widgets" class="clear widgets footer-widgets" role="complementary">

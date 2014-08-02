@@ -179,6 +179,11 @@ function healthy_controller() {
 		$inserted = absint( $inserted );
 		if( ! empty( $inserted ) ) {
 		
+			$sugary_drinks = get_post_meta( $inserted, 'sugary_drinks', TRUE );
+			$sugary = false;
+			if( $sugary_drinks > 1 ) { $sugary = true; }
+
+
 			// Translations.
 			$edit_text = esc_html__( "You can go back and edit your entry if you want.", 'healthy' );
 			
@@ -201,14 +206,31 @@ function healthy_controller() {
 		
 			$subtitle = $edit_link.$edit_week_link;
 
-			// If the user just entered data and their week is full...
-			if( healthy_is_week_full() ) {
-				// Tell the user the week is full.
-				$title = __( "Good job!  All your days are full so far this week. Come back soon!", 'healthy' );
-			} else {
+			if( ! $sugary ) {
+
+				// If the user just entered data and their week is full...
+				if( healthy_is_week_full() ) {
+					// Tell the user the week is full.
+					$title = __( "Good job!  All your days are full so far this week. Come back soon!", 'healthy' );
+				} else {
 				
-				$title = esc_html__( 'Nice! Your data has been recorded!', 'healthy' );
-				$content = healthy_post_a_day_form( false );
+					$title = esc_html__( 'Nice! Your data has been recorded!', 'healthy' );
+					$content = healthy_post_a_day_form( false );
+				}
+
+			} else {
+
+				$message = healthy_get_sugar_slogan();
+				$title = $message[ 'title' ];
+				$subtitle = $message[ 'subtitle' ];
+				$subtitle .= $edit_link.$edit_week_link;
+
+				if( ! healthy_is_week_full() ) {	
+					$content = healthy_post_a_day_form( false );
+				} else {
+					$content = __( "All your days are full so far this week. Come back soon!", 'healthy' );
+				}
+
 			}
 
 		// If the user is about to insert a day...
@@ -248,9 +270,23 @@ function healthy_controller() {
 		// If the user just edited, congratulate him.
 		if( healthy_process_post_a_day_form() ) {
 
-			// Thank the usr for editing that day.
-			$subtitle = sprintf( esc_html__ ( 'You just edited your entry from %s.', 'healthy' ), $post_to_edit_date );
-			$title = esc_html__( 'That looks great, nice work on that.', 'healthy' );
+			$sugary_drinks = get_post_meta( $object_id, 'sugary_drinks', TRUE );
+			$sugary = false;
+			if( $sugary_drinks > 1 ) { $sugary = true; }
+
+			if( ! $sugary ) {
+
+				// Thank the usr for editing that day.
+				$subtitle = sprintf( esc_html__ ( 'You just edited your entry from %s.', 'healthy' ), $post_to_edit_date );
+				$title = esc_html__( 'That looks great, nice work on that.', 'healthy' );
+
+			} else {
+
+				$message = healthy_get_sugar_slogan();
+				$title = $message[ 'title' ];
+				$subtitle = $message[ 'subtitle' ];
+
+			}
 
 		// Else, prompt him to edit.
 		} else {
@@ -743,7 +779,7 @@ function healthy_profile_fields() {
 			'label' 				  => 'Grade',
 			'slug' 					  => sanitize_key( 'grade' ),
 			'type' 					  => 'range',
-			'min' 					  => '5',
+			'min' 					  => '6',
 			'max' 					  => '8',
 			'default' 				  => '1',
 			'is_meta' 				  => 1,
@@ -839,7 +875,7 @@ function healthy_get_the_title_and_content( $title, $content, $subtitle = '' ) {
 
 	// The subtitle for our page.
 	if( ! empty ( $subtitle ) ) {
-		$subtitle = "<div class='subtitle'>$subtitle</div>";
+		$subtitle = "<p class='subtitle'>$subtitle</p>";
 	}
 
 	// Wrap the title & subtitle.
@@ -1217,7 +1253,7 @@ function healthy_day() {
 				'slug' 		=> sanitize_key( 'light_exercise' ),
 				'type' 		=> 'range',
 				'min' 		=> 0,
-				'max' 		=> 480,
+				'max' 		=> 120,
 				'default' 	=> 0,
 				'notes'		=> esc_html__( "You will be moving, but your heart beat and breathing will not change much.", 'healthy' ),
 
@@ -1241,7 +1277,7 @@ function healthy_day() {
 				'slug' 		=> sanitize_key( 'moderate_exercise' ),
 				'type' 		=> 'range',
 				'min' 		=> 0,
-				'max' 		=> 480,
+				'max' 		=> 120,
 				'default' 	=> 0,
 				'notes'		=> esc_html__( "While performing the physical activity, if your breathing and heart rate is noticeably faster but you can still carry on a conversation, it's probably moderately intense.", 'healthy' ),
 				'step'		=> 5,
@@ -1257,7 +1293,7 @@ function healthy_day() {
 				'slug' 		=> sanitize_key( 'vigorous_exercise' ),
 				'type' 		=> 'range',
 				'min' 		=> 0,
-				'max' 		=> 240,
+				'max' 		=> 120,
 				'default' 	=> 0,
 				'notes'		=> esc_html__( "If your heart rate is increased substantially and you are breathing too hard and fast to have a conversation, it's probably vigorously intense.", 'healthy' ),
 				'step'		=> 5,

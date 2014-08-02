@@ -51,6 +51,28 @@ function healthy_active_user_first_name() {
 	return $out;
 }
 
+function healthy_hello_user() {
+	
+	// Grab the user first name.
+	$first_name = get_user_meta( get_current_user_id(), 'first_name', TRUE	);
+	
+	// If the user has a first name:
+	if ( ! empty ( $first_name ) ) {
+
+		// Create a "Hi user!" string.
+		$hello = sprintf( esc_html__( 'Hi %s!', 'healthy' ), $first_name );
+			
+		// Wrap the string for CSS.
+		$hello = "<em class='healthy-hello'>$hello</em>";
+
+		return $hello;
+
+	}
+
+	return false;
+	
+}
+
 /**
  * Returns a link prompting the user to create a user, if applicaple.
  *
@@ -325,36 +347,25 @@ function healthy_nav_menu() {
 	// Will hold each menu item.
 	$menu_items = array();
 
-	// If the user is logged in, givehim a logout link.
-	if( is_user_logged_in() ) {
-
-		// A loginout link.
-		$loginout = healthy_login_link();
-	
-		// Add the logout link.
-		$menu_items []= $loginout;
-
-	}
-
 	// Grab the current week so we can see if it's full.
 	$week = date( 'W' );
 
 	// Some items only make sense for logged in users.
 	if( is_user_logged_in() ) {
 
-		// Logged in users can edit their profile.
-		$menu_items []= healthy_edit_profile_link();
+		// Say hello to our little friends.
+		$menu_items []= healthy_hello_user();
 
 		// If the user is able, give links to create and browse data.
 		if( healthy_is_profile_complete() && healthy_user_is_role( true, 'student' ) ) {
 
-			// Browse by week
-			$my_weeks = healthy_my_weeks_select();
-			$menu_items []= $my_weeks;
-		
 			// Enter a new day
 			$enter_day = healthy_enter_day_link( $week );
 			$menu_items []= $enter_day;
+
+			// Browse by week
+			$my_weeks = healthy_my_weeks_select();
+			$menu_items []= $my_weeks;
 
 		}
 
@@ -373,7 +384,21 @@ function healthy_nav_menu() {
 			$healthy_review_reports_link = healthy_review_reports_link();
 			$menu_items []= $healthy_review_reports_link;
 		}
+
+		// Logged in users can edit their profile.
+		$menu_items []= healthy_edit_profile_link();
 	
+		// If the user is logged in, givehim a logout link.
+		if( is_user_logged_in() ) {
+
+			// A loginout link.
+			$loginout = healthy_login_link();
+		
+			// Add the logout link.
+			$menu_items []= $loginout;
+
+		}
+
 	// End if user is logged in.
 	}
 

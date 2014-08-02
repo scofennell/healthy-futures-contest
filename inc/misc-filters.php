@@ -22,22 +22,6 @@ function healthy_filter_login_link( $link ) {
 	// If the user is logged in, use his name in the loginout text.
 	if( is_user_logged_in() ) { 
 
-		// Grab the user first name.
-		$first_name = get_user_meta( get_current_user_id(), 'first_name', TRUE	);
-	
-		// If the user has a first name:
-		if ( ! empty ( $first_name ) ) {
-
-			// Create a "Hi user!" string.
-			$hello = sprintf( esc_html__( 'Hi %s!', 'healthy' ), $first_name );
-			
-			// Wrap the string for CSS.
-			$hello = "<em class='healthy-hello'>$hello</em>";
-	
-			// Build the new version of the link text.
-			$link = $hello.' '.$link;
-		}
-
 		// Fix the casing of the log out link.  Find the default text.
 		$logout_text_before = 'Log out';
 

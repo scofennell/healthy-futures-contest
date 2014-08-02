@@ -822,3 +822,51 @@ function healthy_review_a_post( $post_id ) {
 
 	return $out;
 }
+
+function healthy_sugar_slogans() {
+
+	$slogans = array(
+		array(
+			'title' 	=> esc_html__( 'A 20-ounce soda could have as much sugar as 16 mini chocolate doughnuts.', 'healthy' ),
+			'subtitle' 	=> esc_html__( 'You wouldn\'t eat that much sugar, so why drink it?', 'healthy' ),
+		),
+		array(
+			'title' 	=> esc_html__( 'Looking for sugar?  It goes by many names.', 'healthy' ),
+			'subtitle' 	=> esc_html__( 'Brown Rice Syrup, honey, maple syrup, corn syrup, fruit nectar, glucose, sucrose, dextrose, fructose, and many more!', 'healthy' ),
+		),
+		array(
+			'title' 	=> esc_html__( 'Some drinks say they\'re loaded with vitamins.  But the truth us, they\'re loaded with SUGAR.', 'healthy' ),
+			'subtitle' 	=> esc_html__( 'Want something healthy?  Skip all those added sugars. Drink water or low-fat milk.', 'healthy' ),
+		),	
+		array(
+			'title' 	=> esc_html__( 'A fruit-flavored drink must be healthy, right?  WRONG. A 20-ounce drink can have as much sugar as 2 regular-sized candy bars.', 'healthy' ),
+			'subtitle' 	=> esc_html__( 'Want something healthy?  Eat a piece of fruit and drink water.', 'healthy' ),
+		),
+		array(
+			'title' 	=> esc_html__( 'A powdered drink can have as much sugar as 6 puffed rice treats.', 'healthy' ),
+			'subtitle' 	=> esc_html__( 'Want something healthy?  Eat a piece of fruit and drink water.', 'healthy' ),
+		),
+		array(
+			'title' 	=> esc_html__( 'A 20-ounce sports drink can have as much sugar as 10 chocolate chip cookies.', 'healthy' ),
+			'subtitle' 	=> esc_html__( 'Want to quench your thirst?  Skip all those added sugars and drink water.', 'healthy' ),
+		),
+		array(
+			'title' 	=> esc_html__( 'A 16-ounce energy drink can have as much sugar as 5 ice cream sandwiches.', 'healthy' ),
+			'subtitle' 	=> esc_html__( 'You wouldn\'t eat that much sugar, so why drink it?', 'healthy' ),
+		),
+	);
+
+	return $slogans;
+}
+
+function healthy_get_sugar_slogan() {
+
+	$slogans = healthy_sugar_slogans();
+
+	$rand = rand( 0, 6 );
+
+	$out = $slogans[ $rand ];
+
+	return $out;
+
+}

@@ -732,9 +732,16 @@ function healthy_profile_form( $creating = false ) {
 		$role = healthy_get_roles_as_select();
 	}
 
+	// Grab some JS to power a show hide for the password inputs.
+	$show_hide_pw_fields = healthy_show_hide_pw_fields();
+	
+	// Grab the terms and cons.
+	$terms_cons = healthy_terms_and_cons();
+
 	// Complete the output.
 	$out = "
 		<form id='profile-form' method='$method' action='$form_action'>
+			$terms_cons
 			$nonce
 			$out
 			$role
@@ -743,6 +750,7 @@ function healthy_profile_form( $creating = false ) {
 			$action
 			$submit
 			$validate
+			$show_hide_pw_fields
 		</form>
 		$range_script
 	";
@@ -767,6 +775,30 @@ function healthy_profile_form( $creating = false ) {
 
 
 
+function healthy_show_hide_pw_fields() {
+	$toggle = esc_html__( 'Click here to change your password.', 'Healthy' );
+	?>
+		<script>
+			jQuery( document ).ready( function( $ ) {
+				var pw_fields = $( '[for="password"], [for="password_confirm"]' );
+				var first_pw_field = $( pw_fields ).first();
+				
+				var toggle = '<p><a href="#" class="toggle pw-toggle"><?php echo $toggle; ?></a></p>';
+
+				$( toggle ).insertBefore( first_pw_field );
+				
+				$( pw_fields ).hide();
+
+				$( '.pw-toggle' ).on( 'click', function( event ) {
+					event.preventDefault();
+					$( pw_fields ).fadeToggle();
+				});
+
+
+			});
+		</script>
+	<?php
+}
 
 
 
@@ -774,8 +806,21 @@ function healthy_profile_form( $creating = false ) {
 
 
 
+function healthy_terms_and_cons() {
 
+	if( healthy_is_profile_complete() ) { return false; }
 
+	require_once( get_template_directory().'/inc/terms-and-cons.php' );
+	$text = healthy_terms_cons_text();
+
+	$agree = esc_html__( 'I have read and agree to the terms & conditions.', 'healthy' );
+
+	$input = "<label for='terms-cons'>$agree <input class='required' type='radio' id='terms-cons' name='terms-cons' value=1 ></label>";
+
+	$out = $text.$input;
+
+	return $out;
+}
 
 
 
