@@ -604,7 +604,7 @@ function healthy_get_active_user() {
  * @param  string $slug The slug for the stat we're analyzing.
  * @return string A number rounded to the nearest tenth, representing the average value.
  */
-function healthy_get_weekly_average( $week_id, $slug ) {
+function healthy_get_weekly_average( $week_id, $slug, $user_id='' ) {
 	
 	// Start the output.
 	$out = '';
@@ -613,7 +613,10 @@ function healthy_get_weekly_average( $week_id, $slug ) {
 	$query_week = healthy_convert_contest_week_to_query_week( $week_id );
 
 	// Grab info for the active user.
-	$user_id = healthy_get_active_user_id();
+	$user_id = absint( $user_id );
+	if( empty( $user_id ) ) {
+		$user_id = healthy_get_active_user_id();
+	}
 
 	// Get Posts from that week.
 	$r = healthy_get_posts( $user_id, 7, false, false, false, $query_week );

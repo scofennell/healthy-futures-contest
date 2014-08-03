@@ -1250,7 +1250,8 @@ li.weekly-average {
 .sponsors > * {
   display: inline-block;
   vertical-align: middle;
-  margin: 0 10px; }
+  margin: 0 10px;
+  border-radius: 3px; }
 
 /**
  * User-specific menu

@@ -461,7 +461,7 @@ function healthy_get_row( $user_id = false, $which_school = false ) {
 						$slug = $f[ 'slug' ];
 
 						// Get the average for this user/week/value.
-						$cell = healthy_get_weekly_average( $i, $slug );
+						$cell = healthy_get_weekly_average( $i, $slug, $user_id );
 				
 						// If we're writing a table, append this cell.
 						if( $format == 'table' ) {
