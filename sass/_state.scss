@@ -60,3 +60,14 @@ a > * {
 	}
 
 }
+
+/* Form states */
+input[readonly],
+input[readonly="readonly"] {
+	border: none;
+	box-shadow: none;
+	width: 0;
+	background: transparent;
+	visibility: hidden;
+	position: absolute;
+}

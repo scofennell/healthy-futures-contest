@@ -1425,3 +1425,12 @@ input, a, a > * {
   text-shadow: 1px 1px 0 black, 2px 2px 0 white;
   padding-left: 0px;
   padding-right: 2px; }
+
+/* Form states */
+input[readonly], input[readonly="readonly"] {
+  border: none;
+  box-shadow: none;
+  width: 0;
+  background: transparent;
+  visibility: hidden;
+  position: absolute; }

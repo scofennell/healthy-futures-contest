@@ -91,7 +91,7 @@ function healthy_controller() {
 
 			// Prompt them to create a user.
 			$title = esc_html__( 'Add Teachers & Students!', 'healthy' );
-			$subtitle = esc_html__( 'You can create teachers and students for any school.', 'healthy' );
+			$subtitle = esc_html__( 'You can create teachers and students for your school.', 'healthy' );
 
 		}
 
@@ -225,7 +225,7 @@ function healthy_controller() {
 				$subtitle = $message[ 'subtitle' ];
 				$subtitle .= $edit_link.$edit_week_link;
 
-				if( ! healthy_is_week_full() ) {	
+				if( ! healthy_is_week_full() ) {
 					$content = healthy_post_a_day_form( false );
 				} else {
 					$content = __( "All your days are full so far this week. Come back soon!", 'healthy' );
@@ -783,8 +783,9 @@ function healthy_profile_fields() {
 			'slug' 					  => sanitize_key( 'grade' ),
 			'type' 					  => 'range',
 			'min' 					  => '6',
+			'step' 					  => '1',
 			'max' 					  => '8',
-			'default' 				  => '1',
+			'default' 				  => '6',
 			'is_meta' 				  => 1,
 			'required' 				  => 1,
 			'is_hidden_from_teachers' => 1,
@@ -1038,6 +1039,24 @@ function healthy_current_url(){
 	return $out;
 }
 
+function healthy_get_slider( $slug, $min, $max, $step, $value, $unit_label='' ) {
+	
+	$slug = esc_attr( $slug );
+	$min = absint( $min );
+	$max = absint( $max );
+	$step = absint( $step );
+	$value = absint( $value );
+	$unit_label = esc_html( $unit_label );
+
+	$out = "
+		<div data-unit-label='$unit_label' data-id='$slug' data-min='$min' data-max='$max' data-step='$step' data-value='$value' class='slider'></div>
+		<input readonly type='text' name='$slug' id='$slug' value='$value'>
+		<output class='output_$slug'>$value $unit_label</output>
+	";
+
+	return $out;
+}
+
 /**
  * Returns JS for powering the HTML range attr.
  * 
@@ -1046,29 +1065,32 @@ function healthy_current_url(){
 function healthy_range_script(){
 	$out = <<<EOT
 		<script>
-	
+		
 			// DOM Ready
-			jQuery(function() {
- 					
-				// set all the sliders once the dom is ready
-				jQuery("input[type='range']").each( function() {
-					value = jQuery( this ).val();
-					jQuery( this ).next("output").text(value);
-
+			jQuery( function( $ ) {
+ 				
+				$( '.slider' ).each( function(){
+					
+					var value = parseInt( $( this ).attr( 'data-value' ) );
+					var step = parseInt( $( this ).attr( 'data-step' ) );
+					var min = parseInt( $( this ).attr( 'data-min' ) );
+					var max = parseInt( $( this ).attr( 'data-max' ) );
+					var id = $( this ).attr( 'data-id' );
+					var unit_label = $( this ).attr( 'data-unit-label' );
+										
+					$( '#' + id ).attr( 'value', value );		
+					
+					$( this ).slider({
+      					value: value,
+      					min: min,
+      					max: max,
+      					step: step,
+      					slide: function( event, ui ) {
+      						$( '#' + id ).attr( 'value', ui.value );
+      						$( '.output_' + id ).text( ui.value + ' ' + unit_label );
+      					}
+    				});
 				});
-
- 				var el;
- 
- 				// Select all range inputs, watch for change
- 				jQuery("input[type='range']").on( "change mousemove", function() {
- 
-   					// Cache this for efficiency
-   					el = jQuery(this);
-   
-   					// Update the output text
-   					el.next("output").text(el.val());
-				});
-
 			});
 
 		</script>
@@ -1312,6 +1334,7 @@ function healthy_day() {
 				'slug' 		=> sanitize_key( 'sugary_drinks' ),
 				'type' 		=> 'range',
 				'min' 		=> 0,
+				'step'		=> 1,
 				'max' 		=> 24,
 				'default' 	=> 0,
 				'notes'		=> esc_html__( "Soda, powdered drinks, energy drinks, fruit-flavored juices, or any drink that has added sugar, corn syrup, or another type of caloric sweetener in the ingredient list.", 'healthy' ),

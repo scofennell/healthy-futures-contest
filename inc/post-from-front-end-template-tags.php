@@ -210,6 +210,7 @@ function healthy_post_a_day_form( $editing = false ) {
 
 	// If we're editing, do some checks and set some values
 	if ( $editing ) {
+
 		$action = 'edit';
 		
 		// Editing requires that we have a url var telling us what post to edit.
@@ -265,21 +266,21 @@ function healthy_post_a_day_form( $editing = false ) {
 		$min = '0';
 		if (isset ( $f[ 'min' ] ) ){
 			$min = $f[ 'min' ];
-			$min = " min='$min' ";
+			//$min = " min='$min' ";
 		}
 		
 		// A max value.
 		$max = '0';
 		if (isset ( $f[ 'max' ] ) ){
 			$max = $f[ 'max' ];
-			$max = " max='$max' ";
+			//$max = " max='$max' ";
 		}
 		
 		// A step value.
 		$step = '';
 		if (isset ( $f[ 'step' ] ) ){
 			$step = $f[ 'step' ];
-			$step = " step='$step' ";
+			//$step = " step='$step' ";
 		}
 
 		// A default value.
@@ -313,7 +314,27 @@ function healthy_post_a_day_form( $editing = false ) {
 
 		// Draw the input.
 		if( $type == 'range' ) {
-			$input = "<input name='$slug' class='$type' $min $max $step type='$type' id='$slug' value='$default'>";
+			//$input = "<input name='$slug' class='$type' $min $max $step type='$type' id='$slug' value='$default'>";
+		
+			//$input = "<input name='$slug' class='range' value='$default' $min $max $step type='text' id='$slug' readonly>";
+
+			$unit = '';
+			if( isset( $f[ 'unit' ] ) ) {
+				$unit = $f[ 'unit' ];
+				$singular = $unit[0];
+				$plural = $unit[1];
+
+				if( $default == 1 ) {
+					$unit_label = $singular;
+				} else {
+					$unit_label = $plural;	
+				}
+
+				$unit_label = esc_attr( $unit_label );
+			}
+
+			$input = healthy_get_slider( $slug, $min, $max, $step, $default, $unit_label );
+
 		} elseif ( $type == 'date' ) {
 			
 			// determine the post author, as different dates will be avaiulable for different authors.
@@ -336,27 +357,6 @@ function healthy_post_a_day_form( $editing = false ) {
 		if( ( $type == 'date' ) && ( $week_is_full ) ) { continue; }
 
 		// A holder for min/max ( slider ) inputs.
-		$output = "";
-		if ( $type == 'range' ) {
-			$unit = '';
-			if( isset( $f[ 'unit' ] ) ) {
-				$unit = $f[ 'unit' ];
-				$singular = $unit[0];
-				$plural = $unit[1];
-
-				if( $default == 1 ) {
-					$unit_label = $singular;
-				} else {
-					$unit_label = $plural;	
-				}
-
-				$unit_label = "<span class='unit'>".esc_html( $unit_label )."</span>";
-			}
-			$output ="
-				<output name='amount_$slug' for='$slug'>$default</output>
-				$unit_label
-			";
-		}	
 
 		// Build the whole field and add it to the output. 
 		$out.="
@@ -364,7 +364,6 @@ function healthy_post_a_day_form( $editing = false ) {
 				$label
 				$notes
 				$input
-				$output
 			</label>
 		";
 

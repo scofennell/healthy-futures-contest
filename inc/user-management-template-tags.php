@@ -579,13 +579,13 @@ function healthy_profile_form( $creating = false ) {
 		$slug = $f['slug'];
 		
 		// The label.
-		$label = $f['label'];
+		$label = $f[ 'label' ];
 		
 		// The type of inuput.
-		$type = $f['type'];
+		$type = $f[ 'type' ];
 
 		// The default value for the input.
-		$default = $f['default'];
+		$default = $f[ 'default' ];
 
 		// Is this input required?
 		$required = '';
@@ -597,23 +597,22 @@ function healthy_profile_form( $creating = false ) {
 		$min = '';
 		if (isset ( $f[ 'min' ] ) ){
 			$min = $f[ 'min' ];
-			$min = " min='$min' ";
+			//$min = " min='$min' ";
 		}
 		
 		// A max value.
 		$max = '';
 		if (isset ( $f[ 'max' ] ) ){
 			$max = $f[ 'max' ];
-			$max = " max='$max' ";
+			//$max = " max='$max' ";
 		}
 
-		// A holder for min/max ( slider ) inputs.
-		$output = "";
-		if ( $type == 'range' ) {
-			$output ="
-				<output $required name='amount_$slug' for='$slug'>$default</output>
-			";
-		}	
+		// A max value.
+		$step = '';
+		if (isset ( $f[ 'step' ] ) ){
+			$step = $f[ 'step' ];
+			//$max = " max='$max' ";
+		}
 
 		// If we're editing, draw the appropriate fields.
 		if( $action == 'edit' ) {
@@ -668,6 +667,10 @@ function healthy_profile_form( $creating = false ) {
 				</select>
 			";
 		
+		} elseif( $type == 'range' ) {
+
+			$input = healthy_get_slider( $slug, $min, $max, $step, $default );
+
 		// Else, it's a fairly normal input.		
 		} else {
 
@@ -680,7 +683,6 @@ function healthy_profile_form( $creating = false ) {
 			<label for='$slug'>
 				$label
 				$input
-				$output
 			</label>
 		";
 
@@ -696,7 +698,7 @@ function healthy_profile_form( $creating = false ) {
 	if ( $creating ) {
 		$submit_text = esc_attr__( 'Create', 'healthy' );
 	} else {
-		$submit_text = esc_attr__( 'Edit', 'healthy' );
+		$submit_text = esc_attr__( 'Submit', 'healthy' );
 	}
 
 	// A nonce field for our form.
@@ -760,7 +762,6 @@ function healthy_profile_form( $creating = false ) {
 
 	healthy_load_teachers_async();
 
-
 	return $out;
 
 }
@@ -776,7 +777,7 @@ function healthy_profile_form( $creating = false ) {
 
 
 function healthy_show_hide_pw_fields() {
-	$toggle = esc_html__( 'Click here to change your password.', 'Healthy' );
+	$toggle = esc_html__( 'Click here to change the password.', 'Healthy' );
 	?>
 		<script>
 			jQuery( document ).ready( function( $ ) {
@@ -871,10 +872,20 @@ function healthy_load_teachers_async() {
 
 				var teacher = $( '[name="teacher"]' );
 				
-				$( school ).change( function() {
-
 				var which_school = $( school ).val();
+
+				if( which_school != '' ) {
+
+					var response = $( teacher ).load( '<?php echo $api_page_url; ?>', { post_school: which_school }, function() {
+						// stuff here
+					});
+					
+				}
+
+				$( school ).change( function() {
 				
+					var which_school = $( this ).val();
+
 					var response = $( teacher ).load( '<?php echo $api_page_url; ?>', { post_school: which_school }, function() {
 						// some stuff here to execute after load
 					});

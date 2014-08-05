@@ -299,6 +299,11 @@ function healthy_scripts_styles() {
 	// Grab wp-includes version of jQuery.
 	wp_register_script( 'jquery-validation', get_template_directory_uri().'/js/jquery.validate.min.js', 'jquery', false, true );
 
+	// Grab wp-includes version of jQuery.
+	wp_enqueue_script( 'jquery-ui-slider', get_template_directory_uri().'/js/jquery.validate.min.js', 'jquery', false, false );
+
+	wp_enqueue_style( 'jquery-ui-smoothness', get_template_directory_uri().'/js/jquery-ui/smoothness/jquery-ui-1.10.4.custom.min.css' );
+
 }
 add_action( 'wp_enqueue_scripts', 'healthy_scripts_styles' );
 
