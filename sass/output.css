@@ -164,7 +164,7 @@ audio:not([controls]) {
 body a.current-menu-item, a {
   text-decoration: none; }
 
-a:hover {
+select.transparent:hover, a:hover {
   text-decoration: underline; }
 
 a, a > * {
@@ -246,7 +246,7 @@ code, kbd, pre, samp {
   font-size: 1em; }
 
 /* Forms */
-label, [type="range"] {
+select, label, [type="range"] {
   cursor: pointer; }
 
 label {
@@ -417,6 +417,10 @@ nav li {
 nav ul {
   margin: 0; }
 
+/* jQuery UI resets */
+a.ui-slider-handle {
+  background-image: none !important; }
+
 /**
  * 1.2 Repeatable Patterns
  * ----------------------------------------------------------------------------
@@ -510,6 +514,14 @@ form > :last-child, form > :last-child :last-child, fieldset > :last-child, .wp-
   margin-top: 28px;
   margin-bottom: 40px; }
 
+/* Align */
+.aligncenter, .align-center {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  clear: both; }
+
 /**
  * =============================================================================
  * WP defualts
@@ -583,6 +595,12 @@ img.wp-smiley, .rsswidget img {
   margin-top: -300px;
   z-index: -1; }
 
+@media (max-width: 723px) {
+  .body-logo {
+    background-size: contain;
+    left: 0;
+    top: 100px;
+    margin: 0; } }
 /** 
  * =============================================================================
  * Blog Header
@@ -639,6 +657,10 @@ img.wp-smiley, .rsswidget img {
   left: -90px;
   border-radius: 75px; }
 
+@media (max-width: 723px) {
+  .header-logo {
+    transform: scale(0.5);
+    left: -45px; } }
 /**
  * Primary Menu
  */
@@ -1225,7 +1247,7 @@ li.login-panel, .login-panel-header {
 /*
  * Weekly Averages
  */
-li.weekly-average {
+li.weekly-total, li.weekly-average {
   list-style: none;
   margin-left: 0; }
 
@@ -1253,6 +1275,11 @@ li.weekly-average {
   margin: 0 10px;
   border-radius: 3px; }
 
+@media (max-width: 723px) {
+  .sponsors > * {
+    display: block;
+    text-align: center;
+    margin: 0 auto 20px; } }
 /**
  * User-specific menu
  */
@@ -1303,16 +1330,16 @@ a.button {
   background-color: white;
   color: black; }
 
-.accent-color {
+.ui-widget-content a.ui-slider-handle.ui-state-default, .accent-color {
   background-color: #7cc24d; }
 
-a {
+.inverse-color select.transparent:hover, a {
   color: #0f2c52; }
 
-a.button, .button, [type='submit'], [type='image'], button, .inverse-color, .inverse-color .sub-menu {
+.ui-widget-content a.ui-slider-handle.ui-state-active, a.button, .button, [type='submit'], [type='image'], button, .inverse-color, .inverse-color .sub-menu {
   background-color: #0f2c52; }
 
-.home-link:hover .word_3, a.button, .button, [type='submit'], [type='image'], button, .inverse-color, .inverse-color a, .inverse-color .sub-menu {
+.inverse-color select.browse-my-data, .home-link:hover .word_3, a.button, .button, [type='submit'], [type='image'], button, .inverse-color, .inverse-color a, .inverse-color .sub-menu {
   color: white; }
 
 .inverse-color select, .inverse-color input[type="search"], .inverse-color input[type="url"], .inverse-color input[type="tel"], .inverse-color input[type="text"], .inverse-color input[type="email"], .inverse-color input[type="date"], .inverse-color input[type="password"], .inverse-color textarea {
@@ -1342,6 +1369,14 @@ a:hover {
 
 [type="submit"]:hover {
   background-color: #7cc24d; }
+
+.error {
+  color: red; }
+
+.inverse-color .transparent, transparent {
+  background: transparent;
+  border: none;
+  box-shadow: none; }
 
 /* Typograhpy */
 h1, h2, h3, h4, h5, h6, dt, th, label, [type='submit'], [type='image'], .button, button, .inverse-font, .entry-content blockquote cite {
@@ -1401,7 +1436,7 @@ a:active, input:active, a:focus, input:focus {
   outline: 1px dotted white; }
 
 /* Universal Transitions - Module one-offs are in _modules.scss*/
-input, a, a > * {
+select, input, a, a > * {
   transition: all 0.4s ease-in-out;
   transition-property: color, background, transform, opacity; }
 

@@ -165,7 +165,7 @@ function healthy_enter_day_link( $week ) {
 	if ( ! is_user_logged_in () ) { return false; }
 	
 	// If this week is full for this author, don't bother showing it.
-	if ( healthy_is_week_full() ) { return false; }
+	if ( healthy_is_fortnight_full() ) { return false; }
 
 	//The base url for our link.
 	$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
@@ -235,6 +235,37 @@ function healthy_edit_profile_link() {
 	// Complete the output.
 	$out = "<a href='$href'>$edit</a>";
 	return $out;
+}
+
+function healthy_browse_data_link() {
+
+	// If the user is acting on behalf of another user:
+	if ( healthy_has_switched_users() ) {
+		
+		// Grab the first name of the user being acted upon.
+		$active_user_display_name = healthy_get_active_user() -> display_name;
+		
+		// Text prompting the user to browse data for another user.
+		$browse = sprintf( esc_html__( 'Browse Data for %s', 'healthy' ), $active_user_display_name );	
+	
+	// Else, text prompting the user to browse his own data.
+	} else {
+		$browse = esc_html__( 'Browse My Data', 'healthy' );
+	}
+
+	// Our base url.
+	$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
+	
+	// Query to view all weeks.
+	$query = healthy_controller_query_string( 'week', 'review', 'all' );
+
+	// A Url to view all weeks.
+	$href = esc_url( $base.$query );
+
+	$out = "<a href='$href'>$browse</a>";
+
+	return $out;
+
 }
 
 /**
@@ -332,7 +363,7 @@ function healthy_my_weeks_select() {
 	$options .= "<option value='$value'>$week_by_week</option>";
 
 	// Complete the output as a JS jump-menu.
-	$out = "<select onchange='document.location.href=this.options[this.selectedIndex].value;'>$options</select>";
+	$out = "<select class='browse-my-data transparent' onchange='document.location.href=this.options[this.selectedIndex].value;'>$options</select>";
 
 	return $out;
 }
@@ -364,8 +395,8 @@ function healthy_nav_menu() {
 			$menu_items []= $enter_day;
 
 			// Browse by week
-			$my_weeks = healthy_my_weeks_select();
-			$menu_items []= $my_weeks;
+			$browse = healthy_browse_data_link();
+			$menu_items []= $browse;
 
 		}
 

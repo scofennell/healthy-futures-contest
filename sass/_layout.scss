@@ -86,3 +86,13 @@ blockquote > :last-child,
 	margin-top: $large_margin;
 	margin-bottom: $x_large_margin;
 }
+
+/* Align */
+.aligncenter,
+.align-center {
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+	display: block;
+	clear: both;
+}

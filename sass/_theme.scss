@@ -17,12 +17,17 @@ textarea,
 	color: $color;
 }
 
+.ui-widget-content a.ui-slider-handle.ui-state-default,
 .accent-color {
 	background-color: $tertiary_color;
 }
 
-a {color: $secondary_color;}
+.inverse-color select.transparent:hover,
+a {
+	color: $secondary_color;
+}
 
+.ui-widget-content a.ui-slider-handle.ui-state-active,
 a.button,
 .button,
 [type='submit'],
@@ -33,6 +38,7 @@ button,
 	background-color: $secondary_color; 
 }
 
+.inverse-color select.browse-my-data,
 .home-link:hover .word_3,
 a.button,
 .button,
@@ -119,6 +125,17 @@ form,
 a:hover { color: $tertiary_color; }
 
 [type="submit"]:hover { background-color: $tertiary_color; }
+
+.error {
+	color: red;
+}
+
+.inverse-color .transparent,
+transparent {
+	background: transparent;
+	border: none;
+	box-shadow: none;
+}
 
 /* Typograhpy */
 h1,

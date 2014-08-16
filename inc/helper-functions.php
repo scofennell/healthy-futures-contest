@@ -82,7 +82,7 @@ function healthy_controller() {
 	} elseif ( healthy_current_user_is_acting( 'create', 'user', 'new' ) ) {
 
 		// If the post is set, congratulate them on making a user.
-		if ( isset( $_POST['edit_profile'] ) ) {
+		if ( isset( $_POST[ 'edit_profile' ] ) ) {
 			$title = esc_html__( 'Your new user is alive and well.', 'healthy' );
 			$subtitle = esc_html__( 'Create another?', 'healthy' );			
 
@@ -98,7 +98,7 @@ function healthy_controller() {
 		// The edit profile form.
 		$content = healthy_profile_form( true );	
 
-	// Is the user creating a user?
+	// Is the user reviewing a user?
 	} elseif ( healthy_current_user_is_acting( 'review', 'user', 'all' ) ) {
 
 		// Prompt the user to assume the identity of a user
@@ -209,7 +209,7 @@ function healthy_controller() {
 			if( ! $sugary ) {
 
 				// If the user just entered data and their week is full...
-				if( healthy_is_week_full() ) {
+				if( healthy_is_fortnight_full() ) {
 					// Tell the user the week is full.
 					$title = __( "Good job!  All your days are full so far this week. Come back soon!", 'healthy' );
 				} else {
@@ -225,7 +225,7 @@ function healthy_controller() {
 				$subtitle = $message[ 'subtitle' ];
 				$subtitle .= $edit_link.$edit_week_link;
 
-				if( ! healthy_is_week_full() ) {
+				if( ! healthy_is_fortnight_full() ) {
 					$content = healthy_post_a_day_form( false );
 				} else {
 					$content = __( "All your days are full so far this week. Come back soon!", 'healthy' );
@@ -237,7 +237,7 @@ function healthy_controller() {
 		} else {
 
 			// If the week is full and we're not editing congratulate the user, return.
-			if( healthy_is_week_full() ) {
+			if( healthy_is_fortnight_full() ) {
 		
 				// Tell the user the week is full.
 				$title = __( "Good job!  All your days are full so far this week. Come back soon!", 'healthy' );
@@ -406,7 +406,7 @@ function healthy_controller() {
 			// The edit profile form.
 			$content = healthy_get_report();
 		
-		} elseif( healthy_is_week_full() ) {
+		} elseif( healthy_is_fortnight_full() ) {
 
 			// Prompt the user to browse past data.
 			$title = esc_html__( 'So much data!  Come back tomorrow to enter a new day!', 'healthy' );
@@ -656,6 +656,54 @@ function healthy_get_weekly_average( $week_id, $slug, $user_id='' ) {
 
 
 /**
+ * Returns the total for a stat in a given week.
+ * 
+ * @param  int $week_id The week of the contest to analyze.
+ * @param  string $slug The slug for the stat we're analyzing.
+ * @return string The total value.
+ */
+function healthy_get_weekly_total( $week_id, $slug, $user_id='' ) {
+	
+	// Start the output.
+	$out = '';
+
+	// Convert the contest week into a date( 'W' ).
+	$query_week = healthy_convert_contest_week_to_query_week( $week_id );
+
+	// Grab info for the active user.
+	$user_id = absint( $user_id );
+	if( empty( $user_id ) ) {
+		$user_id = healthy_get_active_user_id();
+	}
+
+	// Get Posts from that week.
+	$r = healthy_get_posts( $user_id, 7, false, false, false, $query_week );
+
+	// The posts from that week.
+	$days = $r -> posts;
+
+	// Will hold the running tally for this stat in this week.
+	$weekly_total = 0;
+
+	// For each day...
+	foreach( $days as $day ) {
+
+		// Get the amount for that day
+		$daily_amount = get_post_meta( $day -> ID, $slug, TRUE );
+		$daily_amount = absint( $daily_amount );
+
+		// Add it to the output
+		$weekly_total = $weekly_total + $daily_amount;
+
+	}
+
+	$out = absint( $weekly_total );
+	
+	return $out;
+}
+
+
+/**
  * Returns an array of schools for our app.
  * 
  * @return An array of schools for our app.
@@ -802,6 +850,7 @@ function healthy_profile_fields() {
 		'type' 		=> 'password',
 		'default' 	=> '',
 		'is_meta' 	=> 0,
+		'required' 	=> 1,
 	);
 	array_push( $out, $password );
 
@@ -812,6 +861,7 @@ function healthy_profile_fields() {
 		'type' 		=> 'password',
 		'default' 	=> '',
 		'is_meta' 	=> 0,
+		'required' 	=> 1,
 	);
 	array_push( $out, $password_confirm );
 
@@ -1278,7 +1328,7 @@ function healthy_day() {
 				'slug' 		=> sanitize_key( 'light_exercise' ),
 				'type' 		=> 'range',
 				'min' 		=> 0,
-				'max' 		=> 120,
+				'max' 		=> 180,
 				'default' 	=> 0,
 				'notes'		=> esc_html__( "You will be moving, but your heart beat and breathing will not change much.", 'healthy' ),
 

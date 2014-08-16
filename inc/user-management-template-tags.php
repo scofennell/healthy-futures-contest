@@ -12,9 +12,9 @@
  *
  * @return An HTML select menu for the roles in our app.
  */
-function healthy_get_roles_as_select() {
+function healthy_get_roles_as_select( $role_of_user_being_edited = false) {
 	
-	if( healthy_user_is_role( true, 'student' ) ) { return false; }
+	if( healthy_user_is_role( false, 'student' ) ) { return false; }
 
 	$out = '';
     
@@ -26,7 +26,9 @@ function healthy_get_roles_as_select() {
 		$slug = $r[ 'slug' ];
 		$label = $r[ 'label' ];
 
-		$out.= "<option value='$slug'>$label</option>";
+		$selected = selected( $slug, $role_of_user_being_edited, false );
+
+		$out.= "<option $selected value='$slug'>$label</option>";
 	}
 
 	$choose = esc_html__( 'Teacher or Student', 'healthy' );
@@ -691,8 +693,8 @@ function healthy_profile_form( $creating = false ) {
 	// The method by which we'll submit our form.
 	$method = 'post';
 
-	// The action to which we'll submit our form.
-	$form_action = esc_url( trailingslashit( get_bloginfo( 'url' ) ) );
+	// The action by which to handle our form.
+	$form_action = healthy_current_url();
 
 	// The submit button text for our form.
 	if ( $creating ) {
@@ -723,7 +725,13 @@ function healthy_profile_form( $creating = false ) {
 	$validate = '
 		<script>
 			jQuery( document ).ready( function() {
-				jQuery( "#profile-form" ).validate();
+				jQuery( "#profile-form" ).validate({
+					rules: {
+    					password_confirm: {
+      						equalTo: "#password"
+    					}
+  					}
+  				});
 			});
 		</script>
 	';
@@ -731,11 +739,49 @@ function healthy_profile_form( $creating = false ) {
 	// Role.
 	$role = '';		
 	if( get_current_user_id() != $user_to_edit_id ) {
-		$role = healthy_get_roles_as_select();
+
+
+		$role_of_user_being_edited = '';
+		if ( ! $creating ) {
+			if( healthy_user_is_role( true, 'teacher' ) ) {
+				$role_of_user_being_edited = 'teacher';
+			} else {
+				$role_of_user_being_edited = 'student';	
+			}
+		}
+
+		$role = healthy_get_roles_as_select( $role_of_user_being_edited );
+
+		// If the user is going to be a teacher, there is no need to select a grade or teacher for him.
+		$role.="
+			<script>
+				jQuery( document ).ready( function() {
+
+					notForTeachers = jQuery( 'label[for=\"grade\"], label[for=\"teacher\"]' );
+
+					var initialRole = jQuery( 'select#role' ).val();
+
+					if( initialRole == 'teacher' ) { jQuery( notForTeachers ).hide(); }
+
+					jQuery( 'select#role' ).change( function() {
+						newRole = jQuery( this ).val();
+						
+						if( newRole == 'teacher' ) {
+							jQuery( notForTeachers ).fadeOut();
+						} else {
+							jQuery( notForTeachers ).fadeIn();
+						}
+
+					});
+				});
+			</script>
+		";
+
 	}
 
 	// Grab some JS to power a show hide for the password inputs.
-	$show_hide_pw_fields = healthy_show_hide_pw_fields();
+	$show_hide_pw_fields = '';
+	if( ! $creating ) { healthy_show_hide_pw_fields(); }
 	
 	// Grab the terms and cons.
 	$terms_cons = healthy_terms_and_cons();
@@ -745,8 +791,8 @@ function healthy_profile_form( $creating = false ) {
 		<form id='profile-form' method='$method' action='$form_action'>
 			$terms_cons
 			$nonce
-			$out
 			$role
+			$out
 			$object_id
 			$object_type
 			$action
@@ -801,12 +847,6 @@ function healthy_show_hide_pw_fields() {
 	<?php
 }
 
-
-
-
-
-
-
 function healthy_terms_and_cons() {
 
 	if( healthy_is_profile_complete() ) { return false; }
@@ -823,18 +863,9 @@ function healthy_terms_and_cons() {
 	return $out;
 }
 
-
-
-
-
 function healthy_get_api_page_slug() {
 	return 'api-response';
 }
-
-
-
-
-
 
 function healthy_get_api_page() {
 	
@@ -851,9 +882,6 @@ function healthy_get_api_page() {
 	return $api_page_url;
 
 }
-
-
-
 
 function healthy_load_teachers_async() {
 	

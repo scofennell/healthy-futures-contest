@@ -119,6 +119,119 @@ function healthy_get_weekly_averages( $week_id ) {
 
 }
 
+
+/**
+ * Returns a definition list of total stats for the week.
+ *
+ * @param  int $week_id From what contest week are we grabbing?
+ * @return  string An HTML definitition list of data for the week.
+ */
+function healthy_get_weekly_totals( $week_id ) {
+
+	// Grab the active user id.
+	$user_id = healthy_get_active_user_id();
+
+	// Check for a transient.
+	$transient_key = 'healthy_weekly_tots_'.$user_id.$week_id;
+	$transient = get_transient( $transient_key );
+	if( $transient === false ) {
+
+		// Our plugin-wide definition of a day.
+		$day = healthy_day();
+
+		$week_id = absint( $week_id );
+
+		// Meta fields for a day.
+		$components = $day['components'];
+
+		// This will hold meta keys that relate to exercise time.
+		$keys = array();
+
+		// Start the output.
+		$out = "";
+
+		// For each meta key that relates to exercise...
+		foreach( $components as $c ) {
+
+			// If this isn't measured weekly, skip it.
+			if ( ! isset( $c[ 'is_weekly_metric' ] ) ) { continue; }
+			
+			// Will be used as a key to get the weekly average
+			$slug = $c[ 'slug' ];
+
+			// The label for this component.
+			$label = esc_html( $c[ 'label' ] );
+
+			// The weekly average for this component.
+			$value = healthy_get_weekly_total( $week_id, $slug );
+
+			// The unit.
+			$unit = $c[ 'unit' ];
+
+			if( $value == 1 ) {
+				$unit_label = $unit[0];
+			} else {
+				$unit_label = $unit[1];	
+			}
+
+			// The week_id for last week.
+			$last_week = $week_id - 1;
+
+			// This will hold the result of comparing this week to last week for this stat.
+			$compare ='';
+
+			// If there was a last week...
+			if ( ! empty ( $last_week ) ) {
+
+				// Get the value from last week.
+				$last_week_value = healthy_get_weekly_total( $last_week, $slug );
+				
+				// Compare last week to this week.
+				$difference = $value - $last_week_value;
+				
+				// Make it absolute.
+				$difference = str_replace( '-', '', $difference );
+				
+				// Output a string based on the result of the comparison.  More than the week before:
+				if ( $value > $last_week_value ) {
+					$compare = sprintf( esc_html__( " &mdash; That's %s more %s than the week before.", 'healthy' ), $difference, $unit_label );
+				
+				// Less than the week before.
+				} elseif ( $value < $last_week_value ) {
+					$compare = sprintf( esc_html__( " &mdash; That's %s fewer %s  than the week before.", 'healthy' ), $difference, $unit_label );	
+				
+				// The same as the week before.
+				} elseif ( $value == $last_week_value ) {
+					esc_html__( "That\'s the same as last week.", 'healthy' );
+				}
+			}
+
+			// Translate 'per day'.
+			// $per_day = esc_html( 'Per Day: ', 'healthy' );
+
+			// Add this stat to the output.
+			$out .= "<li><strong>$label: $value $unit_label</strong> <i>$compare</i></li>";
+
+		}
+
+		// Complete the output.
+		$out = "<ul>$out</ul>";
+
+		// Grab the transient time.
+		$transient_time = healthy_transient_time();
+
+		// Stash the output.
+		set_transient( $transient_key, $out, $transient_time );
+
+		return $out;
+
+	// If we have a transient, return it.
+	} else {
+		return $transient;
+	}
+
+}
+
 /**
  * Returns an HTML form to confirm that the user wants to delete a post.
  *
@@ -561,8 +674,12 @@ function healthy_choose_day_from_week( $week ) {
 			$prompt = "<a href='".get_bloginfo('url')."'>Enter a day for this week.</a>";
 		}
 
+		// This is a pretty short string, so we'll center it.
+
+		$out = "<div class='aligncenter'>$no_entries $prompt</div>";
+
 		// Return text to instruct the user on the status of this week.
-		return $no_entries.' '.$prompt;
+		return $out;
 	}
 
 	// The posts tht we found.
@@ -658,16 +775,16 @@ function healthy_week_by_week(){
 	$length_of_contest = healthy_length_of_contest();
 	
 	// The date( 'W' ) for the final week of the contest
-	$final_week = $week + $length_of_contest;
+	$final_week = $week + $length_of_contest - 1;
 	
 	// Carry the value for which week of the contest ( 1, 2, 3 ... )
 	$i = 0;
 
 	// The current week.
 	$current_week = date( 'W' );
-	
+
 	// Increment through the weeks of the competition.
-	while( $week <= $final_week ) {
+	while( $week < $current_week ) {
 
 		// Increment the values for $i and $week.
 		$i++;
@@ -683,7 +800,7 @@ function healthy_week_by_week(){
 		$maybe_edit_or_create_or_review = '';
 	
 		// If we're in the current week, we can create and edit.
-		if( $current_week == $week ) {
+		if( ( $current_week == $week ) || ( ( $current_week -1 ) == $week ) ) {
 
 			// If there are days, we can edit them.
 			if ( ! empty ( $number_of_days_entered ) ) {
@@ -716,7 +833,7 @@ function healthy_week_by_week(){
 
 		// If we're not in the current week and it does not have days, skip it.
 		} else {
-			continue;
+			$maybe_edit_or_create_or_review = "";
 		}
 
 		// Is the week complete?
@@ -732,22 +849,22 @@ function healthy_week_by_week(){
 
 		// Add a label for the week, tensed for past/present. 
 		if ( $current_week == $week ) {
-			$you_entered = sprintf( _n( "You&#8217;ve entered %d day so far.", "You&#8217;ve entered %d days so far.", $number_of_days_entered, 'healthy' ), $number_of_days_entered );
+			$you_entered = sprintf( _n( "You were active for %d day so far.", "You were active for %d days so far.", $number_of_days_entered, 'healthy' ), $number_of_days_entered );
 		} else {
-			$you_entered = sprintf( _n( "You&#8217;ve entered %d day.", "You&#8217;ve entered %d days.", $number_of_days_entered, 'healthy' ), $number_of_days_entered );		
+			$you_entered = sprintf( _n( "You were active for %d day.", "You were active for %d days.", $number_of_days_entered, 'healthy' ), $number_of_days_entered );		
 		}
 		$you_entered = "<p>$you_entered $complete $maybe_edit_or_create_or_review</p>";
 
 		// Get the average values for this week.
-		$averages = healthy_get_weekly_averages( $i );
+		$totals = healthy_get_weekly_totals( $i );
 
 		// Add this week to the output.
-		$out .= "<li class='weekly-average'>$week_string $you_entered $averages</li>";
+		$out .= "<li class='weekly-total'>$week_string $you_entered $totals</li>";
 
 	}
 
 	// Wrap the output, return.
-	$out = "<ul class='weekly-averages'>$out</ul>";
+	$out = "<ul class='weekly-totals'>$out</ul>";
 	return $out;
 
 }

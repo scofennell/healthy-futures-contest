@@ -115,8 +115,10 @@ function healthy_reporting_menu() {
 
 		// If we're viewing by school, this is the menu item.
 		$selected = '';
-		if( ( $_GET['unit_time'] == 'all' ) && ( $_GET['object_id'] == 'all' ) && empty( $_GET[ 'all_stars' ] ) ) {
-			$selected = 'selected="selected"';
+		if( isset( $_GET[  'unit_time' ] ) ) {
+			if( ( $_GET['unit_time'] == 'all' ) && ( $_GET['object_id'] == 'all' ) && empty( $_GET[ 'all_stars' ] ) ) {
+				$selected = 'selected="selected"';
+			}
 		}
 
 		// A label to browse all schools.
@@ -1173,13 +1175,18 @@ function healthy_days_complete_per_student_by_school( $school ) {
 function healthy_get_rows_for_report( $args = array() ) {
 
 	// For what unit time are we grabbing?
-	$unit_time = $args['unit_time'];
+	$unit_time = '';
+	if( isset( $args[ 'unit_time' ] ) ) {
+		$unit_time = $args[ 'unit_time' ];
+	}
 
 	// If we're grabbing from all schools, we actually need to pass an empty string.
-	if( $args[ 'meta_value' ] == 'all' ) {
-		$args[ 'meta_value' ] = '';
+	if( isset( $args[ 'meta_value' ] ) ){
+		if( $args[ 'meta_value' ] == 'all' ) {
+			$args[ 'meta_value' ] = '';
+		}
 	}
-	
+		
 	// What's our output format?
 	$format = $args['format'];
 

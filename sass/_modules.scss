@@ -93,6 +93,15 @@ img.wp-smiley,
 	z-index: -1;
 }
 
+@media ( max-width: $large_device ) {
+	.body-logo {
+		background-size: contain;
+		left: 0;
+		top: 100px;
+		margin: 0;
+	}
+}
+
 /** 
  * =============================================================================
  * Blog Header
@@ -157,6 +166,13 @@ img.wp-smiley,
 	bottom: -120px;
 	left: -90px;
 	border-radius: 75px;
+}
+
+@media ( max-width: $large_device ) {
+	.header-logo {
+		transform: scale(.5);
+		left: -45px;
+	}
 }
 
 /**
@@ -920,6 +936,7 @@ li.login-panel,
 /*
  * Weekly Averages
  */
+li.weekly-total,
 li.weekly-average  { 
 	list-style: none;
 	margin-left: 0;
@@ -952,6 +969,13 @@ li.weekly-average  {
 	border-radius: $small_border_radius;
 }
 
+@media ( max-width: $large_device ) {
+	.sponsors > * {
+		display: block;
+		text-align: center;
+		margin: 0 auto 20px;
+	}
+}
 
 /**
  * User-specific menu

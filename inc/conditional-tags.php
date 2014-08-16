@@ -684,10 +684,40 @@ function healthy_is_week_full( $week = false ) {
 			return false;		
 		}
 
-		// If we made it all the way to today, then the only days left are future days, which we cant post to.
-		if ( $i == $current_week_day_as_int ) { return true; }
+		// If we are in the current week, make sure we don't get past the current day.
+		if( $week == date( 'W' ) ) {
+
+			// If we made it all the way to today, then the only days left are future days, which we cant post to.
+			if ( $i == $current_week_day_as_int ) { return true; }
+
+		}
 		
 	} // end looping through days.
+
+	return true;
+}
+
+/**
+ * Determine if a fortnight is full for an author.
+ *
+ * @param  int $week The current week: 1, 2, 3, ... 51, 52
+ * @return bool If any days this fortnight week are empty, return false, otherwise, return true.
+ */
+function healthy_is_fortnight_full( $this_week = false ) {
+
+	if( ! $this_week ) {
+		$this_week = $current_week = date( 'W' );
+	}
+
+	$last_week = $this_week - 1;
+
+	$is_last_week_full = healthy_is_week_full( $last_week  );
+
+	if( ! $is_last_week_full ) { return false; }
+
+	$is_this_week_full = healthy_is_week_full( $this_week );
+
+	if( ! $is_this_week_full ) { return false; }
 
 	return true;
 }

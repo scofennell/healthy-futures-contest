@@ -240,7 +240,9 @@ function healthy_process_profile_form() {
 		$userdata[ 'display_name' ] = $first_name.' '.$last_name;
 
 		// Returns the ID of the newly created user.
-		$affected = wp_insert_user( $userdata ) ;
+		$affected = @wp_insert_user( $userdata ) ;
+
+		wp_new_user_notification( $affected, $userdata[ 'user_pass' ] );	
 	
 	}
 
@@ -282,8 +284,25 @@ function healthy_process_profile_form() {
 	// If we made it this far without doing something, something is wrong.
 	if( empty( $affected ) ) { wp_die( "There has been a problem. 173" ); }
 
+	// If the user has switched to a student and promotes them to teacher, unswitch them.
+	$user_to_edit_roles = $user_obj_to_edit -> roles;
+	if ( in_array( 'teacher', $user_to_edit_roles ) ) {
+
+		// Grab the app-wide value for our cookie key so we don't have to keep repeating it.
+		$cookie_key = healthy_switched_user_cookie_key();
+	
+		// Delete the cookie if it exists.
+		if ( isset( $_COOKIE[ $cookie_key ] ) ) {
+			setcookie( $cookie_key, get_current_user_id(), time() - 3600, COOKIEPATH, COOKIE_DOMAIN );
+		}
+
+		// Redir so as to get a fresh page updated with menu items and such that reflect the active user.
+		wp_safe_redirect( esc_url( get_bloginfo( 'url' ) ) );
+		exit;
+	}
+
 	// If the user was not profile complete before submitting the form...
-	if( empty( $was_user_profile_complete ) ) {
+	if( empty( $was_user_profile_complete ) && $editing ) {
 
 		// Let's see if she is now that she submitted it.
 		$is_user_profile_complete = healthy_is_profile_complete();
