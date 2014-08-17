@@ -655,7 +655,14 @@ function healthy_is_week_full( $week = false ) {
 	if( ! $week ) { $week = date( 'W' ); }
 
 	// Grab the first day of the week.
-	$first_day_of_week = healthy_get_first_day_of_week();
+	if( $week == date( 'W' ) ) {
+		$first_day_of_week = healthy_get_first_day_of_week();
+	} elseif( $week == ( date( 'W' ) - 1 ) ) {
+		$first_day_of_week = healthy_get_first_day_of_last_week();
+	} else {
+		wp_die( 'There has been a problem. 663' );
+	}
+
 	$first_day_of_week_in_seconds = strtotime( $first_day_of_week );
 
 	// Will get incremented as we loop through days.	
@@ -664,8 +671,9 @@ function healthy_is_week_full( $week = false ) {
 	// Grab the current day for this week -- no need to loop past it.
 	$current_week_day_as_int = date( 'N' );
 
-	// Loop through each say of the week.
+	// Loop through each day of the week.
 	$i=0;
+
 	while( $i <= 7 ) {
 
 		// 1 = monday, 2 = tuesday, etc..
@@ -676,20 +684,23 @@ function healthy_is_week_full( $week = false ) {
 			$next_day_in_seconds = $first_day_of_week_in_seconds + ( ( DAY_IN_SECONDS * $i ) -1 );
 		}
 
-		// The next day in text for easier string comparision.
-		$next_day_in_text = esc_attr( date( 'l, F d, Y', $next_day_in_seconds ) ); 
-
-		// If this author does not have post for this day, return false -- the week in not full.
-		if( ! healthy_already_an_entry_for_this_day( $post_author_id, $next_day_in_text ) ) {
-			return false;		
-		}
-
 		// If we are in the current week, make sure we don't get past the current day.
 		if( $week == date( 'W' ) ) {
 
 			// If we made it all the way to today, then the only days left are future days, which we cant post to.
 			if ( $i == $current_week_day_as_int ) { return true; }
 
+		}
+
+		// The next day in text for easier string comparision.
+		$next_day_in_text = esc_attr( date( 'l, F d, Y', $next_day_in_seconds ) ); 
+
+		// If this author does not have post for this day, return false -- the week in not full.
+		if( ! healthy_already_an_entry_for_this_day( $post_author_id, $next_day_in_text ) ) {
+
+			//wp_die( $next_day_in_text );
+
+			return false;		
 		}
 		
 	} // end looping through days.
@@ -712,6 +723,8 @@ function healthy_is_fortnight_full( $this_week = false ) {
 	$last_week = $this_week - 1;
 
 	$is_last_week_full = healthy_is_week_full( $last_week  );
+
+	//wp_die( var_dump( $is_last_week_full ) );
 
 	if( ! $is_last_week_full ) { return false; }
 

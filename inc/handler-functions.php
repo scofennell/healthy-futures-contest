@@ -284,21 +284,22 @@ function healthy_process_profile_form() {
 	// If we made it this far without doing something, something is wrong.
 	if( empty( $affected ) ) { wp_die( "There has been a problem. 173" ); }
 
-	// If the user has switched to a student and promotes them to teacher, unswitch them.
-	$user_to_edit_roles = $user_obj_to_edit -> roles;
-	if ( in_array( 'teacher', $user_to_edit_roles ) ) {
+	if ( isset( $_POST[ 'role' ] ) ) {
+		if( $_POST[ 'role' ] == 'teacher' ) {
 
-		// Grab the app-wide value for our cookie key so we don't have to keep repeating it.
-		$cookie_key = healthy_switched_user_cookie_key();
+			// Grab the app-wide value for our cookie key so we don't have to keep repeating it.
+			$cookie_key = healthy_switched_user_cookie_key();
 	
-		// Delete the cookie if it exists.
-		if ( isset( $_COOKIE[ $cookie_key ] ) ) {
-			setcookie( $cookie_key, get_current_user_id(), time() - 3600, COOKIEPATH, COOKIE_DOMAIN );
-		}
+			// Delete the cookie if it exists.
+			if ( isset( $_COOKIE[ $cookie_key ] ) ) {
+				setcookie( $cookie_key, get_current_user_id(), time() - 3600, COOKIEPATH, COOKIE_DOMAIN );
+			}
 
-		// Redir so as to get a fresh page updated with menu items and such that reflect the active user.
-		wp_safe_redirect( esc_url( get_bloginfo( 'url' ) ) );
-		exit;
+			// Redir so as to get a fresh page updated with menu items and such that reflect the active user.
+			wp_safe_redirect( esc_url( get_bloginfo( 'url' ) ) );
+			exit;
+		
+		}
 	}
 
 	// If the user was not profile complete before submitting the form...
@@ -416,7 +417,10 @@ function healthy_process_post_a_day_form() {
     $post_author_last_name = esc_html( $post_author_obj->user_lastname );
     
     // Adding the post date to the title makes for easier searching and browsing.
-    $date_string = esc_html( $_POST[ 'date' ] );
+    $date_string = '';
+    if ( isset( $_POST[ 'date' ] ) ) {
+	    $date_string = esc_html( $_POST[ 'date' ] );
+    }
     $date_stamp = strtotime( $date_string );
     $date = date( 'Y-m-d H:i:s', $date_stamp );
     $week = date( 'W', $date_stamp );

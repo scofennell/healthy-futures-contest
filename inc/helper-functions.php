@@ -72,7 +72,7 @@ function healthy_controller() {
 			$user_to_delete_display_name = get_userdata( $_REQUEST['object_id'] ) -> display_name;
 
 			// Prompt the user to enter data.
-			$title = sprintf( esc_html__( 'Expell %s?', 'healthy' ), $user_to_delete_display_name );
+			$title = sprintf( esc_html__( 'Expel %s?', 'healthy' ), $user_to_delete_display_name );
 			$subtitle = sprintf( esc_html__( 'Really delete your user, %s?', 'healthy' ), $user_to_delete_display_name );
 			$content = healthy_delete_user_confirm( $_REQUEST['object_id'] );
 		
