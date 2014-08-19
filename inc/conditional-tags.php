@@ -687,8 +687,8 @@ function healthy_is_week_full( $week = false ) {
 		// If we are in the current week, make sure we don't get past the current day.
 		if( $week == date( 'W' ) ) {
 
-			// If we made it all the way to today, then the only days left are future days, which we cant post to.
-			if ( $i == $current_week_day_as_int ) { return true; }
+			// If we made it past today, then the only days left are future days, which we cant post to.
+			if ( $i > $current_week_day_as_int ) { return true; }
 
 		}
 

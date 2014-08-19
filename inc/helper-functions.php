@@ -277,8 +277,16 @@ function healthy_controller() {
 			if( ! $sugary ) {
 
 				// Thank the usr for editing that day.
-				$subtitle = sprintf( esc_html__ ( 'You just edited your entry from %s.', 'healthy' ), $post_to_edit_date );
-				$title = esc_html__( 'That looks great, nice work on that.', 'healthy' );
+				$title = sprintf( esc_html__ ( 'You just edited your entry from %s.', 'healthy' ), $post_to_edit_date );
+
+				if( healthy_is_fortnight_full() ) {
+					$subtitle = esc_html__( 'All your days are full.  Come back soon to enter more data!', 'healthy' );
+				} else {
+					$new_post_query = healthy_controller_query_string( 'post', 'create', 'new' );
+					$new_post_href = esc_url( $base_url.$new_post_query );
+					$new_post_label = esc_html__( 'You can post a new day here.', 'healthy' );
+					$subtitle = "<a href='$new_post_href'>$new_post_label</a>";
+				}
 
 			} else {
 
@@ -829,11 +837,9 @@ function healthy_profile_fields() {
 		$grade = array(
 			'label' 				  => 'Grade',
 			'slug' 					  => sanitize_key( 'grade' ),
-			'type' 					  => 'range',
-			'min' 					  => '6',
-			'step' 					  => '1',
-			'max' 					  => '8',
-			'default' 				  => '6',
+			'type' 					  => 'select',
+			'options'				  => array( '6', '7', '8' ),
+			'default' 				  => '',
 			'is_meta' 				  => 1,
 			'required' 				  => 1,
 			'is_hidden_from_teachers' => 1,
@@ -843,7 +849,7 @@ function healthy_profile_fields() {
 
 	}
 
-			// Password is part of userdata, not usermeta.  Expects plain text.
+	// Password is part of userdata, not usermeta.  Expects plain text.
 	$password = array(
 		'label' 	=> 'Password',
 		'slug' 		=> sanitize_key( 'password' ),
@@ -854,7 +860,7 @@ function healthy_profile_fields() {
 	);
 	array_push( $out, $password );
 
-		// Password is part of userdata, not usermeta.  Expects plain text.
+	// Password is part of userdata, not usermeta.  Expects plain text.
 	$password_confirm =	array(
 		'label' 	=> 'Password Confirm',
 		'slug' 		=> sanitize_key( 'password_confirm' ),
@@ -1316,8 +1322,8 @@ function healthy_day() {
 
 			// A text input for activity.
 			array(
-				'label' 	=> esc_html__( 'Activity', 'healthy' ),
-				'slug' 		=> sanitize_key( 'activity' ),
+				'label' 	=> esc_html__( 'Activities', 'healthy' ),
+				'slug' 		=> sanitize_key( 'activities' ),
 				'type' 		=> 'text',
 				'default' 	=> '',
 			),
@@ -1385,7 +1391,7 @@ function healthy_day() {
 				'type' 		=> 'range',
 				'min' 		=> 0,
 				'step'		=> 1,
-				'max' 		=> 24,
+				'max' 		=> 8,
 				'default' 	=> 0,
 				'notes'		=> esc_html__( "Soda, powdered drinks, energy drinks, fruit-flavored juices, or any drink that has added sugar, corn syrup, or another type of caloric sweetener in the ingredient list.", 'healthy' ),
 				'is_weekly_metric' => 1,

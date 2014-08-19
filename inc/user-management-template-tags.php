@@ -594,6 +594,13 @@ function healthy_profile_form( $creating = false ) {
 		if (isset ( $f[ 'required' ] ) ){
 			$required = ' required="required" ';
 		}
+		
+		// An array of options..
+		$options = array();
+		if (isset ( $f[ 'options' ] ) ){
+			$options = $f[ 'options' ];
+			//$min = " min='$min' ";
+		}
 
 		// A min value.
 		$min = '';
@@ -672,6 +679,23 @@ function healthy_profile_form( $creating = false ) {
 		} elseif( $type == 'range' ) {
 
 			$input = healthy_get_slider( $slug, $min, $max, $step, $default );
+
+		} elseif( $type == 'select' ) {
+
+			$options_string = '';
+			foreach( $options as $option ) {
+				$option = esc_attr( $option );
+				$selected = selected( $option, $default, false );
+				$options_string .= "<option $selected value='$option'>$option</option>";
+			}
+
+			$choose = esc_html__( 'Choose Your Grade', 'healthy' );
+			$input = "
+				<select $required name='$slug'>
+					<option value=''>$choose</option>
+					$options_string
+				</select>
+			";
 
 		// Else, it's a fairly normal input.		
 		} else {
