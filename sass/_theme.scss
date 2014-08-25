@@ -85,6 +85,7 @@ a.inverse-color.current-menu-item,
 	color: $tertiary_color;
 }
 
+label .label-text,
 .accent-color a.current-menu-item,
 .accent-color a:hover {
 	color: $secondary_color;
@@ -126,6 +127,8 @@ a:hover { color: $tertiary_color; }
 
 [type="submit"]:hover { background-color: $tertiary_color; }
 
+.bad,
+.sugary-title,
 .error {
 	color: red;
 }

@@ -260,7 +260,9 @@ select,
 label,
 [type="range"] { cursor: pointer; }
 
-label { font-weight: bold; }
+label {
+	font-weight: bold;
+}
 
 label input,
 label select,

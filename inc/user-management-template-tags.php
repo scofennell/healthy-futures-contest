@@ -35,7 +35,7 @@ function healthy_get_roles_as_select( $role_of_user_being_edited = false) {
 	$role = esc_html__( 'Role', 'healthy' );
 
     $out = "
-    	<label for='role'>$role
+    	<label for='role'><span class='label-text'>$role</span>
     	<select id='role' name='role' required='required'>
     		<option value=''>$choose</option>
     		$out
@@ -909,7 +909,6 @@ function healthy_get_api_page() {
 
 function healthy_load_teachers_async() {
 	
-
 	$api_page_url = healthy_get_api_page();
 
 	if( empty( $api_page_url ) ) { wp_die( 'There has been a problem. 797' ); }

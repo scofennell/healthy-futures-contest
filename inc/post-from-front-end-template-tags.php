@@ -83,10 +83,24 @@ function healthy_get_weekly_averages( $week_id ) {
 				if ( $value > $last_week_value ) {
 					$compare = sprintf( esc_html__( " &mdash; That's %s more %s than the week before.", 'healthy' ), $difference, $unit_label );
 				
+					if( $c[ 'more_is_good' ] ) {
+						$grin =  convert_smilies( ':-)' );
+						$compare = "<span class='good'>$grin $compare</span>";
+					} else {
+						$compare = "<span class='bad'>$compare</span>";
+					}
+
 				// Less than the week before.
 				} elseif ( $value < $last_week_value ) {
-					$compare = sprintf( esc_html__( " &mdash; That's %s fewer %s  than the week before.", 'healthy' ), $difference, $unit_label );	
+					$compare =sprintf( esc_html__( " &mdash; That's %s fewer %s than the week before.", 'healthy' ), $difference, $unit_label );	
 				
+					if( ! $c[ 'more_is_good' ] ) {
+						$grin =  convert_smilies( ':-)' );
+						$compare = "<span class='good'>$grin $compare</span>";
+					} else {
+						$compare = "<span class='bad'>$compare</span>";
+					}
+
 				// The same as the week before.
 				} elseif ( $value == $last_week_value ) {
 					esc_html__( "That\'s the same as last week.", 'healthy' );
@@ -196,10 +210,24 @@ function healthy_get_weekly_totals( $week_id ) {
 				if ( $value > $last_week_value ) {
 					$compare = sprintf( esc_html__( " &mdash; That's %s more %s than the week before.", 'healthy' ), $difference, $unit_label );
 				
+					if( $c[ 'more_is_good' ] ) {
+						$grin =  convert_smilies( ':-)' );
+						$compare = "<span class='good'>$grin $compare</span>";
+					} else {
+						$compare = "<span class='bad'>$compare</span>";
+					}
+
 				// Less than the week before.
 				} elseif ( $value < $last_week_value ) {
 					$compare = sprintf( esc_html__( " &mdash; That's %s fewer %s  than the week before.", 'healthy' ), $difference, $unit_label );	
 				
+					if( ! $c[ 'more_is_good' ] ) {
+						$grin =  convert_smilies( ':-)' );
+						$compare = "<span class='good'>$grin $compare</span>";
+					} else {
+						$compare = "<span class='bad'>$compare</span>";
+					}
+
 				// The same as the week before.
 				} elseif ( $value == $last_week_value ) {
 					esc_html__( "That\'s the same as last week.", 'healthy' );
@@ -367,7 +395,7 @@ function healthy_post_a_day_form( $editing = false ) {
 	foreach($components as $f ) {
 
 		// The human readable name for the field.
-		$label 	= $f[ 'label' ];
+		$label 	= '<span class="label-text">'.$f[ 'label' ].'</span>';
 		
 		// The unique name for the field.
 		$slug 	= $f[ 'slug' ];
@@ -809,7 +837,7 @@ function healthy_week_by_week(){
 				$query = healthy_controller_query_string( 'week', 'review', $i );
 				$edit_href = $base_url.$query;
 				$edit = esc_html__( 'Edit', 'healthy' );
-				$maybe_edit_or_create_or_review = "<a href='$edit_href'>$edit</a>";
+				$maybe_edit_or_create_or_review = "<a class='crud-a-week-link' href='$edit_href'>Did you do more? $edit</a>";
 			
 			// If there are no posts, prompt the user to create some.
 			} else {
@@ -818,7 +846,7 @@ function healthy_week_by_week(){
 				$query = healthy_controller_query_string( 'post', 'create', 'new' );
 				$create_href = $base_url.$query;
 				$create = esc_html__( 'Create an entry', 'healthy' );
-				$maybe_edit_or_create_or_review = "<a href='$create_href'>$create</a>";
+				$maybe_edit_or_create_or_review = "<a class='crud-a-week-link' href='$create_href'>$create</a>";
 
 			}
 
@@ -829,7 +857,7 @@ function healthy_week_by_week(){
 			$query = healthy_controller_query_string( 'week', 'review', $i );
 			$review_href = $base_url.$query;
 			$review = esc_html__( 'Review these entries', 'healthy' );
-			$maybe_edit_or_create_or_review = "<a href='$review_href'>$review</a>";
+			$maybe_edit_or_create_or_review = "<a class='crud-a-week-link' href='$review_href'>$review</a>";
 
 		// If we're not in the current week and it does not have days, skip it.
 		} else {
@@ -853,13 +881,13 @@ function healthy_week_by_week(){
 		} else {
 			$you_entered = sprintf( _n( "You were active for %d day.", "You were active for %d days.", $number_of_days_entered, 'healthy' ), $number_of_days_entered );		
 		}
-		$you_entered = "<p>$you_entered $complete $maybe_edit_or_create_or_review</p>";
+		$you_entered = "<p class='you-entered'>$you_entered $complete</p>";
 
 		// Get the average values for this week.
 		$totals = healthy_get_weekly_totals( $i );
 
 		// Add this week to the output.
-		$out .= "<li class='weekly-total'>$week_string $you_entered $totals</li>";
+		$out .= "<li class='weekly-total'>$week_string $you_entered $totals $maybe_edit_or_create_or_review</li>";
 
 	}
 
@@ -902,7 +930,7 @@ function healthy_review_a_post( $post_id ) {
 	foreach($components as $f ) {
 
 		// The human readable name for the field.
-		$label 	= $f[ 'label' ];
+		$label 	= '<span class="label-text">'.$f[ 'label' ].'</span>';
 		
 		// The unique name for the field.
 		$slug 	= $f[ 'slug' ];

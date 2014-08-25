@@ -38,7 +38,7 @@ function healthy_controller() {
 
 		// It they're not logged in, return the login screen.
 		$title = esc_html__( 'Log in or register to get started', 'healthy' );
-		$subtitle = esc_html__( 'Only logged in users can partake in the contest!', 'healthy' );
+		$subtitle = esc_html__( 'Only logged in users can take the challenge!', 'healthy' );
 		$content = healthy_login_panels();
 
 	// If your profile is not complete, you're sunk.
@@ -46,7 +46,7 @@ function healthy_controller() {
 
 		// If they are not profile complete, bail.
 		$title = esc_html__( 'Please fill out this information about yourself.', 'healthy' );
-		$subtitle = esc_html__( 'Once your profile is complete, you can partake in the contest!', 'healthy' );
+		$subtitle = esc_html__( 'Once your profile is complete, you can take the challenge!', 'healthy' );
 		$content = healthy_profile_form();
 
 	// Is the user deleting a user?
@@ -163,7 +163,7 @@ function healthy_controller() {
 
 			$title = sprintf( esc_html__( 'Hey %s, how\'s it going?', 'healthy' ), $first_name );
 
-			$subtitle = esc_html__( 'Come back soon, once the contest starts!', 'healthy' );
+			$subtitle = esc_html__( 'Come back soon, once the challenge starts!', 'healthy' );
 		}
 
 		// The edit profile form.
@@ -221,7 +221,7 @@ function healthy_controller() {
 			} else {
 
 				$message = healthy_get_sugar_slogan();
-				$title = $message[ 'title' ];
+				$title = '<span class="sugary-title">'.$message[ 'title' ].'</span>';
 				$subtitle = $message[ 'subtitle' ];
 				$subtitle .= $edit_link.$edit_week_link;
 
@@ -291,7 +291,7 @@ function healthy_controller() {
 			} else {
 
 				$message = healthy_get_sugar_slogan();
-				$title = $message[ 'title' ];
+				$title = '<span class="sugary-title">'.$message[ 'title' ].'</span>';
 				$subtitle = $message[ 'subtitle' ];
 
 			}
@@ -400,7 +400,7 @@ function healthy_controller() {
 
 			// Prompt the user to browse reports.
 			$title = esc_html__( 'Report Card', 'healthy' );
-			$subtitle = esc_html__( 'You can view a broad report for the whole contest, or more detailed reports for each week.', 'healthy' );			
+			$subtitle = esc_html__( 'You can view a broad report for the whole challenge, or more detailed reports for each week.', 'healthy' );			
 
 			// The report view.
 			$content = healthy_get_report();
@@ -409,7 +409,7 @@ function healthy_controller() {
 
 			// Prompt the user to assume the identity of a user
 			$title = esc_html__( 'Contest Activity', 'healthy' );
-			$subtitle = esc_html__( 'You can view reports on the contest here.', 'healthy' );			
+			$subtitle = esc_html__( 'You can view reports on the challenge here.', 'healthy' );			
 
 			// The edit profile form.
 			$content = healthy_get_report();
@@ -425,7 +425,7 @@ function healthy_controller() {
 		} else {
 
 			// Prompt the user to enter data.
-			$title = esc_html__( 'This is the place for data entry!', 'healthy' );
+			$title = esc_html__( 'This is the place to log your activity!', 'healthy' );
 			$subtitle = esc_html__( 'So.  How was your day?', 'healthy' );
 			$content = healthy_post_a_day_form( false );
 	
@@ -1330,13 +1330,16 @@ function healthy_day() {
 
 			// A range input for exercise.
 			array(
-				'label' 	=> esc_html__( 'Light Exercise', 'healthy' ),
-				'slug' 		=> sanitize_key( 'light_exercise' ),
-				'type' 		=> 'range',
-				'min' 		=> 0,
-				'max' 		=> 180,
-				'default' 	=> 0,
-				'notes'		=> esc_html__( "You will be moving, but your heart beat and breathing will not change much.", 'healthy' ),
+				'label' 		=> esc_html__( 'Light Exercise', 'healthy' ),
+				'slug' 			=> sanitize_key( 'light_exercise' ),
+				'type' 			=> 'range',
+				'min' 			=> 0,
+				'max' 			=> 180,
+				'default' 		=> 0,
+				'notes'			=> esc_html__( 'You were moving, but your heart rate and breathing did not change much.', 'healthy' ),
+				
+				// Does the user deserve a smiley face is this number is higher than the week before?
+				'more_is_good'  => true,
 
 				// We'll flag things as exercise for computing the total minutes of exercise.
 				'is_exercise' => 1,
@@ -1360,7 +1363,8 @@ function healthy_day() {
 				'min' 		=> 0,
 				'max' 		=> 120,
 				'default' 	=> 0,
-				'notes'		=> esc_html__( "While performing the physical activity, if your breathing and heart rate is noticeably faster but you can still carry on a conversation, it's probably moderately intense.", 'healthy' ),
+				'notes'		=> esc_html__( 'Your breathing and heart rate were noticeably faster but you could have a conversation.', 'healthy' ),
+				'more_is_good'  => true,
 				'step'		=> 5,
 				'is_exercise' => 1,
 				'is_weekly_metric' => 1,
@@ -1376,7 +1380,8 @@ function healthy_day() {
 				'min' 		=> 0,
 				'max' 		=> 120,
 				'default' 	=> 0,
-				'notes'		=> esc_html__( "If your heart rate is increased substantially and you are breathing too hard and fast to have a conversation, it's probably vigorously intense.", 'healthy' ),
+				'notes'		=> esc_html__( 'Your heart rate was increased and you were breathing too hard to have a conversation.', 'healthy' ),
+				'more_is_good'  => true,				
 				'step'		=> 5,
 				'is_exercise' => 1,
 				'is_weekly_metric' => 1,
@@ -1393,7 +1398,8 @@ function healthy_day() {
 				'step'		=> 1,
 				'max' 		=> 8,
 				'default' 	=> 0,
-				'notes'		=> esc_html__( "Soda, powdered drinks, energy drinks, fruit-flavored juices, or any drink that has added sugar, corn syrup, or another type of caloric sweetener in the ingredient list.", 'healthy' ),
+				'notes'		=> esc_html__( 'Sugary drink, sugar, corn syrup, or another type of caloric sweetener in the ingredient list', 'healthy' ),
+				'more_is_good'  => false,				
 				'is_weekly_metric' => 1,
 
 				'unit'		=> array( 'drink', 'drinks' ),
