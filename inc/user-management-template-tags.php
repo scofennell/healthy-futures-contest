@@ -911,7 +911,9 @@ function healthy_load_teachers_async() {
 	
 	$api_page_url = healthy_get_api_page();
 
-	if( empty( $api_page_url ) ) { wp_die( 'There has been a problem. 797' ); }
+	if( empty( $api_page_url ) ) { wp_die( 'There has been a problem. 914' ); }
+
+	$current_teacher_id = absint( get_user_meta( healthy_get_active_user_id(), 'teacher', TRUE ) );
 
 	?>
 		<script>
@@ -925,9 +927,11 @@ function healthy_load_teachers_async() {
 				
 				var which_school = $( school ).val();
 
+				var which_teacher = <?php echo $current_teacher_id; ?>;
+
 				if( which_school != '' ) {
 
-					var response = $( teacher ).load( '<?php echo $api_page_url; ?>', { post_school: which_school }, function() {
+					var response = $( teacher ).load( '<?php echo $api_page_url; ?>', { post_school: which_school, post_teacher: which_teacher }, function() {
 						// stuff here
 					});
 					
@@ -937,7 +941,7 @@ function healthy_load_teachers_async() {
 				
 					var which_school = $( this ).val();
 
-					var response = $( teacher ).load( '<?php echo $api_page_url; ?>', { post_school: which_school }, function() {
+					var response = $( teacher ).load( '<?php echo $api_page_url; ?>', { post_school: which_school, post_teacher: which_teacher }, function() {
 						// some stuff here to execute after load
 					});
 

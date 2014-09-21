@@ -137,8 +137,17 @@ function healthy_controller() {
 		// If the contest has started:
 		if ( healthy_contest_is_happening() ){
 
-			// A query to post a new day.
-			$query = healthy_controller_query_string( 'post', 'create', 'new' );
+			if( healthy_user_is_role( true, 'teacher' ) ) {
+
+				// A query to post a new day.
+				$query = healthy_controller_query_string( 'report', 'review', 'all' );
+
+			} else {
+
+				// A query to post a new day.
+				$query = healthy_controller_query_string( 'post', 'create', 'new' );
+
+			}
 		
 			// A base for the link.
 			$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
@@ -183,6 +192,11 @@ function healthy_controller() {
 			$sugary = false;
 			if( $sugary_drinks > 1 ) { $sugary = true; }
 
+			$exercise_reminder = false;
+			if( ! healthy_is_day_complete( $inserted ) ) {
+				$daily_minimum = healthy_daily_minimum();
+				$exercise_reminder = "<br><br>".sprintf( esc_html__( 'Remember to get at least %d minutes of exercise per day!', 'healthy' ), $daily_minimum );
+			}
 
 			// Translations.
 			$edit_text = esc_html__( "You can go back and edit your entry if you want.", 'healthy' );
@@ -211,10 +225,14 @@ function healthy_controller() {
 				// If the user just entered data and their week is full...
 				if( healthy_is_fortnight_full() ) {
 					// Tell the user the week is full.
-					$title = __( "Good job!  All your days are full so far this week. Come back soon!", 'healthy' );
+					
+					$title = __( 'Good job! All your days are full so far this week. Come back soon!', 'healthy' );
+					$title .= $exercise_reminder;
+
 				} else {
 				
-					$title = esc_html__( 'Nice! Your data has been recorded!', 'healthy' );
+					$title = esc_html__( 'Your data has been recorded!', 'healthy' );
+					$title .= $exercise_reminder;
 					$content = healthy_post_a_day_form( false );
 				}
 
@@ -228,7 +246,7 @@ function healthy_controller() {
 				if( ! healthy_is_fortnight_full() ) {
 					$content = healthy_post_a_day_form( false );
 				} else {
-					$content = __( "All your days are full so far this week. Come back soon!", 'healthy' );
+					$content = __( 'All your days are full so far this week. Come back soon!', 'healthy' );
 				}
 
 			}
@@ -274,11 +292,19 @@ function healthy_controller() {
 			$sugary = false;
 			if( $sugary_drinks > 1 ) { $sugary = true; }
 
+			$exercise_reminder = false;
+			if( ! healthy_is_day_complete( $object_id ) ) {
+				$daily_minimum = healthy_daily_minimum();
+				$exercise_reminder = "<br><br>".sprintf( esc_html__( 'Remember to get at least %d minutes of exercise per day!', 'healthy' ), $daily_minimum );
+
+			}
+
 			if( ! $sugary ) {
 
 				// Thank the usr for editing that day.
 				$title = sprintf( esc_html__ ( 'You just edited your entry from %s.', 'healthy' ), $post_to_edit_date );
-
+				$title .= $exercise_reminder;
+				
 				if( healthy_is_fortnight_full() ) {
 					$subtitle = esc_html__( 'All your days are full.  Come back soon to enter more data!', 'healthy' );
 				} else {
@@ -292,6 +318,7 @@ function healthy_controller() {
 
 				$message = healthy_get_sugar_slogan();
 				$title = '<span class="sugary-title">'.$message[ 'title' ].'</span>';
+				$title .= $exercise_reminder;
 				$subtitle = $message[ 'subtitle' ];
 
 			}

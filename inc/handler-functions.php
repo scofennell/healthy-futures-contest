@@ -284,21 +284,25 @@ function healthy_process_profile_form() {
 	// If we made it this far without doing something, something is wrong.
 	if( empty( $affected ) ) { wp_die( "There has been a problem. 173" ); }
 
-	if ( isset( $_POST[ 'role' ] ) ) {
-		if( $_POST[ 'role' ] == 'teacher' ) {
+	if( $editing ) {
+		if ( isset( $_POST[ 'role' ] ) ) {
+			if( $_POST[ 'role' ] == 'teacher' ) {
 
-			// Grab the app-wide value for our cookie key so we don't have to keep repeating it.
-			$cookie_key = healthy_switched_user_cookie_key();
+				// Grab the app-wide value for our cookie key so we don't have to keep repeating it.
+				$cookie_key = healthy_switched_user_cookie_key();
 	
-			// Delete the cookie if it exists.
-			if ( isset( $_COOKIE[ $cookie_key ] ) ) {
-				setcookie( $cookie_key, get_current_user_id(), time() - 3600, COOKIEPATH, COOKIE_DOMAIN );
-			}
+				// Delete the cookie if it exists.
+				if ( isset( $_COOKIE[ $cookie_key ] ) ) {
+					setcookie( $cookie_key, get_current_user_id(), time() - 3600, COOKIEPATH, COOKIE_DOMAIN );
+				}
 
-			// Redir so as to get a fresh page updated with menu items and such that reflect the active user.
-			wp_safe_redirect( esc_url( get_bloginfo( 'url' ) ) );
-			exit;
-		
+				$base = trailingslashit( get_bloginfo( 'url' ) );
+				$query = esc_url( healthy_controller_query_string( 'user', 'create', 'new' ) );
+
+				// Redir so as to get a fresh page updated with menu items and such that reflect the active user.
+				wp_redirect( $query );
+				exit;
+			}	
 		}
 	}
 
@@ -315,7 +319,7 @@ function healthy_process_profile_form() {
 			$base = trailingslashit( get_bloginfo( 'url' ) );
 			$query = healthy_controller_query_string( 'post', 'create', 'new' );
 			$url = esc_url( $base.$query );
-			wp_safe_redirect( $url );
+			wp_redirect( $url );
 			exit;
 		} 
 	}

@@ -923,7 +923,7 @@ function healthy_get_report() {
  * @return int Number of users per page in reports.
  */
 function healthy_users_per_page() {
-	return 2;
+	return 50;
 }
 
 /**

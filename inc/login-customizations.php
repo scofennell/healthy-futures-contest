@@ -246,7 +246,7 @@ add_filter( 'show_admin_bar', '__return_false' );
  * @return [type]        [description]
  */
 function healthy_filter_wp_mail_from($email){
-    get_bloginfo( 'admin_email' );
+    return get_bloginfo( 'admin_email' );
 }
 add_filter( 'wp_mail_from', 'healthy_filter_wp_mail_from', 999 );
 
