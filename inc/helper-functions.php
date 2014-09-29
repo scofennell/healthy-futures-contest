@@ -19,6 +19,9 @@ function healthy_controller() {
 	// The user on behalf of whom we're CRUD'ing
 	$active_user_id = healthy_get_active_user_id();
 
+	// use their first name.
+	$first_name = healthy_active_user_first_name();
+
 	// Grab the object id.
 	$object_id = '';
 	if( isset( $_REQUEST[ 'object_id' ] ) ) {
@@ -131,9 +134,6 @@ function healthy_controller() {
 	// Is the user editing his profile?
 	} elseif ( healthy_current_user_is_acting( 'edit', 'user', $object_id ) ) {
 
-		// use their first name.
-		$first_name = healthy_active_user_first_name();
-	
 		// If the contest has started:
 		if ( healthy_contest_is_happening() ){
 
@@ -449,8 +449,15 @@ function healthy_controller() {
 			$content = healthy_week_by_week();
 	
 		// If the week is not full yet
-		} else {
+		} elseif( ! healthy_contest_is_happening() ) {
 
+			$title = sprintf( esc_html__( 'Hey %s, how\'s it going?', 'healthy' ), $first_name );
+
+			$subtitle = esc_html__( 'Come back soon, once the challenge starts!', 'healthy' );
+		
+			$content = false;
+
+		} else {
 			// Prompt the user to enter data.
 			$title = esc_html__( 'This is the place to log your activity!', 'healthy' );
 			$subtitle = esc_html__( 'So.  How was your day?', 'healthy' );

@@ -596,7 +596,7 @@ function healthy_days_of_week_select( $post_author_id, $post_date_to_edit = '' )
 	} elseif( $current_week_of_contest > 1 ) {
 		$first_day_of_week = healthy_get_first_day_of_last_week();
 		$limit = 14;
-	} else { wp_die( 'There has been a problem. 446' ); }
+	} else { return false; }
 	
 
 
@@ -905,6 +905,8 @@ function healthy_week_by_week(){
  */
 function healthy_review_a_post( $post_id ) {
 
+	$out = '';
+
 	// The post id we're reviewing.
 	$post_id = absint( $post_id );
 	if( empty( $post_id ) ) { return false; }
@@ -942,12 +944,17 @@ function healthy_review_a_post( $post_id ) {
 		$meta = get_post_meta( $post_id, $slug, TRUE );
 
 		// The unit.
-		$unit = $f[ 'unit' ];
+		$unit_label = '';
+		if( isset(  $f[ 'unit' ] ) ) {
+			
+			$unit = $f[ 'unit' ];
+			
+			if( $meta == 1 ) {
+				$unit_label = $unit[0];
+			} else {
+				$unit_label = $unit[1];	
+			}
 
-		if( $meta == 1 ) {
-			$unit_label = $unit[0];
-		} else {
-			$unit_label = $unit[1];	
 		}
 
 		// Output.

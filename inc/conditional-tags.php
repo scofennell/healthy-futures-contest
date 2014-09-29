@@ -720,13 +720,20 @@ function healthy_is_fortnight_full( $this_week = false ) {
 		$this_week = $current_week = date( 'W' );
 	}
 
-	$last_week = $this_week - 1;
+	// What's the first week of the contest?
+	$first_week = healthy_first_week_of_contest();
 
-	$is_last_week_full = healthy_is_week_full( $last_week  );
+	// If we are not in the first week, check last week.
+	if( $this_week > $first_week ) {
 
-	//wp_die( var_dump( $is_last_week_full ) );
+		// Get the week number for last week.
+		$last_week = $this_week - 1;
 
-	if( ! $is_last_week_full ) { return false; }
+		$is_last_week_full = healthy_is_week_full( $last_week  );
+
+		if( ! $is_last_week_full ) { return false; }
+
+	}
 
 	$is_this_week_full = healthy_is_week_full( $this_week );
 
