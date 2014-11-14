@@ -65,7 +65,7 @@ function healthy_length_of_contest() {
 function healthy_first_week_of_contest() {
 	
 	// Let's say the contest starts on the 29th week of the year.
-	return 37;
+	return 40;
 }
 
 /**

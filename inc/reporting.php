@@ -437,12 +437,19 @@ function healthy_get_row( $user_id = false, $which_school = false ) {
 
 			// Determine the current week, so we don't loop past it.
 			$current_week_of_contest = healthy_current_week_of_contest();
+			$loops = $current_week_of_contest;
+
+			// Get the contest length.
+			$max_week = healthy_length_of_contest();
+			if( $loops > $max_week ) {
+				$loops = $max_week;
+			}
 
 			// Will increment to refer to each contest week.
 			$i = 0;
 
 			// While the week is less than the current week.
-			while( $i < $current_week_of_contest ) {
+			while( $i < $loops ) {
 			
 				// Increment the week ID.	
 				$i++;
@@ -708,6 +715,10 @@ function healthy_get_report() {
 	// If we have all the fields we need:
 	if ( ! isset( $_GET[ 'object_type' ] ) || ! isset( $_GET[ 'action' ] ) || ! isset( $_GET[ 'object_id' ] ) || ! isset( $_GET[ 'unit_time' ] ) ) { return $out; }
 
+	// How many users per page?
+	$per_page = 0;
+	$per_page = healthy_users_per_page();
+	
 	// Grab the school from the url.
 	$school = sanitize_text_field( $_GET[ 'object_id' ] );
 
@@ -760,6 +771,18 @@ function healthy_get_report() {
 			$by_school = 'all';
 		}
 
+		// Grab pagination if necessary.
+		$pagination = '';
+		if( $unit_time != 'all' ) {
+			$pagination = healthy_report_pagination( $school );
+		}
+
+		// Where to start in pagination.
+		$offset = 0;
+		if ( isset( $_GET[ 'offset' ] ) ) {
+			$offset = absint( $_GET[ 'offset' ] );
+		}
+
 		// Get the header row.
 		$header_cells = healthy_get_row( false, $by_school );
 
@@ -798,8 +821,8 @@ function healthy_get_report() {
 			$args = array(
 				'meta_key'     => 'school',
 				'meta_value'   => 'all',
-				'offset'	   => 0,
-				'number'	   => 9999,
+				'offset'	   => $offset,
+				'number'	   => $per_page,
 				'format' 	   => $format,
 				'unit_time'	   => $unit_time,
 				'role' 		   => 'student',
@@ -811,20 +834,6 @@ function healthy_get_report() {
 
 			// Build an args array for a call to get_users.
 			$args = array();
-
-			// Where to start in pagination.
-			$offset = 0;
-
-			// If it's a table view and we are paginating:
-			if ( ( $format == 'table' ) && isset( $_GET[ 'offset' ] ) ) {
-				$offset = absint( $_GET[ 'offset' ] );
-			}
-
-			// How many users per page?
-			$per_page = 0;
-			if ( $format == 'table' ) {
-				$per_page = healthy_users_per_page();
-			}
 
 			// Meta user query.
 			$args = array(
@@ -848,12 +857,6 @@ function healthy_get_report() {
 		
 			// THe html table.
 			$table = "<table id='healthy_report'>$head$body</table>";
-
-			// Grab pagination if necessary.
-			$pagination = '';
-			if( $school != 'all' ) {
-				$pagination = healthy_report_pagination( $school );
-			}
 
 			// Grab a count of users for this school.
 			$count = healthy_count_users_by_school( $school, $all_stars );
@@ -923,7 +926,8 @@ function healthy_get_report() {
  * @return int Number of users per page in reports.
  */
 function healthy_users_per_page() {
-	return 50;
+	//return 250;
+	return 300;
 }
 
 /**
@@ -1281,6 +1285,10 @@ function healthy_get_csv() {
 	// Sniff the url to seee if we're getting by csv.
 	if( ! isset( $_GET[ 'as_csv' ] ) ) { return false; }
 
+	// The page number.
+	$offset = '';
+	if( isset( $_GET[ 'offset' ] ) ) { $offset = sanitize_text_field( $_GET[ 'offset' ] ); }
+
 	// Our action is to review.
 	$action = 'review';
 
@@ -1309,7 +1317,7 @@ function healthy_get_csv() {
 	if( is_numeric( $unit_time ) ) { $unit_time = "week-".$unit_time; }
 
 	// Establish the name of the file that the user will download.
-	$fileName = $object_id.'-'.$unit_time.'-'.$current_time.'.csv';
+	$file_name = $object_id . '-' . $unit_time . '-' . $current_time . '-start-' . $offset . '.csv';
  
  	// The rows of the csv.
 	$rows = healthy_get_report();
@@ -1318,7 +1326,7 @@ function healthy_get_csv() {
 	header( 'Cache-Control: must-revalidate, post-check=0, pre-check=0' );
 	header( 'Content-Description: File Transfer' );
 	header( 'Content-type: text/csv' );
-	header( "Content-Disposition: attachment; filename={$fileName}" );
+	header( "Content-Disposition: attachment; filename={$file_name}" );
 	header( 'Expires: 0' );
 	header( 'Pragma: public' );
  
