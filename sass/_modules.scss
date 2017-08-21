@@ -96,6 +96,7 @@ img.wp-smiley,
 @media ( max-width: $large_device ) {
 	.body-logo {
 		background-size: contain;
+		-webkit-background-size: contain;
 		left: 0;
 		top: 100px;
 		margin: 0;
@@ -171,6 +172,9 @@ img.wp-smiley,
 @media ( max-width: $large_device ) {
 	.header-logo {
 		transform: scale(.5);
+		-moz-transform: scale(.5);
+		-webkit-transform: scale(.5);
+		bottom: -98px;
 		left: -45px;
 	}
 }
@@ -455,13 +459,6 @@ img.wp-smiley,
 
 .break-minor {
 	margin: $small_margin 0;
-}
-/* First-letter */
-.entry-content > p:first-child:first-letter {
-    font-size: 38px;
-    font-weight: 600;
-    line-height: 35px;
-    vertical-align: bottom;
 }
 
 /* Forms */
@@ -911,6 +908,10 @@ li.login-panel,
 	margin-left: auto;
 }
 
+#login form p {
+	clear: both;
+}
+
 /**
  Reports
  */
@@ -973,14 +974,16 @@ li.weekly-average  {
 	padding-bottom: $small_padding;
 }
 
-/**
- * Week By Week
- */
-.crud-a-week-link {
-	display: block;
-	text-align: center;
-	margin-bottom: $large_margin;
-	font-weight: 600;
+.healthy-date-input {
+	font-size: 200%;
+}
+
+html body .ui-slider span.ui-slider-handle {
+	background-image: none !important;
+	top: -.55em;
+	width: 1.75em;
+	height: 1.75em;
+	cursor: pointer;
 }
 
 /**
@@ -999,6 +1002,14 @@ li.weekly-average  {
 		text-align: center;
 		margin: 0 auto 20px;
 	}
+}
+
+/**
+ * Profile Form
+ */
+#profile-form label.error {
+	padding-bottom: 0;
+	margin-bottom: 0;
 }
 
 /**
@@ -1030,6 +1041,7 @@ Warnings
 	padding: $medium_padding;
 	border-radius: $small_border_radius;
 }
+
 /**
  * Islands
  */
@@ -1057,4 +1069,62 @@ Warnings
  */
 a.button {
 	text-decoration: none;
+}
+
+/**
+ * The Calendar
+ */
+
+.healthy-calendar {
+	border: 1px solid rgba( 0, 0, 0, .1);
+	border-radius: $medium_padding $medium_padding 0 0;
+}
+
+h4.healthy-calendar-header {
+	text-align: center;
+	margin: 0;
+	padding: $medium_padding $medium_padding $small_padding;
+	font-size: 250%;
+	line-height: 1.4em;
+	background: rgba( 255, 255, 255, .5 );
+	border-radius: $medium_padding $medium_padding 0 0;
+}
+
+.healthy-calendar-table {
+	width: 100%;
+	table-layout: fixed;
+	background: none;
+	margin: 0 auto;
+}
+
+td.healthy-calendar-cell,
+tr:nth-child(2n) > td.healthy-calendar-cell {
+	padding: $medium_padding $small_padding;
+	background-color: rgba( 255, 255, 255, .65 );
+	text-align: center;
+	font-size: 200%;
+}
+
+th.healthy-calendar-header-cell {
+	padding: $medium_padding;
+}
+
+td.healthy-calendar-cell-complete,
+tr:nth-child(2n) > td.healthy-calendar-cell-complete {
+	background-color: rgba( 0, 255, 0, .45 );
+}
+
+td.healthy-calendar-cell-not-complete,
+tr:nth-child(2n) > td.healthy-calendar-cell-not-complete {
+	background-color: rgba( 255, 0, 0, .45 );
+}
+
+a.healthy-calendar-cell-link {
+	text-decoration: none;
+	font-weight: 600;
+	text-shadow: 1px 1px 0px #fff;
+}
+
+a.healthy-calendar-cell-link:hover {
+	color: #000;
 }

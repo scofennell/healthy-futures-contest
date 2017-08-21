@@ -10,6 +10,32 @@
  * @since  healthy 1.0
  */
 
+function healthy_add_date_to_user_table( $column ) {
+    $column['date_registered'] = 'Date Registered';
+    return $column;
+}
+add_filter( 'manage_users_columns', 'healthy_add_date_to_user_table' );
+
+function healthy_add_school_to_user_table( $column ) {
+    $column['school'] = 'School';
+    return $column;
+}
+add_filter( 'manage_users_columns', 'healthy_add_school_to_user_table' );
+
+function healthy_modify_user_table_row( $val, $column_name, $user_id ) {
+    $udata = get_userdata( $user_id );
+    if ( $column_name == 'date_registered' ) {
+        $registered = $udata -> user_registered;
+        $registered = date( "M j, Y", strtotime( $registered ) );
+        return $registered;
+    } elseif( $column_name == 'school' ) {
+        $school = healthy_get_user_school( $user_id );
+        return $school;
+    }
+    return $val;
+}
+add_filter( 'manage_users_custom_column', 'healthy_modify_user_table_row', 10, 3 );
+
 /**
  * Unset and set contact methods for users.
  * 
@@ -99,6 +125,11 @@ function healthy_add_custom_user_profile_fields( $user ) {
     // Grab the user id.
     $user_id = absint( $user -> ID );
 
+    $school  = healthy_get_user_school( $user_id );
+    $teacher = get_user_meta( $user_id, 'teacher', TRUE );
+    $team    = get_user_meta( $user_id, 'team', TRUE );
+       
+
     $out = '';
 
     $fields = healthy_profile_fields();
@@ -107,9 +138,9 @@ function healthy_add_custom_user_profile_fields( $user ) {
         
         if( ! isset( $f[ 'add_to_wp_admin' ] ) ) { continue; }
         
-        $slug = $f[ 'slug' ];
+        $slug  = $f[ 'slug' ];
         $label = $f[ 'label' ];
-        $type = $f[ 'type' ];
+        $type  = $f[ 'type' ];
 
         $out .= "
             <tr>
@@ -122,10 +153,11 @@ function healthy_add_custom_user_profile_fields( $user ) {
         if( $slug == 'school' ) {                   
             $options = healthy_get_schools_as_options( $user_id, true );
         } elseif( $slug == 'teacher' ) {
-            $school = healthy_get_user_school( $user_id );
-            $teacher = get_user_meta( $user_id, 'teacher', TRUE );
             $options = healthy_get_teachers_as_options( $school, $teacher );
+        } elseif( $slug == 'team' ) {
+            $options = healthy_get_teams_as_options( $school, $team );
         }
+
 
         $out .= "
             <select name='$slug' id='$slug' class='regular-text' />

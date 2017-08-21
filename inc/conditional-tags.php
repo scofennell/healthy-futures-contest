@@ -11,7 +11,6 @@
  * Is the user eligible for the grand prize?
  * 
  * @param  int $user_id The user id to check.
- * @todo   Check the current week to see if the user is still eligible to complete the current week.
  * @return boolean      If the user has recorded the minimum amount of exercise, return true.  Else, false.
  */
 function healthy_user_is_all_star( $user_id ) {
@@ -19,26 +18,45 @@ function healthy_user_is_all_star( $user_id ) {
 	// The user ID to check.
 	$user_id = absint( $user_id );
 
-	// Check all weeks up until the current one.
-	$current_week_of_contest = healthy_current_week_of_contest();
+	// Determine how many days complete the user has.
+	$days_complete = healthy_days_complete( $user_id );
 
-	// This will increment up until the current week.
-	$week = 1;
-
-	// While the week is less than the current week.
-	while( $week < $current_week_of_contest ) {
-		
-		// If the week is not complete, bail.
-		if ( ! healthy_is_week_complete( $week, $user_id ) ) {
-			return false;
-		}
-
-		// Go to the next week.
-		$week ++;
-	}
+	if( $days_complete < healthy_get_min_days() ) { return FALSE; }
 
 	// We made it!  the user is still eligible.
-	return true;
+	return TRUE;
+}
+
+/**
+ * Is the user eligible for the grand prize?
+ * 
+ * @param  int $user_id The user id to check.
+ * @return boolean      If the user has recorded the minimum amount of exercise, return true.  Else, false.
+ */
+function healthy_user_is_on_pace( $user_id ) {
+
+	// The user ID to check.
+	$user_id = absint( $user_id );
+
+	// Determine how many days we are into the contest.
+	if( date( 'n' ) != healthy_get_month_of_contest( 'n' ) ) {
+		$day = healthy_get_days_of_contest_month();
+	} else {
+		$day = date( 'd' );
+	}
+
+	$days_in_month = healthy_get_days_of_contest_month();
+
+	// Determine how many days complete the user has.
+	$days_complete = healthy_days_complete( $user_id );
+	$batting_average = $days_complete / $day;
+
+	$minimum = healthy_get_min_days() / $days_in_month;
+
+	if( $batting_average < $minimum ) { return FALSE; }
+
+	// We made it!  the user is still eligible.
+	return TRUE;
 }
 
 /**
@@ -62,7 +80,7 @@ function healthy_current_user_can_act_on_object( $object_id, $action, $object_ty
 	$active_user_id = healthy_get_active_user_id();
 
 	// Whitelist our object types.
-	if( ( $object_type != 'post' ) && ( $object_type != 'user' ) && ( $object_type != 'week' ) && ( $object_type != 'report' ) ) { return false; }
+	if( ( $object_type != 'post' ) && ( $object_type != 'user' ) && ( $object_type != 'report' ) ) { return false; }
 
 	// If we're acting on a post
 	if( $object_type == 'post' ) {
@@ -87,10 +105,7 @@ function healthy_current_user_can_act_on_object( $object_id, $action, $object_ty
 		if( ( $action == 'edit' ) || ( $action == 'delete' ) ) { 
 
 			// The contenst must be happening in order to edit or delete posts.
-			if ( ! healthy_contest_is_happening() && ! healthy_is_grace_week() ) { return false; }
-
-			// If the post is not for the current week, it's too late to edit or delete.
-			if( ! healthy_is_post_for_current_fortnight( $object_id ) ) { return false; }
+			if ( ! healthy_contest_is_happening() ) { return false; }
 
 			// If the post is not a "healthy_day", bail.
 			if( $post -> post_type != 'healthy_day' ) { return false; }
@@ -112,7 +127,7 @@ function healthy_current_user_can_act_on_object( $object_id, $action, $object_ty
 		// The contest must be happening in order to create posts
 		} elseif ( $action == 'create' ) {
 
-			if ( ! healthy_contest_is_happening() && ! healthy_is_grace_week() ) { return false; }
+			if ( ! healthy_contest_is_happening() ) { return false; }
 		} 
 
 	// If we're CRUD'ing a user...
@@ -161,15 +176,6 @@ function healthy_current_user_can_act_on_object( $object_id, $action, $object_ty
 			if ( ! healthy_does_user_own_user( $current_user_id, $user_to_switch_to ) ) { return false; }
 
 		}
-
-	// If we're browsing a week...
-	} elseif( $object_type == 'week' ) {
-		
-		// If the user is not done filling his profile data, return false
-		if ( ! healthy_is_profile_complete() ) { return false; }
-
-		// There's only one thing you can do to a week, and that's review.
-		if ( $action != 'review' ) { return false; }
 	
 	// If we;re dealing with reports...
 	} elseif( $object_type == 'report' ) {
@@ -237,41 +243,20 @@ function healthy_is_day_complete( $post_id ) {
 	}
 
 	// Is the running total more than the minimum?
-	if( $minutes >= $daily_min ) {return true; }
+	if( $minutes < $daily_min ) { return FALSE; }
 
-	return false;
+	// Did this day get ruined by too much sugar?
+	if( healthy_is_sugary( $post_id ) ) { return FALSE; }
+
+	return TRUE;
 }
 
-/**
- * Determines if a week is complete -- that is, does it meet the minimum level of exercise days for a week?
- *
- * @param  int $week_id The id of the week we're checking.
- * @param  int $user_id The id of the user we're checking.
- * @return  boolean Returns true if week is complete, otherwise false.
- */
-function healthy_is_week_complete( $week_id, $user_id = '' ) {
-	
-	// Grab the user ID.
-	$user_id = absint( $user_id );
-	
-	// If empty, default to the active user.
-	if ( empty( $user_id ) ){
-		$user_id = healthy_get_active_user_id();
-	}
+function healthy_is_sugary( $post_id ) {
+	$sugary_drinks = get_post_meta( $post_id, 'sugary_drinks', TRUE );
+	if( $sugary_drinks > 2 ) { return TRUE; }
 
-	// Grab the week ID we're checking in.
-	$week_id = absint( $week_id );
+	return FALSE;
 
-	// Grab the daily min value.
-	$weekly_min = healthy_weekly_minimum();
-
-	// How many days this week are complete?
-	$days_complete = healthy_days_complete( $week_id, $user_id );
-
-	// Is the running total more than the minimum?
-	if( $days_complete >= $weekly_min ) { return true; }
-
-	return false;
 }
 
 /**
@@ -332,6 +317,9 @@ function healthy_user_is_role( $active_user = true, $role = 'teacher' ) {
 		return true;
 	}
 
+	// Super admin gets boss privileges.
+	if( is_super_admin( $user -> ID ) && $role == 'boss' ) { return TRUE; }
+
 	return false;
 
 }
@@ -343,44 +331,19 @@ function healthy_user_is_role( $active_user = true, $role = 'teacher' ) {
  */
 function healthy_contest_is_happening() {
 
-	// Grab the current week.
-	$current_week = date( 'W' );
-	
-	// Grab the first week of the contest.
-	$first_week = healthy_first_week_of_contest();
-	
-	// Grab the last week of the contest.
-	$last_week = healthy_last_week_of_contest();
+	return TRUE;
 
-	// If the contest has not started...
-	if ( $current_week < $first_week ) { return false; }
+	// Grab the current month.
+	$current_month = healthy_get_current_month();
 	
-	// If the contest is over...
-	if ( $current_week > $last_week ) { return false; }
+	// Grab the month of the contest.
+	$contest_month = healthy_get_month_of_contest();
 
+	// If the contest is not happening...
+	if ( $current_month != $contest_month ) { return false; }
+	
 	// We made it this far, the contest is on!
 	return true;
-
-}
-
-/**
- * Determine if this is the first week after the contest -- students can still add their days for last week.
- * 
- * @return boolean Return true if the contest ended last week.
- */
-function healthy_is_grace_week() {
-
-	// Grab the current week.
-	$current_week = date( 'W' );
-	
-	// Grab the last week of the contest.
-	$last_week = healthy_last_week_of_contest();
-
-	if( ( $last_week + 1 ) == $current_week ) {
-		return true;
-	}
-
-	return false;
 
 }
 
@@ -543,72 +506,13 @@ function healthy_does_user_own_user( $owner_id, $owned_id ) {
 }
 
 /**
- * Determine if a post is for the current week.
- *
- * @param int $post_id The ID of the post to check.
- * @return bool Returns tue if the post is from the current week, otherwise false.
- */
-function healthy_is_post_for_current_week( $post_id ) {
-
-	// The id of the post to check
-	$post_id = absint( $post_id );
-	
-	// The post object of the post to check
-	$post = get_post( $post_id );
-	
-	// The post date of the post to check, by week #
-	$post_date = date( 'W', strtotime( $post->post_date ) );
-	
-	// The # of the current week.
-	$current_week = date( 'W' );
-
-	// If the post is from this week, return true.
-	if ( $current_week == $post_date ) { return true; }
-
-	// Otherwise, return false.
-	return false;
-
-}
-
-/**
- * Determine if a post is for the current fortnight.
- *
- * @param int $post_id The ID of the post to check.
- * @return bool Returns tue if the post is from the current fortnight, otherwise false.
- */
-function healthy_is_post_for_current_fortnight( $post_id ) {
-
-	// The id of the post to check
-	$post_id = absint( $post_id );
-	
-	// The post object of the post to check
-	$post = get_post( $post_id );
-	
-	// The post date of the post to check, by week #
-	$post_date = date( 'W', strtotime( $post->post_date ) );
-	
-	// The # of the current week.
-	$current_week = date( 'W' );
-
-	// If the post is from this week, return true.
-	if ( $current_week == $post_date ) { return true; }
-
-	// If the post is from last week, return true.
-	if ( ( $current_week - 1 ) == $post_date ) { return true; }
-
-	// Otherwise, return false.
-	return false;
-
-}
-
-/**
  * Determine if there is already an entry for this day for this user.
  *
  * @param int $post_author_id The ID of the author from whom we're checking for posts.
- * @param sting $day The text version of the date on which we're checking for posts.
+ * @param int $timestamp The timestamp for which we are checking for posts.
  * @return bool Returns true if there is already an entry for this day, otherwise false.
  */
-function healthy_already_an_entry_for_this_day( $post_author_id, $day ){
+function healthy_already_an_entry_for_this_day( $post_author_id, $timestamp ) {
 	
 	// The author we're checking against.  If his ID is weird, bail.
 	$post_author_id = absint( $post_author_id );
@@ -616,23 +520,20 @@ function healthy_already_an_entry_for_this_day( $post_author_id, $day ){
 		return false;
 	}
 
-	// The timestamp of the day we're checking.  Will be used in wp query date query.
-	$stamp = strtotime( $day );
-
 	// The year we're checking in.
-	$year = date( 'Y', $stamp );
+	$year = date( 'Y', $timestamp );
 	
 	// The month we're checking in.
-	$month = date( 'm', $stamp );
+	$month = date( 'm', $timestamp );
 
 	// The day we're checking in.
-	$day = date( 'd', $stamp );
+	$day = date( 'd', $timestamp );
 
 	// A WP query to look for posts.
 	$query = healthy_get_posts( $post_author_id, 1, $year, $month, $day );
 
 	// If we found posts, return false.
-	$posts = $query->found_posts;
+	$posts = $query -> found_posts;
 	if( empty( $posts ) ) {
 		return false;
 	}
@@ -641,103 +542,52 @@ function healthy_already_an_entry_for_this_day( $post_author_id, $day ){
 }
 
 /**
- * Determine if a week is full for an author.
+ * Determine if the current month is full for an author.
  *
- * @param  int $week The current week: 1, 2, 3, ... 51, 52
- * @return bool If any days this week are empty, return false, otherwise, return true.
+ * @return bool If any days this month are empty, return false, otherwise, return true.
  */
-function healthy_is_week_full( $week = false ) {
+function healthy_is_month_full() {
 
 	$post_author_id = healthy_get_active_user_id();
 	if( empty( $post_author_id ) ) { wp_die( "There has been a problem. 86" ); }
 
-	// If week is not provided, grab current week.
-	if( ! $week ) { $week = date( 'W' ); }
+	/*
+	// Grab the first minute of the month.
+	$first_minute_of_month_in_seconds = mktime( 0, 0, 0, date( 'n' ), 1 );
+	
+	// Grab the last minute of the month.
+	$last_minute_of_month_in_seconds = mktime( 23, 59, 0, date( 'n' ), date( 't') );
 
-	// Grab the first day of the week.
-	if( $week == date( 'W' ) ) {
-		$first_day_of_week = healthy_get_first_day_of_week();
-	} elseif( $week == ( date( 'W' ) - 1 ) ) {
-		$first_day_of_week = healthy_get_first_day_of_last_week();
-	} else {
-		wp_die( 'There has been a problem. 663' );
+	// Grab now in seconds.
+	$current_time_in_seconds = current_time( 'timestamp' );
+
+	// Determine the end of the time window in which we'd look for posts.
+	$end = $last_minute_of_month_in_seconds;
+	if( $current_time_in_seconds < $last_minute_of_month_in_seconds ) {
+		$end = $current_time_in_seconds;
+	}
+	*/
+
+	$year  = healthy_get_year_of_contest();
+	$month = healthy_get_month_of_contest();
+	$today = absint( date( 'd' ) );
+	$first_day_of_month = 1;
+	$last_day_of_month  = healthy_get_days_of_contest_month();
+
+	$end = $last_day_of_month;
+	if( $today < $last_day_of_month ) {
+		$end = $today;
 	}
 
-	$first_day_of_week_in_seconds = strtotime( $first_day_of_week );
-
-	// Will get incremented as we loop through days.	
-	$next_day_in_seconds = $first_day_of_week_in_seconds;
-
-	// Grab the current day for this week -- no need to loop past it.
-	$current_week_day_as_int = date( 'N' );
-
-	// Loop through each day of the week.
-	$i=0;
-
-	while( $i <= 7 ) {
-
-		// 1 = monday, 2 = tuesday, etc..
+	$i = 0;
+	while( $i < $end ) {
 		$i++;
 
-		// If we've looped past $first_day_of_week, calculate the day we're on in seconds
-		if( $i > 1 ) {
-			$next_day_in_seconds = $first_day_of_week_in_seconds + ( ( DAY_IN_SECONDS * $i ) -1 );
-		}
-
-		// If we are in the current week, make sure we don't get past the current day.
-		if( $week == date( 'W' ) ) {
-
-			// If we made it past today, then the only days left are future days, which we cant post to.
-			if ( $i > $current_week_day_as_int ) { return true; }
-
-		}
-
-		// The next day in text for easier string comparision.
-		$next_day_in_text = esc_attr( date( 'l, F d, Y', $next_day_in_seconds ) ); 
-
-		// If this author does not have post for this day, return false -- the week in not full.
-		if( ! healthy_already_an_entry_for_this_day( $post_author_id, $next_day_in_text ) ) {
-
-			//wp_die( $next_day_in_text );
-
-			return false;		
-		}
-		
-	} // end looping through days.
-
-	return true;
-}
-
-/**
- * Determine if a fortnight is full for an author.
- *
- * @param  int $week The current week: 1, 2, 3, ... 51, 52
- * @return bool If any days this fortnight week are empty, return false, otherwise, return true.
- */
-function healthy_is_fortnight_full( $this_week = false ) {
-
-	if( ! $this_week ) {
-		$this_week = $current_week = date( 'W' );
+		$get_posts = healthy_get_posts( $post_author_id , 1, $year, $month, $i );
+		$posts = count( $get_posts -> posts );
+		if( empty( $posts ) ) { return FALSE; }
 	}
+	
+	return TRUE;
 
-	// What's the first week of the contest?
-	$first_week = healthy_first_week_of_contest();
-
-	// If we are not in the first week, check last week.
-	if( $this_week > $first_week ) {
-
-		// Get the week number for last week.
-		$last_week = $this_week - 1;
-
-		$is_last_week_full = healthy_is_week_full( $last_week  );
-
-		if( ! $is_last_week_full ) { return false; }
-
-	}
-
-	$is_this_week_full = healthy_is_week_full( $this_week );
-
-	if( ! $is_this_week_full ) { return false; }
-
-	return true;
 }

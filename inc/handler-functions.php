@@ -421,16 +421,15 @@ function healthy_process_post_a_day_form() {
     $post_author_last_name = esc_html( $post_author_obj->user_lastname );
     
     // Adding the post date to the title makes for easier searching and browsing.
+    $date_stamp = '';
     $date_string = '';
     if ( isset( $_POST[ 'date' ] ) ) {
-	    $date_string = esc_html( $_POST[ 'date' ] );
+	    $date_stamp = absint( $_POST[ 'date' ] );
+    	$date_string = date( 'Y-m-d H:i:s', $date_stamp );
     }
-    $date_stamp = strtotime( $date_string );
-    $date = date( 'Y-m-d H:i:s', $date_stamp );
-    $week = date( 'W', $date_stamp );
 
     // Build our search-friendly post title.
-	$title = " author first name: $post_author_first_name | author last name: $post_author_last_name | author ID: $post_author_id | author email: $post_author_email | week $week | $date_string ";
+	$title = " author first name: $post_author_first_name | author last name: $post_author_last_name | author ID: $post_author_id | author email: $post_author_email | $date_string ";
 	
 	// The post slug
 	$name = sanitize_html_class( $title );
@@ -441,7 +440,7 @@ function healthy_process_post_a_day_form() {
 	 	'post_name'    => $name,
 		'post_status'  => 'publish',
 	  	'post_type'    => 'healthy_day',	
-		'post_date'    => $date,
+		'post_date'    => $date_string,
 		'post_author'  => $post_author_id,
 	);  
 
@@ -450,7 +449,7 @@ function healthy_process_post_a_day_form() {
 		$post['ID'] = $post_id_to_act_upon;
 
 	// If we're not editing, we have to worry about there already being a post for this date.	
-	} elseif( healthy_already_an_entry_for_this_day( $post_author_id, $date ) ) {
+	} elseif( healthy_already_an_entry_for_this_day( $post_author_id, $date_stamp ) ) {
 		wp_die( 'There is already an entry for this day. Please go back and select a different day.' );
 	}
 

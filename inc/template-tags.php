@@ -154,49 +154,6 @@ function healthy_review_reports_link() {
 }
 
 /**
- * Returns a link prompting the user to post information, if applicable.
- *
- * @param  int $week The current week.
- * @return bool|string An html link to the create-post form, or false if no slots available for new posts.
- */
-function healthy_enter_day_link( $week ) {
-	
-	// Only logged-in users would need this.
-	if ( ! is_user_logged_in () ) { return false; }
-	
-	// If this week is full for this author, don't bother showing it.
-	if ( healthy_is_fortnight_full() ) { return false; }
-
-	//The base url for our link.
-	$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
-
-	// The query for making a new post.
-	$query = healthy_controller_query_string( 'post', 'create', 'new' );
-
-	// The url to the post-a-day view.
-	$url = esc_url( $base.$query );
-	
-	// The link text.  If it's a teacher who is acting on behalf of a student:
-	if ( healthy_has_switched_users() ) {
-		
-		// Grab the name of the student being acted upon.
-		$active_user_display_name = healthy_get_active_user() -> display_name;
-		
-		// The label for acting on a student.
-		$record = sprintf( esc_html__( 'Record a Day for %s', 'healthy' ), $active_user_display_name );	
-	
-	// The link text for when the active user is not switched.
-	} else {
-		$record = esc_html__( 'Record My Day', 'healthy' );
-	}
-
-	// The output.
-	$out = "<a href='$url'>$record</a>";
-
-	return $out;
-}
-
-/**
  * Sniffs to see if user is logged in, if so, gives a link to edit profile.
  * 
  * @return string A url to the new post form.
@@ -237,137 +194,6 @@ function healthy_edit_profile_link() {
 	return $out;
 }
 
-function healthy_browse_data_link() {
-
-	// If the user is acting on behalf of another user:
-	if ( healthy_has_switched_users() ) {
-		
-		// Grab the first name of the user being acted upon.
-		$active_user_display_name = healthy_get_active_user() -> display_name;
-		
-		// Text prompting the user to browse data for another user.
-		$browse = sprintf( esc_html__( 'Browse Data for %s', 'healthy' ), $active_user_display_name );	
-	
-	// Else, text prompting the user to browse his own data.
-	} else {
-		$browse = esc_html__( 'Browse My Data', 'healthy' );
-	}
-
-	// Our base url.
-	$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
-	
-	// Query to view all weeks.
-	$query = healthy_controller_query_string( 'week', 'review', 'all' );
-
-	// A Url to view all weeks.
-	$href = esc_url( $base.$query );
-
-	$out = "<a href='$href'>$browse</a>";
-
-	return $out;
-
-}
-
-/**
- * Returns an HTML select menu to browse data by week.
- *
- * @return An HTML select menu to browse data by week.
- */
-function healthy_my_weeks_select() {
-
-	// If the user is acting on behalf of another user:
-	if ( healthy_has_switched_users() ) {
-		
-		// Grab the first name of the user being acted upon.
-		$active_user_display_name = healthy_get_active_user() -> display_name;
-		
-		// Text prompting the user to browse data for another user.
-		$browse = sprintf( esc_html__( 'Browse Data for %s', 'healthy' ), $active_user_display_name );	
-	
-	// Else, text prompting the user to browse his own data.
-	} else {
-		$browse = esc_html__( 'Browse My Data', 'healthy' );
-	}
-
-	// Our base url.
-	$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
-
-	// The default, empty option.
-	$options="<option>$browse</option>";
-
-	// We will increment this number for each week of the contest.
-	$week = 1;
-
-	// Grab the current week so we don't prompt the user to browse future weeks.
-	$current_week_of_contest = healthy_current_week_of_contest();
-
-	// If the user has switched users...
-	if ( healthy_has_switched_users() ) {
-
-		// Grab the name of the active user.
-		$active_user_display_name = healthy_get_active_user() -> display_name;	
-	}
-
-	// Get the number of weeks for whic the contest runs.
-	$length = healthy_length_of_contest();
-
-	// For each week in the contest...
-	while ( $week <= ( $current_week_of_contest ) ) {
-
-		// Build a query to view posts from that week
-		$query = healthy_controller_query_string( 'week', 'review', $week );
-	
-		// The url to which we'll navigate.
-		$value = esc_url( $base.$query );
-	
-		// If the user has switched users...
-		if ( healthy_has_switched_users() ) {
-
-			// Draw a label to browse the week for that user.
-			$week_label = sprintf( esc_html__( "See %s&#8217;s data from week %d", 'healthy' ), $active_user_display_name, $week );
-		
-		// Otherwise, speak in the first person.
-		} else {
-			$week_label = sprintf( esc_html__( 'See My Data from Week %d', 'healthy' ), $week );	
-		}
-
-		// Add this option to the output.
-		$options .= "<option value = '$value'>$week_label</option>";
-		
-		// Increment the value for week.
-		$week++;
-
-		// Don't exceed the length of the contest.
-		if( $week > $length ) { break; } 
-
-	}
-
-	// If the user has switched users...
-	if ( healthy_has_switched_users() ) {
-		
-		// Prompt the user to browse week-by-week for that user.
-		$week_by_week = sprintf( esc_html( 'Week by Week data for %s', 'healthy' ), $active_user_display_name );
-	
-	// Else, speak in the first person.
-	} else {	
-		$week_by_week = esc_html__( 'Week by Week', 'healthy' );
-	}
-
-	// Query to view all weeks.
-	$query = healthy_controller_query_string( 'week', 'review', 'all' );
-
-	// A Url to view all weeks.
-	$value = esc_url( $base.$query );
-
-	// Add the all weeks option.
-	$options .= "<option value='$value'>$week_by_week</option>";
-
-	// Complete the output as a JS jump-menu.
-	$out = "<select class='browse-my-data transparent' onchange='document.location.href=this.options[this.selectedIndex].value;'>$options</select>";
-
-	return $out;
-}
-
 /**
  * Returns a nav menu for our app.
  * 
@@ -378,27 +204,11 @@ function healthy_nav_menu() {
 	// Will hold each menu item.
 	$menu_items = array();
 
-	// Grab the current week so we can see if it's full.
-	$week = date( 'W' );
-
 	// Some items only make sense for logged in users.
 	if( is_user_logged_in() ) {
 
 		// Say hello to our little friends.
 		$menu_items []= healthy_hello_user();
-
-		// If the user is able, give links to create and browse data.
-		if( healthy_is_profile_complete() && healthy_user_is_role( true, 'student' ) ) {
-
-			// Enter a new day
-			$enter_day = healthy_enter_day_link( $week );
-			$menu_items []= $enter_day;
-
-			// Browse by week
-			$browse = healthy_browse_data_link();
-			$menu_items []= $browse;
-
-		}
 
 		// Teachers can create new users and browse reports.
 		if( healthy_user_is_role( true, 'teacher' ) || healthy_user_is_role( true, 'boss' ) ) {

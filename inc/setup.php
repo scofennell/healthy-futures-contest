@@ -31,63 +31,46 @@ add_action( 'init', 'healthy_set_the_time_zone', 0 );
  */
 function healthy_daily_minimum() {
 
-	// Let's say 30 minutes of exercise completes a day.
-	return 30;
+	// Let's say 60 minutes of exercise completes a day.
+	return 60;
 }
 
 /**
- * Set the minimum amount of exercise days to complete a week.
+ * Set the month of the contest.
  *
- * @return int The number of days_complete to achieve week_is_complete.
+ * @return int The date('n') for the month of the contest.
  */
-function healthy_weekly_minimum() {
+function healthy_get_month_of_contest( $format = 'n' ) {
+	
+	// Let's say the contest is on the 3rd month of the year.
+	$m = 10;
 
-	// Let's say 4 days of exercise completes a week.
-	return 4;
+	if( $format == 'm' ) {
+		return $m;
+	} else {
+		$y     = healthy_get_year_of_contest();
+		$stamp = strtotime( "$y-$m-1" );
+		$out = date( $format, $stamp );
+		return $out;
+	}
+
+
+}
+
+// The min # of days in order to win the contest.
+function healthy_get_min_days() {
+	return 15;
 }
 
 /**
- * Set the length of the contest in weeks.
+ * Set the year of the contest.
  *
- * @return int The length of the contest in weeks.
+ * @return int The date('Y') for the year of the contest.
  */
-function healthy_length_of_contest() {
+function healthy_get_year_of_contest() {
 	
-	// Let's say the contest lasts for 6 weeks.
-	return 6;
-}
-
-/**
- * Set the first week of the contest.
- *
- * @return int The date('W') for the first week of the contest.
- */
-function healthy_first_week_of_contest() {
-	
-	// Let's say the contest starts on the 29th week of the year.
-	return 40;
-}
-
-/**
- * Get the date('W') for the last week of the contest.
- *
- * @return int The date('W') for the last week of the contest.
- */
-function healthy_last_week_of_contest() {
-	
-	// Start by grabbing the first week.
-	$first = healthy_first_week_of_contest();
-	
-	// Next, grab the length.
-	$length = healthy_length_of_contest();
-	
-	// Add the two.
-	$off_by_one = $first + $length;
-
-	// Subtract 1.
-	$out = $off_by_one - 1;
-
-	return $out;
+	// Let's say the contest takes place in 2015.
+	return 2016;
 }
 
 /**
@@ -291,7 +274,7 @@ function healthy_scripts_styles() {
 	 * caching.  That date should be manually updated whenever the stylesheet
 	 * is changed.
 	 */  
-	wp_enqueue_style( 'healthy-sass', get_stylesheet_directory_uri().'/sass/output.css' , array(), '2014-07-08' );
+	wp_enqueue_style( 'healthy-sass', get_stylesheet_directory_uri().'/sass/output.css' , array(), '2015-03-17' );
 	
 	// Grab wp-includes version of jQuery.
 	wp_enqueue_script( 'jquery' );
@@ -301,6 +284,8 @@ function healthy_scripts_styles() {
 
 	// Grab wp-includes version of jQuery.
 	wp_enqueue_script( 'jquery-ui-slider', get_template_directory_uri().'/js/jquery.validate.min.js', 'jquery', false, false );
+
+	wp_enqueue_script( 'jquery-ui-touch-punch', get_template_directory_uri().'/js/jquery.ui.touch-punch.min.js', 'jquery-ui-slider', false, true );
 
 	wp_enqueue_style( 'jquery-ui-smoothness', get_template_directory_uri().'/js/jquery-ui/smoothness/jquery-ui-1.10.4.custom.min.css' );
 

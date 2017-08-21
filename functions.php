@@ -101,3 +101,8 @@ require_once( get_template_directory()."/inc/reporting.php" );
  * Functions to manage sponsors.
  */
 require_once( get_template_directory()."/inc/sponsors.php" );
+
+/**
+ * Functions to draw the calendar view.
+ */
+require_once( get_template_directory()."/inc/calendar.php" );

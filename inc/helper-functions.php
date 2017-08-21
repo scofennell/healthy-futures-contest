@@ -153,7 +153,7 @@ function healthy_controller() {
 			$base = trailingslashit( esc_url( get_bloginfo( 'url' ) ) );
 		
 			// The href to start a new day.
-			$href = $base.$query;
+			$href = $base;
 		
 			// The label to start a new day.
 			$label = esc_html__( 'Meet the challenge here.', 'healthy' );
@@ -188,10 +188,8 @@ function healthy_controller() {
 		$inserted = absint( $inserted );
 		if( ! empty( $inserted ) ) {
 		
-			$sugary_drinks = get_post_meta( $inserted, 'sugary_drinks', TRUE );
-			$sugary = false;
-			if( $sugary_drinks > 1 ) { $sugary = true; }
-
+			$sugary = healthy_is_sugary( $inserted );
+			
 			$exercise_reminder = false;
 			if( ! healthy_is_day_complete( $inserted ) ) {
 				$daily_minimum = healthy_daily_minimum();
@@ -208,32 +206,22 @@ function healthy_controller() {
 			// Build a link to edit the new post.
 			$edit_link = "<p><a href='$edit_href'>$edit_text</a></p>";
 
-			// Translations.
-			$edit_week_text = esc_html__( "Or you can browse your recent posts.", 'healthy' );
-			
-			// Build an href to edit the newly created post.
-			$edit_week_query = healthy_controller_query_string( 'week', 'review', 'all' );
-			$edit_week_href = $base_url.$edit_week_query;
-		
-			// Build a link to edit the new post.
-			$edit_week_link = "<p><a href='$edit_week_href'>$edit_week_text</a></p>";
-		
-			$subtitle = $edit_link.$edit_week_link;
+			$subtitle = $edit_link;
 
 			if( ! $sugary ) {
 
-				// If the user just entered data and their week is full...
-				if( healthy_is_fortnight_full() ) {
-					// Tell the user the week is full.
+				// If the user just entered data and their month is full...
+				if( healthy_is_month_full() ) {
+					// Tell the user the month is full.
 					
-					$title = __( 'Good job! All your days are full so far this week. Come back soon!', 'healthy' );
+					$title = __( 'Good job! All your days are full!', 'healthy' );
 					$title .= $exercise_reminder;
 
 				} else {
 				
 					$title = esc_html__( 'Your data has been recorded!', 'healthy' );
 					$title .= $exercise_reminder;
-					$content = healthy_post_a_day_form( false );
+					$content = healthy_calendar();
 				}
 
 			} else {
@@ -241,32 +229,24 @@ function healthy_controller() {
 				$message = healthy_get_sugar_slogan();
 				$title = '<span class="sugary-title">'.$message[ 'title' ].'</span>';
 				$subtitle = $message[ 'subtitle' ];
-				$subtitle .= $edit_link.$edit_week_link;
+				$subtitle .= $edit_link;
 
-				if( ! healthy_is_fortnight_full() ) {
-					$content = healthy_post_a_day_form( false );
-				} else {
-					$content = __( 'All your days are full so far this week. Come back soon!', 'healthy' );
-				}
-
+				$content = healthy_calendar();
+				
 			}
 
 		// If the user is about to insert a day...
 		} else {
 
-			// If the week is full and we're not editing congratulate the user, return.
-			if( healthy_is_fortnight_full() ) {
+			// If the month is full and we're not editing congratulate the user, return.
+			if( healthy_is_month_full() ) {
 		
-				// Tell the user the week is full.
-				$title = __( "Good job!  All your days are full so far this week. Come back soon!", 'healthy' );
-		
-				// Offer a link for editing entries.
-				$edit = __( "You can also review your entries.", 'healthy' );
+				$content = healthy_calendar();
 
-				// Build a link to edit/review other posts.
-				$query = healthy_controller_query_string( 'week', 'review', 'all' );
-				$edit_href = $base_url.$query;
-				$subtitle = "<a href='$edit_href'>$edit</a>";
+				// Tell the user the month is full.
+				$title = __( "Good job!  All your days are full. Come back soon!", 'healthy' );
+		
+				$subtitle = esc_html__( "Nice.", 'healthy' );
 
 			// Else, give the post a day form.
 			} else {
@@ -288,10 +268,8 @@ function healthy_controller() {
 		// If the user just edited, congratulate him.
 		if( healthy_process_post_a_day_form() ) {
 
-			$sugary_drinks = get_post_meta( $object_id, 'sugary_drinks', TRUE );
-			$sugary = false;
-			if( $sugary_drinks > 1 ) { $sugary = true; }
-
+			$sugary = healthy_is_sugary( $object_id );
+			
 			$exercise_reminder = false;
 			if( ! healthy_is_day_complete( $object_id ) ) {
 				$daily_minimum = healthy_daily_minimum();
@@ -304,15 +282,6 @@ function healthy_controller() {
 				// Thank the usr for editing that day.
 				$title = sprintf( esc_html__ ( 'You just edited your entry from %s.', 'healthy' ), $post_to_edit_date );
 				$title .= $exercise_reminder;
-				
-				if( healthy_is_fortnight_full() ) {
-					$subtitle = esc_html__( 'All your days are full.  Come back soon to enter more data!', 'healthy' );
-				} else {
-					$new_post_query = healthy_controller_query_string( 'post', 'create', 'new' );
-					$new_post_href = esc_url( $base_url.$new_post_query );
-					$new_post_label = esc_html__( 'You can post a new day here.', 'healthy' );
-					$subtitle = "<a href='$new_post_href'>$new_post_label</a>";
-				}
 
 			} else {
 
@@ -325,13 +294,17 @@ function healthy_controller() {
 
 		// Else, prompt him to edit.
 		} else {
-			$subtitle = sprintf( esc_html__( 'Edit your entry from %s.', 'healthy' ), $post_to_edit_date );
+			$subtitle = esc_html__( 'Edit your entry.', 'healthy' );
 			$title = esc_html__( 'Rewrite History!', 'healthy' );
 		}
 
 		// Either way, give him the edit form.
 		$content = healthy_post_a_day_form( 'edit' );
 
+		$back_label = esc_html__( 'Back to calendar view', 'healthy' );
+		$back_link = "<p><a href='$base_url'>$back_label</a></p>";	
+
+		$subtitle .= $back_link;
 
 	// If he's niether creating or editing, see if he's deleting.
 	} elseif ( healthy_current_user_is_acting( 'delete', 'post', $object_id ) ) {
@@ -345,7 +318,7 @@ function healthy_controller() {
 			// Prompt the user to enter data.
 			$title = esc_html__( 'That day is totally deleted.  Make a new one.', 'healthy' );
 			$subtitle = esc_html__( 'Greatest. Day. EVERrrrrrr.', 'healthy' );
-			$content = healthy_post_a_day_form( false );
+			$content = healthy_calendar();
 
 		// If he's about to delete something...
 		} else {
@@ -385,41 +358,6 @@ function healthy_controller() {
 		// The review a post view.
 		$content = healthy_review_a_post( $post_id );
 
-	// If the user is browsing all weeks
-	} elseif( healthy_current_user_is_acting( 'review', 'week', 'all' ) ) {
-
-		$title = esc_html__( 'Here&#8217;s what you did each week.', 'healthy' );
-		$subtitle = esc_html__( 'You can edit data from the current week and browse data from past weeks.  Some of these values take about an hour to catch up after you enter data.', 'healthy' );
-		$content = healthy_week_by_week();
-
-	// If the user is browsing a week
-	} elseif( healthy_current_user_is_acting( 'review', 'week', $object_id ) ) {
-
-		// Sanitize the week id.
-		$week_id = absint( $object_id );
-		
-		// Grab the min value of exercise for a day.
-		$min = healthy_weekly_minimum();
-
-		// If this week is complete, congratulate.
-		if( healthy_is_week_complete( $week_id ) ) {
-			$title = sprintf( esc_html__( 'Huzzah!  Week %d is complete.', 'healthy' ), $week_id );
-		} else {
-			$title = sprintf( esc_html__( 'You gotta get %s days per week!', 'healthy' ), $min );
-		}
-
-		$subtitle = sprintf( esc_html__( 'Here&#8217;s what you did in week %s:', 'healthy' ), $week_id );
-		$content = healthy_choose_day_from_week( $week_id );
-
-	// If the user is browsing a week
-	} elseif( healthy_current_user_is_acting( 'review', 'report', $object_id ) ) {
-
-		// Prompt the user to assume the identity of a user
-		$title = esc_html__( 'Report Card', 'healthy' );
-		$subtitle = esc_html__( 'You can review reports here.', 'healthy' );	
-
-		$content = healthy_get_report();
-
 	// As a default, if none of the above are met, offer appropriate defaults.
 	} else {
 
@@ -427,7 +365,7 @@ function healthy_controller() {
 
 			// Prompt the user to browse reports.
 			$title = esc_html__( 'Report Card', 'healthy' );
-			$subtitle = esc_html__( 'You can view a broad report for the whole challenge, or more detailed reports for each week.', 'healthy' );			
+			$subtitle = esc_html__( 'You can view reports on the challenge here.', 'healthy' );			
 
 			// The report view.
 			$content = healthy_get_report();
@@ -441,14 +379,14 @@ function healthy_controller() {
 			// The edit profile form.
 			$content = healthy_get_report();
 		
-		} elseif( healthy_is_fortnight_full() ) {
+		} elseif( healthy_is_month_full() ) {
 
 			// Prompt the user to browse past data.
 			$title = esc_html__( 'So much data!  Come back tomorrow to enter a new day!', 'healthy' );
-			$subtitle = esc_html__( 'You\'re doing good.  Right now there are no more days for you to enter! However you can browse your work thus far.', 'healthy' );
-			$content = healthy_week_by_week();
+			$subtitle = esc_html__( 'So far, so good.  Right now there are no more days for you to enter! However you can browse your work thus far.', 'healthy' );
+			$content = healthy_calendar();
 	
-		// If the week is not full yet
+		
 		} elseif( ! healthy_contest_is_happening() ) {
 
 			$title = sprintf( esc_html__( 'Hey %s, how\'s it going?', 'healthy' ), $first_name );
@@ -461,7 +399,7 @@ function healthy_controller() {
 			// Prompt the user to enter data.
 			$title = esc_html__( 'This is the place to log your activity!', 'healthy' );
 			$subtitle = esc_html__( 'So.  How was your day?', 'healthy' );
-			$content = healthy_post_a_day_form( false );
+			$content = healthy_calendar();
 	
 		}
 	
@@ -480,6 +418,7 @@ function healthy_controller() {
  * @return int A transient lifespan in seconds for our app.
  */
 function healthy_transient_time () {
+	return 1;
 	return 3600;
 }
 
@@ -521,40 +460,66 @@ function healthy_sanitize_object_id( $object_id ) {
 	return $object_id;
 }
 
-/**
- * Return the number of days complete in a week for a user.
- * 
- * @param  int $week_id Which week of our contest to check ( 1 - 6 )
- * @param  int $user_id The user ID to check.
- * @return int The number of days complete in a week for a user.
- */
-function healthy_days_complete( $week_id, $user_id = ''  ) {
-	
-	// Which contest week.
-	$week_id = absint( $week_id );
+function healthy_total_drinks( $user_id = ''  ) {
 
-	// Convert the contest week to a query date( 'W' ) for querying.
-	$query_week = healthy_convert_contest_week_to_query_week( $week_id );
-
-	// $r is a query object.
 	$user_id = absint( $user_id );
 	if ( empty( $user_id ) ){
 		$user_id = healthy_get_active_user_id();
 	}
 
-	// Get posts for this user in this week.
-	$r = healthy_get_posts( $user_id, 7, false, false, false, $query_week );
+	// Get posts for this user in this month.
+	$r = healthy_get_posts( $user_id, healthy_get_days_of_contest_month(), healthy_get_year_of_contest(), healthy_get_month_of_contest() );
 
-	// The posts for thsi week for this author.
+	// The posts for this month for this author.
 	$found_posts = $r -> found_posts;
 
-	// If there are no entries this week, bail.
+	// If there are no entries this month, bail.
 	if( empty( $found_posts ) ) { return 0; }
 
-	// The entries for this week.
+	// The entries for this month.
 	$days = $r -> posts;
 
-	// Will hold a counter for how many days complete so far this week.
+	// Will hold a counter for how many days complete so far this month.
+	$out = 0;
+
+	// For each day...
+	foreach ( $days as $day ) {
+		
+		$meta = get_post_meta( $day -> ID, 'sugary_drinks', TRUE );
+		$out = $out + absint( $meta );
+	
+	}
+
+	return  absint( $out );
+
+}
+
+/**
+ * Return the number of days complete in a month for a user.
+ * 
+ * @param  int $user_id The user ID to check.
+ * @return int The number of days complete in a month for a user.
+ */
+function healthy_days_complete( $user_id = ''  ) {
+
+	$user_id = absint( $user_id );
+	if ( empty( $user_id ) ){
+		$user_id = healthy_get_active_user_id();
+	}
+
+	// Get posts for this user in this month.
+	$r = healthy_get_posts( $user_id, healthy_get_days_of_contest_month(), healthy_get_year_of_contest(), healthy_get_month_of_contest() );
+
+	// The posts for this month for this author.
+	$found_posts = $r -> found_posts;
+
+	// If there are no entries this month, bail.
+	if( empty( $found_posts ) ) { return 0; }
+
+	// The entries for this month.
+	$days = $r -> posts;
+
+	// Will hold a counter for how many days complete so far this month.
 	$out = 0;
 
 	// For each day...
@@ -608,8 +573,10 @@ function healthy_switched_user_cookie_key() {
  */
 function healthy_get_user_school( $user_id ) {
 
-	// If the user is a boss, allow all schools.
-	if( healthy_user_is_role( true, 'boss' ) ) { return 'all'; }
+	// If the user is a boss, allow all schools, though careful in wp-admin where you are editing other users.
+	if( ! is_admin() ) {
+	//	if( healthy_user_is_role( true, 'boss' ) ) { return 'all'; }
+	}
 
 	// Grab the current user.
 	$user_id = absint( $user_id );
@@ -640,112 +607,6 @@ function healthy_get_active_user() {
 }
 
 /**
- * Returns the average for a stat in a given week.
- * 
- * @param  int $week_id The week of the contest to analyze.
- * @param  string $slug The slug for the stat we're analyzing.
- * @return string A number rounded to the nearest tenth, representing the average value.
- */
-function healthy_get_weekly_average( $week_id, $slug, $user_id='' ) {
-	
-	// Start the output.
-	$out = '';
-
-	// Convert the contest week into a date( 'W' ).
-	$query_week = healthy_convert_contest_week_to_query_week( $week_id );
-
-	// Grab info for the active user.
-	$user_id = absint( $user_id );
-	if( empty( $user_id ) ) {
-		$user_id = healthy_get_active_user_id();
-	}
-
-	// Get Posts from that week.
-	$r = healthy_get_posts( $user_id, 7, false, false, false, $query_week );
-
-	// The posts from that week.
-	$days = $r -> posts;
-
-	// Will hold the running tally for this stat in this week.
-	$weekly_total = 0;
-
-	// For each day...
-	foreach( $days as $day ) {
-
-		// Get the amount for that day
-		$daily_amount = get_post_meta( $day -> ID, $slug, TRUE );
-		$daily_amount = absint( $daily_amount );
-
-		// Add it to the output
-		$weekly_total = $weekly_total + $daily_amount;
-
-	}
-
-	// For past weeks, we divide by 7.
-	$divide_by = 7;
-
-	// For the current week, we divide by date( 'N' ).
-	$current_week = date( 'W' );
-	if( $current_week == $query_week ) {
-		$divide_by = date( 'N' );
-	}
-
-	// Round it to the nearest 10th.
-	$out = round( ( $weekly_total / $divide_by ), 1 );
-
-	return $out;
-}
-
-
-/**
- * Returns the total for a stat in a given week.
- * 
- * @param  int $week_id The week of the contest to analyze.
- * @param  string $slug The slug for the stat we're analyzing.
- * @return string The total value.
- */
-function healthy_get_weekly_total( $week_id, $slug, $user_id='' ) {
-	
-	// Start the output.
-	$out = '';
-
-	// Convert the contest week into a date( 'W' ).
-	$query_week = healthy_convert_contest_week_to_query_week( $week_id );
-
-	// Grab info for the active user.
-	$user_id = absint( $user_id );
-	if( empty( $user_id ) ) {
-		$user_id = healthy_get_active_user_id();
-	}
-
-	// Get Posts from that week.
-	$r = healthy_get_posts( $user_id, 7, false, false, false, $query_week );
-
-	// The posts from that week.
-	$days = $r -> posts;
-
-	// Will hold the running tally for this stat in this week.
-	$weekly_total = 0;
-
-	// For each day...
-	foreach( $days as $day ) {
-
-		// Get the amount for that day
-		$daily_amount = get_post_meta( $day -> ID, $slug, TRUE );
-		$daily_amount = absint( $daily_amount );
-
-		// Add it to the output
-		$weekly_total = $weekly_total + $daily_amount;
-
-	}
-
-	$out = absint( $weekly_total );
-	
-	return $out;
-}
-
-
-/**
  * Returns an array of schools for our app.
  * 
  * @return An array of schools for our app.
@@ -755,20 +616,77 @@ function healthy_get_schools() {
 	$out = array(
 			
 		// Each school gets a slug and a label.
-		array(
+		/*array(
 			'slug'  => sanitize_key( 'begich' ),
 			'label' => 'Begich',
-		),
+			'teams' => array(
+				'Affinity',
+				'United',
+				'Indestructible',
+				'Fusion',
+				'Serenity',
+				'Ohana',
+				'Squad',
+				'HEART',
+				'Symbiotic',
+			),
+		),*/
+
+		array(
+			'slug'  => sanitize_key( 'colony' ),
+			'label' => 'Colony',
+			'teams' => array(
+				'Health Fitness Period 1',
+				'Health Fitness Period 3',
+			),
+		),		
 	
 		array(
 			'slug'  => sanitize_key( 'goldenview' ),
 			'label' => 'Goldenview',
+			'teams' => array(
+				'Canis Major',
+				'Sirius',
+				'Super Nova',
+				'Nebula',
+				'Phoenix',
+				'Vega',
+				'Borealis',
+			),
 		),
 	
-		array(
+		/*array(
 			'slug'  => sanitize_key( 'hanshew' ),
 			'label' => 'Hanshew',
-		),
+			'teams' => array(
+				'Santorini',
+				'Kilimanjaro',
+				'Denali',
+				'Aurora Borealis',
+				'Midnight Sun',
+				'Stonehenge',
+			),
+		),*/
+
+		array(
+			'slug'  => sanitize_key( 'teeland' ),
+			'label' => 'Teeland',
+			'teams' => array(
+				'Vannoy 1',
+				'Vannoy 2',
+				'Vannoy 3',
+				'Vannoy 4',				
+				'Vannoy 5',
+				'Vannoy 6',
+				'TMS Health 2',
+				'TMS Health 3',
+				'TMS Health 4',
+				'TMS Health 5',
+				'TMS Health 6',
+				'TMS Health 7',
+			),
+		),	
+
 	);
 
 	return $out;
@@ -809,23 +727,23 @@ function healthy_profile_fields() {
 		),
 
 		array(
-			'label' 	=> 'Last Name',
-			'slug' 		=> sanitize_key( 'last_name' ),
-			'type' 		=> 'text',
-			'default' 	=> '',
-			'is_meta' 	=> 1,
-			'required' 	=> 1,
+			'label' 	 => 'Last Name',
+			'slug' 		 => sanitize_key( 'last_name' ),
+			'type' 		 => 'text',
+			'default' 	 => '',
+			'is_meta' 	 => 1,
+			'required' 	 => 1,
 			'exportable' => 1,
 		),
 
 		// Email is part of userdata, not usermeta.
 		array(
-			'label' 	=> 'Email',
-			'slug' 		=> sanitize_key( 'user_email' ),
-			'type' 		=> 'email',
-			'default' 	=> '',
-			'is_meta' 	=> 0,
-			'required' 	=> 1,
+			'label' 	 => 'Email',
+			'slug' 		 => sanitize_key( 'user_email' ),
+			'type' 		 => 'email',
+			'default' 	 => '',
+			'is_meta' 	 => 0,
+			'required' 	 => 1,
 			'exportable' => 1,
 		),
 
@@ -838,50 +756,66 @@ function healthy_profile_fields() {
 	}
 
 	// If the user is a student, or if we are creating a new user, allow him to pick a school & grade.
-	if ( is_admin() || healthy_user_is_role( true, 'student' ) || healthy_current_user_is_acting( 'create', 'user', 'new' ) || healthy_current_user_is_acting( 'review', 'report', $object_id ) ) {
+	
+	// The school.
+	$school = array(
+		'label' 				          => 'School',
+		'slug' 					          => sanitize_key( 'school' ),
+		'type' 					          => 'school',
+		'default' 				          => '',
+		'is_meta' 				          => 1,
+		'required' 				          => 1,
+		'is_hidden_from_teachers'         => 1,
+		'exportable' 			          => 1,
+		'add_to_wp_admin'		          => 1,
+		'is_hidden_from_teachers_editing' => 1,
+	);
+	array_push( $out, $school );
 
-		// The school.
-		$school = array(
-			'label' 				  => 'School',
-			'slug' 					  => sanitize_key( 'school' ),
-			'type' 					  => 'school',
-			'default' 				  => '',
-			'is_meta' 				  => 1,
-			'required' 				  => 1,
-			'is_hidden_from_teachers' => 1,
-			'exportable' 			  => 1,
-			'add_to_wp_admin'		  => 1,
-		);
-		array_push( $out, $school );
+	// The teacher of this student.
+	/*$teacher = array(
+		'label' 				  => 'Teacher',
+		'slug' 					  => sanitize_key( 'teacher' ),
+		'type' 					  => 'teacher',
+		'default' 				  => '',
+		'is_meta' 				  => 1,
+		'is_hidden_from_teachers' => 1,
+		'exportable' 			  => 1,
+		'add_to_wp_admin'		  => 1,
+		'is_hidden_from_teachers_editing' => 1,
+	);
+	array_push( $out, $teacher);
+	*/
 
-		// The teacher of this student.
-		$teacher = array(
-			'label' 				  => 'Teacher',
-			'slug' 					  => sanitize_key( 'teacher' ),
-			'type' 					  => 'teacher',
-			'default' 				  => '',
-			'is_meta' 				  => 1,
-			'is_hidden_from_teachers' => 1,
-		//	'exportable' 			  => 1,
-			'add_to_wp_admin'		  => 1,
-		);
-		array_push( $out, $teacher);
+	// The team of this student.
+	$team = array(
+		'label' 				          => 'Team',
+		'slug' 					          => sanitize_key( 'team' ),
+		'type' 					          => 'team',
+		'default' 				          => '',
+		'is_meta' 				          => 1,
+		'required' 				          => 1,
+		'is_hidden_from_teachers'         => 0,
+		'exportable' 			          => 1,
+		'add_to_wp_admin'		          => 1,
+		'is_hidden_from_teachers_editing' => 0,
+	);
+	array_push( $out, $team);
 
-		// The grade.
-		$grade = array(
-			'label' 				  => 'Grade',
-			'slug' 					  => sanitize_key( 'grade' ),
-			'type' 					  => 'select',
-			'options'				  => array( '6', '7', '8' ),
-			'default' 				  => '',
-			'is_meta' 				  => 1,
-			'required' 				  => 1,
-			'is_hidden_from_teachers' => 1,
-			'exportable' 			  => 1,
-		);
-		array_push( $out, $grade);
-
-	}
+	// The grade.
+	$grade = array(
+		'label' 				          => 'Grade',
+		'slug' 					          => sanitize_key( 'grade' ),
+		'type' 					          => 'select',
+		'options'				          => array( '6', '7', '8' ),
+		'default' 				          => '',
+		'is_meta' 				          => 1,
+		'required' 				          => 1,
+		'is_hidden_from_teachers'         => 1,
+		'exportable' 			          => 1,
+		'is_hidden_from_teachers_editing' => 1,
+	);
+	array_push( $out, $grade);
 
 	// Password is part of userdata, not usermeta.  Expects plain text.
 	$password = array(
@@ -1020,80 +954,46 @@ function healthy_get_post_date_by_id( $post_id ) {
  * @param  string $action The agtion we'll perform (create, edit, delete, review).
  * @param  int $object_id  The ID upon which we'll act.
  * @param  string $unit_time The unit of time by which we'll query.
- * @param  int limit our query to all_star users.
+ * @param  int $all_stars our query to all_star users.
+ * @param  int $timestamp The timestamp for the object we are acting on.
  * @return string A url query string for our application.
  */
-function healthy_controller_query_string( $object_type, $action, $object_id, $unit_time = '', $all_stars = '' ) {
+function healthy_controller_query_string( $object_type, $action, $object_id, $unit_time = '', $all_stars = '', $timestamp = '', $by_school = '' ) {
 
-	// User, post, week.
+	// User, post.
 	$object_type = urlencode( $object_type );
 
 	// Create, edit, delete, review.
 	$action = urlencode( $action );
 
-	// User id, post id, contest week #.
+	// User id, post id.
 	$object_id = urlencode( $object_id );
 
-	// 1, 2, 3, weekly.
+	// 1, 2, 3.
 	$unit_time = urlencode( $unit_time );
 
-	// 0, 1.
-	$all_stars = urlencode( $all_stars );
-
-
 	// Output.
-	$out = "?object_type=$object_type&action=$action&object_id=$object_id&all_stars=$all_stars";
+	$out = "?object_type=$object_type&action=$action&object_id=$object_id";
+
+	// Unit time is an optional param.
+	if( ! empty( $all_stars ) ) {
+		$out .= "&all_stars=$all_stars";
+	} 
 
 	// Unit time is an optional param.
 	if( ! empty( $unit_time ) ) {
 		$out .= "&unit_time=$unit_time";
 	} 
+
+	// Timesetamp is an optional param.
+	if( ! empty( $timestamp ) ) {
+		$out .= "&timestamp=$timestamp";
+	} 
+
+	if( ! empty( $by_school ) ) {
+		$out .= "&by_school=$by_school";
+	} 
 	
-	return $out;
-}
-
-/**
- * Determine the current week of the contest.
- * 
- * @return int The number for the current week of the contest.
- */
-function healthy_current_week_of_contest() {
-
-	// Granb the current week.
-	$current_week = date( 'W' );
-
-	// What's the first week?
-	$first_week = healthy_first_week_of_contest();
-
-	// Subtract the first week from the current week.
-	$off_by_one = $current_week - $first_week;
-
-	// Add one.
-	$out = $off_by_one + 1;
-
-	return $out;
-}
-
-/**
- * Given a week of the contest, return the week( 'W' )
- * 
- * @param  int The week number for a week in the contest
- * @return int The week( 'W' ) for the given contest week.
- */
-function healthy_convert_contest_week_to_query_week( $contest_week ) {
-
-	// What week of the contest are we converting?
-	$contest_week = absint( $contest_week );
-
-	// What is the first week?
-	$first_week = healthy_first_week_of_contest();
-
-	// Add the two values.
-	$off_by_one = $contest_week + $first_week;
-
-	// subtract 1.
-	$out = $off_by_one - 1;
-
 	return $out;
 }
 
@@ -1189,6 +1089,20 @@ EOT;
 }
 
 /**
+ * Healthy get number of days in month of contest.
+ *
+ * @return int The number of days in the month of the contest.
+ */
+function healthy_get_days_of_contest_month() {
+	
+	$m = healthy_get_month_of_contest();
+	$y = healthy_get_year_of_contest();
+
+	return cal_days_in_month( CAL_GREGORIAN, $m, $y );
+
+}
+
+/**
  * Our app-wide function for getting posts.
  * 
  * @param  int $user_id The author ID we're querying.
@@ -1197,9 +1111,12 @@ EOT;
  * @param  int $month The date( 'M' ).
  * @param  int $day  The date( 'd' ).
  * @param  int $week  The date( 'W' ).
+ * @param  int $after_timestamp The timestamp after which to look for posts.
+ * @param  int $before_timestamp The timestamp before which to look for posts.
+ * @param  int $week  The date( 'W' ).
  * @return boolean|object Returns a wp_query object or false on failure.
  */
-function healthy_get_posts( $user_id = false, $posts_per_page = false, $year = false, $month = false, $day = false, $week = false, $dayofweek = false ) {
+function healthy_get_posts( $user_id = false, $posts_per_page = false, $year = false, $month = false, $day = false, $week = false, $dayofweek = false, $after_timestamp = false, $before_timestamp = false ) {
 
 	// For what user are we querying?
 	$user_id = absint( $user_id );
@@ -1230,16 +1147,16 @@ function healthy_get_posts( $user_id = false, $posts_per_page = false, $year = f
 		$date_query['day']=$day;
 	}
 
-	// What week?
-	$week = absint( $week );
-	if( !empty ( $week ) ) {
-		$date_query['week']=$week;
+	// After what timestamp?
+	$after_timestamp = absint( $after_timestamp );
+	if( ! empty ( $after_timestamp ) ) {
+		$date_query['after']= $after_timestamp;
 	}
 
-	// What dayofweek (1-7)?
-	$dayofweek = absint( $dayofweek );
-	if( !empty ( $dayofweek ) ) {
-		$date_query['dayofweek']=$dayofweek;
+	// After what timestamp?
+	$before_timestamp = absint( $before_timestamp );
+	if( ! empty ( $before_timestamp ) ) {
+		$date_query['before']= $before_timestamp;
 	}
 
 	// Build the args.
@@ -1249,7 +1166,6 @@ function healthy_get_posts( $user_id = false, $posts_per_page = false, $year = f
 		'author' 	     => $user_id,
 		'posts_per_page' => $posts_per_page,
 		'date_query' 	 => $date_query,
-		
 	);
 
 	// Find the posts.
@@ -1259,33 +1175,25 @@ function healthy_get_posts( $user_id = false, $posts_per_page = false, $year = f
 }
 
 /**
- * Get the total minutes of exercise for a user for a week.
+ * Get the total minutes of exercise for a user for a month.
  * 
  * @param  int $user_id The User id.
- * @param  int $week_id The week id.
- * @return int          The total minutes of exercise for this week.
+ * @return int          The total minutes of exercise for this month.
  */
-function healthy_get_total_exercise_for_week( $user_id, $week_id ) {
+function healthy_get_total_exercise_for_month( $user_id ) {
 
 	// The user id.
 	$user_id = absint( $user_id );
 	if( empty( $user_id ) ) { return false; }
 
-	// The week id.
-	$week_id = absint( $week_id );
-	if( empty( $week_id ) ) { return false; }
+	// Get Posts from that month.
+	$r = healthy_get_posts( $user_id, healthy_get_days_of_contest_month(), false, false, false );
 
-	// Convert the contest week into a date( 'W' ).
-	$query_week = healthy_convert_contest_week_to_query_week( $week_id );
-
-	// Get Posts from that week.
-	$r = healthy_get_posts( $user_id, 7, false, false, false, $query_week );
-
-	// The posts from that week.
+	// The posts from that month.
 	$days = $r -> posts;
 
-	// Will hold the running tally for this stat in this week.
-	$weekly_total = 0;
+	// Will hold the running tally for this stat in this month.
+	$month = 0;
 
 	// App wide definition of a day.
 	$healthy_day = healthy_day();
@@ -1372,7 +1280,7 @@ function healthy_day() {
 				'default' 		=> 0,
 				'notes'			=> esc_html__( 'You were moving, but your heart rate and breathing did not change much.', 'healthy' ),
 				
-				// Does the user deserve a smiley face is this number is higher than the week before?
+				// Does the user deserve a smiley face?
 				'more_is_good'  => true,
 
 				// We'll flag things as exercise for computing the total minutes of exercise.
@@ -1382,8 +1290,8 @@ function healthy_day() {
 				// Does this field get rolled into the daily total for exercise time?
 				'is_exercise' => 1,
 
-				// Do we incude this field in the weekly average report?
-				'is_weekly_metric' => 1,
+				// Do we incude this field in the monthly average report?
+				'is_monthly_metric' => 1,
 			
 				'unit'		=> array( 'minute', 'minutes' ),
 
@@ -1401,7 +1309,7 @@ function healthy_day() {
 				'more_is_good'  => true,
 				'step'		=> 5,
 				'is_exercise' => 1,
-				'is_weekly_metric' => 1,
+				'is_monthly_metric' => 1,
 
 				'unit'		=> array( 'minute', 'minutes' ),
 			),
@@ -1418,7 +1326,7 @@ function healthy_day() {
 				'more_is_good'  => true,				
 				'step'		=> 5,
 				'is_exercise' => 1,
-				'is_weekly_metric' => 1,
+				'is_monthly_metric' => 1,
 
 				'unit'		=> array( 'minute', 'minutes' ),
 			),
@@ -1434,7 +1342,7 @@ function healthy_day() {
 				'default' 	=> 0,
 				'notes'		=> esc_html__( 'Sugary drink, sugar, corn syrup, or another type of caloric sweetener in the ingredient list', 'healthy' ),
 				'more_is_good'  => false,				
-				'is_weekly_metric' => 1,
+				'is_monthly_metric' => 1,
 
 				'unit'		=> array( 'drink', 'drinks' ),
 
@@ -1449,6 +1357,37 @@ function healthy_day() {
 	);
 
 	return $day;
+}
+
+function healthy_school_to_label( $school ) {
+	// Convert the school slug into a nice label.
+	$school_label = ucwords( $school );
+	$school_label = str_replace( '_', ' ', $school_label );
+
+	return $school_label;
+
+}
+
+function healthy_get_teams( $school ) {
+	
+	$schools = healthy_get_schools();
+	$teams = FALSE;
+	foreach( $schools as $s ) {
+		if( $s['slug'] != $school ) {
+			continue;
+		} else {
+			$teams = $s['teams'];
+		}
+	}
+	return $teams;
+
+}
+
+/**
+ * Get the current month.
+ */
+function healthy_get_current_month() {
+	return date( 'n' );
 }
 
 /**

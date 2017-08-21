@@ -17,7 +17,11 @@ textarea,
 	color: $color;
 }
 
-.ui-widget-content a.ui-slider-handle.ui-state-default,
+body span.ui-slider-handle.ui-state-default,
+body span.ui-slider-handle.ui-widget-content .ui-state-default,
+body span.ui-slider-handle.ui-widget-header .ui-state-default,
+body span.ui-slider-handle.ui-state-default,
+.ui-widget-content a.ui-slider-handle.ui-state-active,
 .accent-color {
 	background-color: $tertiary_color;
 }
@@ -27,7 +31,6 @@ a {
 	color: $secondary_color;
 }
 
-.ui-widget-content a.ui-slider-handle.ui-state-active,
 a.button,
 .button,
 [type='submit'],

@@ -12,7 +12,7 @@
  *
  * @return An HTML select menu for the roles in our app.
  */
-function healthy_get_roles_as_select( $role_of_user_being_edited = false) {
+function healthy_get_roles_as_select( $role_of_user_being_edited = false ) {
 	
 	if( healthy_user_is_role( false, 'student' ) ) { return false; }
 
@@ -81,6 +81,44 @@ function healthy_get_teachers_as_options( $school = '', $current_teacher_id = ''
 	}
 
 	$choose = esc_html__( 'Choose Your Teacher', 'healthy' );
+
+    $out = "
+    	<option value=''>$choose</option>
+    	$out
+    ";
+
+    return $out;
+}
+
+/**
+ * Returns HTML <option>s for the teams in our app.
+ *
+ * @param  string $school The slug of a school from which to grab trachers.
+ * @param  int $current_team The team to power selected().
+ * @return HTML <options> for the teams in our app.
+ */
+function healthy_get_teams_as_options( $school = '', $current_team = '' ) {
+	
+	$out = '';
+    
+	$current_team = sanitize_text_field( $current_team );
+
+	$school = esc_attr( $school );
+
+	$teams = healthy_get_teams( $school );
+	if( ! is_array( $teams ) ) { return FALSE; }
+	foreach( $teams as $t ) {
+		
+		$value = esc_attr( $t );
+		$label = esc_html( $t );
+
+		$selected = selected( $value, $current_team, false );
+
+		$out.= "<option $selected value='$value'>$label</option>";
+	
+	}
+
+	$choose = esc_html__( 'Choose Your Team', 'healthy' );
 
     $out = "
     	<option value=''>$choose</option>
@@ -589,6 +627,12 @@ function healthy_profile_form( $creating = false ) {
 		// The default value for the input.
 		$default = $f[ 'default' ];
 
+		// Can teachers edit this for themselves?
+		$is_hidden_from_teachers_editing = FALSE;
+		if( isset( $f[ 'is_hidden_from_teachers_editing' ] ) ) {
+			$is_hidden_from_teachers_editing = TRUE;
+		}
+
 		// Is this input required?
 		$required = '';
 		if (isset ( $f[ 'required' ] ) ){
@@ -625,6 +669,8 @@ function healthy_profile_form( $creating = false ) {
 
 		// If we're editing, draw the appropriate fields.
 		if( $action == 'edit' ) {
+
+			if( $is_hidden_from_teachers_editing  && healthy_user_is_role ( true, 'teacher' ) ) { continue; }
 
 			// Get the user meta to pre-pop each field.
 			$meta = get_user_meta( $user_to_edit_id, $slug, TRUE );
@@ -676,6 +722,28 @@ function healthy_profile_form( $creating = false ) {
 				</select>
 			";
 		
+		} elseif( $type =='team' ) {
+
+			$current_user_school = healthy_get_user_school( $user_to_edit_id );
+			
+			$current_user_team = get_user_meta( $user_to_edit_id, 'team', TRUE );
+
+			$teams_as_options = '';
+
+			if( ! empty( $current_user_team ) ) {
+
+				//wp_die(659);
+
+				$teams_as_options = healthy_get_teams_as_options( $current_user_school, $current_user_team );
+
+			}
+					
+			$input =  "
+				<select $required name='team'>
+					$teams_as_options
+				</select>
+			";
+
 		} elseif( $type == 'range' ) {
 
 			$input = healthy_get_slider( $slug, $min, $max, $step, $default );
@@ -689,7 +757,7 @@ function healthy_profile_form( $creating = false ) {
 				$options_string .= "<option $selected value='$option'>$option</option>";
 			}
 
-			$choose = esc_html__( 'Choose Your Grade', 'healthy' );
+			$choose = esc_html__( 'Choose a Grade', 'healthy' );
 			$input = "
 				<select $required name='$slug'>
 					<option value=''>$choose</option>
@@ -832,6 +900,8 @@ function healthy_profile_form( $creating = false ) {
 
 	healthy_load_teachers_async();
 
+	healthy_load_teams_async();
+
 	return $out;
 
 }
@@ -908,7 +978,7 @@ function healthy_get_api_page() {
 }
 
 function healthy_load_teachers_async() {
-	
+
 	$api_page_url = healthy_get_api_page();
 
 	if( empty( $api_page_url ) ) { wp_die( 'There has been a problem. 914' ); }
@@ -942,6 +1012,51 @@ function healthy_load_teachers_async() {
 					var which_school = $( this ).val();
 
 					var response = $( teacher ).load( '<?php echo $api_page_url; ?>', { post_school: which_school, post_teacher: which_teacher }, function() {
+						// some stuff here to execute after load
+					});
+
+				});		
+
+			});
+		</script>
+	<?php
+}
+
+function healthy_load_teams_async() {
+	
+	$api_page_url = healthy_get_api_page();
+
+	if( empty( $api_page_url ) ) { wp_die( 'There has been a problem. 914' ); }
+
+	$current_team = sanitize_text_field( get_user_meta( healthy_get_active_user_id(), 'team', TRUE ) );
+
+	?>
+		<script>
+			jQuery( document ).ready( function( $ ) {
+
+				var school = $( '[name="school"]' );
+				
+				var team_wrap = $( '[for="team"]' );
+
+				var team = $( '[name="team"]' );
+				
+				var which_school = $( school ).val();
+
+				var which_team = "<?php echo $current_team; ?>";
+
+				if( which_school != '' ) {
+
+					var response = $( team ).load( '<?php echo $api_page_url; ?>', { post_school: which_school, post_team: which_team }, function() {
+						// stuff here
+					});
+					
+				}
+
+				$( school ).change( function() {
+				
+					var which_school = $( this ).val();
+
+					var response = $( team ).load( '<?php echo $api_page_url; ?>', { post_school: which_school, post_team: which_team }, function() {
 						// some stuff here to execute after load
 					});
 

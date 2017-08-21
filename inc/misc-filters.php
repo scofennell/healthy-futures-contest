@@ -61,8 +61,8 @@ function healthy_change_registration_button_text ( $text ) {
 add_filter( 'gettext', 'healthy_change_registration_button_text' );
 
 function healthy_change_password_email_text ( $text ) {
-	 if ( $text == 'A password will be e-mailed to you.' ) {
-	 	$text = esc_html__( 'A password will be e-mailed to you &mdash; check your spam folder!', 'healthy' );
+	 if ( $text == 'A password link will be e-mailed to you.' ) {
+	 	$text = esc_html__( 'A password link will be e-mailed to you &mdash; check your spam folder!', 'healthy' );
 	}
 	return $text;
 }

@@ -53,6 +53,7 @@ function healthy_login_styles() { ?>
 
         html,
         body.login,
+        input[type='email'],
         input[type='text']  {
             font-family: georgia, times, serif;
             background-color: #fff;
@@ -69,6 +70,7 @@ function healthy_login_styles() { ?>
         }
 
         input[type='text'],
+        input[type='email'],
         input[type='password'] {
             border: 1px solid #000;
             font-weight: 400 !important;
@@ -76,6 +78,7 @@ function healthy_login_styles() { ?>
 
         input[type='submit'],
         input[type='text'],
+        input[type='email'],
         input[type='password'] {
             padding: 3px;
             border-radius: 3px;
@@ -150,12 +153,14 @@ function healthy_login_styles() { ?>
 
         .login input[type=submit],
         .login input[type=password],
+        input[type='email'],
         .login input[type=text] {
             font-size: 30px !important;
         }
 
         #login form > p {
-            margin-bottom: 20px; 
+            margin-bottom: 20px;
+            clear: both;
         }
 
         #login form > p:last-child {
